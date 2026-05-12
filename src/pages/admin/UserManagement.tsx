@@ -1,0 +1,431 @@
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { db, secondaryAuth, auth } from '../../lib/firebase';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import * as XLSX from 'xlsx';
+
+export default function UserManagement() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user' });
+  const [isEditing, setIsEditing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [adminForcePassword, setAdminForcePassword] = useState('');
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmData, setConfirmData] = useState<{id: string, name: string} | null>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const querySnapshot = await getDocs(collection(db, 'users'));
+    const userData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setUsers(userData);
+    setLoading(false);
+  };
+
+  const handleForcePasswordChange = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (!adminForcePassword || adminForcePassword.length < 6) {
+      setErrorMsg("최소 6자 이상의 새 비밀번호를 입력해주세요.");
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/update-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, newPassword: adminForcePassword })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || '알 수 없는 오류');
+      }
+      
+      setSuccessMsg(`[${formData.email}] 계정의 비밀번호가 성공적으로 즉시 변경되었습니다.`);
+      setAdminForcePassword('');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg('비밀번호 강제 변경 실패: ' + err.message);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.email) return;
+    setErrorMsg('');
+
+    try {
+      let isAuthInUse = false;
+
+      if (!isEditing) {
+        if (!formData.password || formData.password.length < 6) {
+          setErrorMsg('비밀번호는 최소 6자 이상이어야 합니다.');
+          return;
+        }
+        // Force create auth account without signing current admin out
+        try {
+          await createUserWithEmailAndPassword(secondaryAuth, formData.email.toLowerCase(), formData.password);
+          await signOut(secondaryAuth);
+        } catch (authErr: any) {
+          if (authErr.code === 'auth/email-already-in-use') {
+            isAuthInUse = true;
+          } else {
+            throw authErr;
+          }
+        }
+      }
+
+      const userRef = doc(db, 'users', formData.email.toLowerCase());
+      await setDoc(userRef, {
+        email: formData.email.toLowerCase(),
+        name: formData.name,
+        department: formData.department,
+        position: formData.position,
+        role: formData.role,
+        createdAt: serverTimestamp(),
+        uid: '' // Will be populatd on their first login
+      }, { merge: true });
+      
+      setIsOpen(false);
+      fetchUsers();
+
+      if (isAuthInUse) {
+        window.alert(`[${formData.email}] 계정은 이미 인증 시스템 서버에 가입되어 있어 성공적으로 데이터베이스 목록에 복구 및 연동되었습니다.\n\n단, 비밀번호는 새로 입력하신 비밀번호로 변경되지 않았으며 기존 인증 시스템 내 비밀번호가 그대로 유지됩니다. (변경이 필요한 경우 기존 사용자가 '비밀번호 재설정'을 해야 합니다)`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/invalid-email') {
+        setErrorMsg('유효하지 않은 이메일 형식입니다.');
+      } else if (err.code === 'auth/weak-password') {
+        setErrorMsg('비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.');
+      } else {
+        setErrorMsg(err.message || '저장에 실패했습니다.');
+      }
+    }
+  };
+
+  const handleDelete = async (email: string) => {
+    await deleteDoc(doc(db, 'users', email));
+    fetchUsers();
+  };
+
+  const handleDeleteConfirm = () => {
+    if (confirmData) {
+      handleDelete(confirmData.id);
+    }
+  };
+
+  const openEdit = (user: any) => {
+    setFormData({ email: user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role });
+    setAdminForcePassword('');
+    setIsEditing(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsOpen(true);
+  };
+
+  const openNew = () => {
+    setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user' });
+    setAdminForcePassword('');
+    setIsEditing(false);
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsOpen(true);
+  };
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.json_to_sheet([{
+      '로그인 아이디 (이메일)': 'user@company.com',
+      '초기 비밀번호': 'Abcd123!',
+      '사용자 이름': '홍길동',
+      '소속 부서': '인사팀',
+      '직급': '사원',
+      '권한 (admin/user)': 'user'
+    }]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Users");
+    XLSX.writeFile(wb, "User_Registration_Template.xlsx");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        let successCount = 0;
+        let failCount = 0;
+        setLoading(true);
+
+        for (const row of data) {
+          const email = String(row['로그인 아이디 (이메일)'] || '').trim().toLowerCase();
+          const password = String(row['초기 비밀번호'] || '').trim();
+          const name = String(row['사용자 이름'] || '').trim();
+          const department = String(row['소속 부서'] || '').trim();
+          const position = String(row['직급'] || '').trim();
+          let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
+          
+          if (!email || !name || !email.includes('@')) {
+            failCount++;
+            continue;
+          }
+          
+          if (role !== 'admin' && role !== 'user') {
+             role = 'user';
+          }
+          
+          let existingUser = users.find(u => u.email === email);
+
+          try {
+            if (!existingUser) {
+              if (!password || password.length < 6) {
+                failCount++;
+                continue;
+              }
+              try {
+                await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                await signOut(secondaryAuth);
+              } catch (authErr: any) {
+                if (authErr.code !== 'auth/email-already-in-use') {
+                  failCount++;
+                  continue;
+                }
+              }
+            }
+
+            const userRef = doc(db, 'users', email);
+            await setDoc(userRef, {
+              email: email,
+              name: name,
+              department: department,
+              position: position,
+              role: role,
+              createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
+              uid: existingUser ? existingUser.uid : '' 
+            }, { merge: true });
+
+            successCount++;
+          } catch(err) {
+             console.error(err);
+             failCount++;
+          }
+        }
+        
+        fetchUsers();
+        alert(`일괄 처리가 완료되었습니다.\\n성공: ${successCount}건\\n실패: ${failCount}건`);
+      } catch (err) {
+         console.error(err);
+         alert('파일 처리 중 오류가 발생했습니다.');
+         setLoading(false);
+      }
+      e.target.value = '';
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  if (loading) return <div>사용자 정보를 불러오는 중입니다...</div>;
+
+  return (
+    <div className="space-y-6">
+      <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
+        <div>
+          <h2 className="text-5xl tracking-tighter">사용자 관리</h2>
+          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">계정 추가 수정 및 권한 부여 관리</p>
+        </div>
+        
+        <div className="flex gap-4 items-center">
+          <button 
+            onClick={downloadTemplate}
+            className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors"
+          >
+            등록양식 다운로드
+          </button>
+          
+          <div className="relative">
+            <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+            <button className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors pointer-events-none">
+              일괄 사용자 등록
+            </button>
+          </div>
+
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger render={<Button onClick={openNew} className="rounded-none bg-[#1A1A1A] hover:bg-[#333] px-5 py-2 text-[11px] uppercase tracking-widest h-auto">개별 사용자 등록</Button>} />
+            <DialogContent className="border-[#1A1A1A] rounded-none bg-[#FDFDFB]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">{isEditing ? '사용자 정보 수정' : '신규 사용자 등록'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {errorMsg && <div className="text-red-700 text-xs p-2 bg-red-50 border border-red-200">{errorMsg}</div>}
+              {successMsg && <div className="text-green-700 text-xs p-2 bg-green-50 border border-green-200">{successMsg}</div>}
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 아이디 (이메일)</Label>
+                <Input 
+                  value={formData.email} 
+                  onChange={e => setFormData({...formData, email: e.target.value})} 
+                  disabled={isEditing}
+                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                />
+              </div>
+              {!isEditing && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest text-[#999]">초기 비밀번호</Label>
+                  <Input 
+                    type="password"
+                    value={formData.password} 
+                    onChange={e => setFormData({...formData, password: e.target.value})} 
+                    className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                    placeholder="최소 6자 이상"
+                  />
+                </div>
+              )}
+              {isEditing && (
+                <div className="space-y-2 pt-4 border-t border-[#EEE]">
+                  <Label className="text-[10px] uppercase tracking-widest text-[#red-700] text-red-700 font-bold">비밀번호 즉시 변경 (관리자)</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input 
+                      type="password"
+                      value={adminForcePassword} 
+                      onChange={e => setAdminForcePassword(e.target.value)} 
+                      className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                      placeholder="새 비밀번호 (6자 이상)"
+                    />
+                    <button type="button" onClick={handleForcePasswordChange} className="px-5 py-2 whitespace-nowrap bg-[#1A1A1A] text-white text-[10px] hover:bg-[#333] transition-colors uppercase tracking-widest">
+                      적용
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-[#777] mt-1">이메일 인증 없이 계정의 비밀번호를 즉시 새로운 값으로 덮어씁니다.</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">사용자 이름</Label>
+                <Input 
+                  value={formData.name} 
+                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">소속 부서</Label>
+                <div className="flex gap-2">
+                  <Select value={formData.department} onValueChange={v => setFormData({...formData, department: v})}>
+                    <SelectTrigger className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
+                      <SelectValue placeholder="부서 선택 혹은 직접 입력" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="설계1그룹">설계1그룹</SelectItem>
+                      <SelectItem value="설계2그룹">설계2그룹</SelectItem>
+                      <SelectItem value="전략기획그룹">전략기획그룹</SelectItem>
+                      <SelectItem value="주거그룹">주거그룹</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    placeholder="직접 입력"
+                    value={formData.department} 
+                    onChange={e => setFormData({...formData, department: e.target.value})} 
+                    className="w-1/3 border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] uppercase tracking-wider text-xs"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">직급/직책</Label>
+                <div className="flex gap-2">
+                  <Select value={formData.position} onValueChange={v => setFormData({...formData, position: v})}>
+                    <SelectTrigger className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
+                      <SelectValue placeholder="직급 선택 혹은 직접 입력" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="설계1그룹장">설계1그룹장</SelectItem>
+                      <SelectItem value="설계2그룹장">설계2그룹장</SelectItem>
+                      <SelectItem value="전략기획그룹장">전략기획그룹장</SelectItem>
+                      <SelectItem value="주거그룹장">주거그룹장</SelectItem>
+                      <SelectItem value="팀원">팀원</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    placeholder="직접 입력"
+                    value={formData.position} 
+                    onChange={e => setFormData({...formData, position: e.target.value})} 
+                    className="w-1/3 border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] uppercase tracking-wider text-xs"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">권한 레벨</Label>
+                <Select value={formData.role} onValueChange={v => setFormData({...formData, role: v})}>
+                  <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">사용자</SelectItem>
+                    <SelectItem value="hr">인사담당자</SelectItem>
+                    <SelectItem value="admin">최고 관리자</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="pt-4 flex justify-end">
+                <button onClick={handleSave} className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors w-full">저장하기</button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        </div>
+      </header>
+
+      <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col mt-8">
+        <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+          <div className="col-span-3">로그인 아이디 (이메일)</div>
+          <div className="col-span-2">사용자 이름</div>
+          <div className="col-span-2">직급</div>
+          <div className="col-span-2">소속 부서</div>
+          <div className="col-span-1">권한</div>
+          <div className="col-span-2 text-right">작업</div>
+        </div>
+        <div className="flex-1 overflow-y-auto  text-sm">
+          {users.map((user) => (
+            <div key={user.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors">
+              <div className="col-span-3 text-[#777] truncate pr-2">{user.email}</div>
+              <div className="col-span-2 font-bold text-lg truncate pr-2">{user.name}</div>
+              <div className="col-span-2 font-sans text-xs text-[#555] truncate pr-2">{user.position || '-'}</div>
+              <div className="col-span-2 font-sans text-xs uppercase text-[#777] truncate pr-2">{user.department}</div>
+              <div className="col-span-1">
+                 <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${user.role === 'admin' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#1A1A1A]'}`}>
+                    {user.role}
+                 </span>
+              </div>
+              <div className="col-span-2 text-right flex justify-end gap-3">
+                <button onClick={() => openEdit(user)} className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4">수정</button>
+                <button onClick={() => { setConfirmData({ id: user.id, name: user.name }); setConfirmOpen(true); }} className="text-[10px] uppercase tracking-widest text-[#777] hover:text-red-700 underline underline-offset-4 border-l border-[#CCC] pl-3">삭제</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <ConfirmDialog 
+        open={confirmOpen} 
+        onOpenChange={setConfirmOpen}
+        title="사용자 삭제"
+        description={`정말로 사용자 '${confirmData?.name}' 님을 삭제하시겠습니까? 프로필 접근 권한이 모두 제거되며 되돌릴 수 없습니다.`}
+        onConfirm={handleDeleteConfirm}
+      />
+    </div>
+  );
+}

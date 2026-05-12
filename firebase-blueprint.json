@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "System users with roles for access control",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "department": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "hr", "user"] },
+        "createdAt": { "type": "number", "description": "Timestamp" }
+      },
+      "required": ["email", "name", "role", "createdAt"]
+    },
+    "setting": {
+      "title": "System Setting",
+      "description": "Global settings like scoring scale",
+      "type": "object",
+      "properties": {
+        "scoringScale": { "type": "number", "enum": [5, 7, 10] },
+        "activeYear": { "type": "string" }
+      },
+      "required": ["scoringScale"]
+    },
+    "evaluationYear": {
+      "title": "Evaluation Year",
+      "description": "Management of evaluation years",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "closed"] }
+      },
+      "required": ["year", "status"]
+    },
+    "evaluationGroup": {
+      "title": "Evaluation Group",
+      "description": "Evaluation groups (e.g., Peer, Manager)",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "evaluationItem": {
+      "title": "Evaluation Item",
+      "description": "Questions organized by year and group",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string" },
+        "groupId": { "type": "string" },
+        "question": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["year", "groupId", "question", "order"]
+    },
+    "evaluationAssignment": {
+      "title": "Evaluation Assignment",
+      "description": "Maps who evaluates whom",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string" },
+        "evaluateeId": { "type": "string" },
+        "evaluatorId": { "type": "string" },
+        "groupId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "totalScore": { "type": "number" }
+      },
+      "required": ["year", "evaluateeId", "evaluatorId", "groupId", "status"]
+    },
+    "evaluationResult": {
+      "title": "Evaluation Result",
+      "description": "Stores the submitted scores for an assignment",
+      "type": "object",
+      "properties": {
+        "assignmentId": { "type": "string" },
+        "scores": { "type": "object", "description": "Map of itemId to score" },
+        "comment": { "type": "string" },
+        "submittedAt": { "type": "number" }
+      },
+      "required": ["assignmentId", "scores", "submittedAt"]
+    },
+    "finalScore": {
+      "title": "Final Score",
+      "description": "Confirmed final result for a user in a year",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string" },
+        "evaluateeId": { "type": "string" },
+        "totalScore": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "confirmed"] },
+        "confirmedBy": { "type": "string" },
+        "confirmedAt": { "type": "number" }
+      },
+      "required": ["year", "evaluateeId", "totalScore", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/user" },
+      "description": "User profiles and roles"
+    },
+    "settings/global": {
+      "schema": { "$ref": "#/entities/setting" },
+      "description": "Global application settings"
+    },
+    "years/{yearId}": {
+      "schema": { "$ref": "#/entities/evaluationYear" },
+      "description": "Evaluation years"
+    },
+    "groups/{groupId}": {
+      "schema": { "$ref": "#/entities/evaluationGroup" },
+      "description": "Types of evaluation groups"
+    },
+    "items/{itemId}": {
+      "schema": { "$ref": "#/entities/evaluationItem" },
+      "description": "Specific questions for a year/group"
+    },
+    "assignments/{assignmentId}": {
+      "schema": { "$ref": "#/entities/evaluationAssignment" },
+      "description": "Mapping from evaluator to evaluatee"
+    },
+    "results/{resultId}": {
+      "schema": { "$ref": "#/entities/evaluationResult" },
+      "description": "Submitted evaluation form data"
+    },
+    "finalScores/{finalScoreId}": {
+      "schema": { "$ref": "#/entities/finalScore" },
+      "description": "Calculated and HR-approved final score for a user's year"
+    }
+  }
+}

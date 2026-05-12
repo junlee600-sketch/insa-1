@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    function getUser(email) {
+      return get(/databases/$(database)/documents/users/$(email)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && getUser(request.auth.token.email).role == 'admin';
+    }
+
+    function isHr() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && (getUser(request.auth.token.email).role == 'admin' || getUser(request.auth.token.email).role == 'hr');
+    }
+
+    function isGroupLeader() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position.matches('.*그룹장.*');
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      
+      allow update: if (
+        isSignedIn() && (
+          isAdmin() ||
+          (request.auth.token.email == userId && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'updatedAt', 'uid']))
+        )
+      );
+
+      allow create: if isSignedIn() && (
+        isAdmin() || 
+        (request.auth.token.email == userId && userId == 'admin@360.com') ||
+        (request.auth.token.email == userId && incoming().keys().hasAll(['email', 'name', 'role', 'createdAt', 'uid']) && incoming().role == 'user')
+      );
+      
+      allow delete: if isAdmin();
+      
+      allow list: if isSignedIn();
+    }
+
+    match /settings/global {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /years/{yearId} {
+      allow read: if isSignedIn();
+      allow write: if isHr();
+    }
+
+    match /groups/{groupId} {
+      allow read: if isSignedIn();
+      allow write: if isHr();
+    }
+
+    match /items/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isHr();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isSignedIn() && (isHr() || isGroupLeader() || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      allow create, delete: if isHr() && isValidId(assignmentId);
+      allow update: if isHr() || isGroupLeader() || (
+        isSignedIn() && existing().evaluatorId == request.auth.token.email 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
+      );
+      allow list: if isHr() || isGroupLeader() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
+    }
+
+    match /results/{resultId} {
+      allow read: if isSignedIn() && (
+        isHr() || isGroupLeader() ||
+        get(/databases/$(database)/documents/assignments/$(resultId)).data.evaluatorId == request.auth.token.email
+      );
+      allow write: if isSignedIn() && (
+        isHr() || isGroupLeader() ||
+        get(/databases/$(database)/documents/assignments/$(resultId)).data.evaluatorId == request.auth.token.email
+      );
+    }
+
+    match /finalScores/{finalScoreId} {
+      allow read: if isSignedIn() && (isHr() || isGroupLeader() || existing().evaluateeId == request.auth.token.email);
+      allow write: if isHr() || isGroupLeader();
+      allow list: if isHr() || isGroupLeader() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
+    }
+  }
+}
