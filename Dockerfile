@@ -15,10 +15,10 @@ RUN npm run build
 # Remove devDependencies to keep image size small
 RUN npm prune --production
 
-# Expose port (Cloud Run sets the PORT env var, typically to 8080)
+# Expose port
 EXPOSE 8080
 ENV PORT=8080
 ENV NODE_ENV=production
 
 # Start the server
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
