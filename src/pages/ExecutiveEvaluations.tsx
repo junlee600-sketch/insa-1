@@ -6,10 +6,10 @@ import { Button } from '../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { useNavigate } from 'react-router-dom';
 
-export default function MyEvaluations() {
+export default function ExecutiveEvaluations() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [assignments, setAssignments] = useState<any[]>([]);
+  const [exec_assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [userPositions, setUserPositions] = useState<Record<string, string>>({});
@@ -40,10 +40,10 @@ export default function MyEvaluations() {
         return;
       }
 
-      // Fetch assignments for this user
+      // Fetch exec_assignments for this user
       // Querying only by evaluatorId avoids the need for a composite Firestore index
       const q = query(
-        collection(db, 'assignments'), 
+        collection(db, 'exec_assignments'), 
         where('evaluatorId', '==', user?.email)
       );
       const snap = await getDocs(q);
@@ -86,8 +86,8 @@ export default function MyEvaluations() {
     <div className="space-y-6">
       <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">내 평가 대기열</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">본인에게 배정된 인사평가를 진행합니다.</p>
+          <h2 className="text-5xl tracking-tighter">내 임원평가 대기열</h2>
+          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">본인에게 배정된 임원평가를 진행합니다.</p>
         </div>
       </header>
 
@@ -98,11 +98,11 @@ export default function MyEvaluations() {
         </div>
         <div className="border-b border-[#EEE] pb-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">총 할당 대상 그룹</p>
-          <p className="text-2xl font-light tracking-tight">{assignments.length}명</p>
+          <p className="text-2xl font-light tracking-tight">{exec_assignments.length}명</p>
         </div>
         <div className="border-b border-[#EEE] pb-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대기 중</p>
-          <p className="text-2xl font-light tracking-tight">{assignments.filter(a => a.status !== 'completed').length}건</p>
+          <p className="text-2xl font-light tracking-tight">{exec_assignments.filter(a => a.status !== 'completed').length}건</p>
         </div>
       </section>
 
@@ -118,10 +118,10 @@ export default function MyEvaluations() {
           </div>
           
           <div className="flex-1 overflow-y-auto  text-sm">
-            {assignments.length === 0 ? (
+            {exec_assignments.length === 0 ? (
               <div className="p-8 text-center text-[#777] font-sans">현재 배정된 평가 대상자가 없습니다.</div>
             ) : (
-              assignments.map(a => (
+              exec_assignments.map(a => (
                 <div key={a.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors">
                   <div className="col-span-2 font-bold">
                     {usersMap[a.evaluateeId] || a.evaluateeId}
@@ -140,14 +140,14 @@ export default function MyEvaluations() {
                     {a.status === 'completed' ? (
                       <button 
                         className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4"
-                        onClick={() => navigate(`/evaluate/${a.id}`)}
+                        onClick={() => navigate(`/evaluate-executive/${a.id}`)}
                       >
                         상세 내역 보기
                       </button>
                     ) : (
                       <button 
                         className="px-5 py-2 bg-[#1A1A1A] text-white text-[10px] font-sans uppercase tracking-widest hover:bg-[#333] transition-colors"
-                        onClick={() => navigate(`/evaluate/${a.id}`)}
+                        onClick={() => navigate(`/evaluate-executive/${a.id}`)}
                       >
                         평가하기
                       </button>

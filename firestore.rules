@@ -26,6 +26,10 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position.matches('.*그룹장.*');
     }
 
+    function isBoss() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position == '사장';
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn();
       
@@ -68,18 +72,18 @@ service cloud.firestore {
     }
 
     match /assignments/{assignmentId} {
-      allow read: if isSignedIn() && (isHr() || isGroupLeader() || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
       allow create, delete: if isHr() && isValidId(assignmentId);
       allow update: if isHr() || isGroupLeader() || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email 
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
       );
-      allow list: if isHr() || isGroupLeader() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
+      allow list: if isHr() || isGroupLeader() || isBoss() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }
 
     match /results/{resultId} {
       allow read: if isSignedIn() && (
-        isHr() || isGroupLeader() ||
+        isHr() || isGroupLeader() || isBoss() ||
         get(/databases/$(database)/documents/assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
       allow write: if isSignedIn() && (
@@ -89,9 +93,41 @@ service cloud.firestore {
     }
 
     match /finalScores/{finalScoreId} {
-      allow read: if isSignedIn() && (isHr() || isGroupLeader() || existing().evaluateeId == request.auth.token.email);
+      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || existing().evaluateeId == request.auth.token.email);
       allow write: if isHr() || isGroupLeader();
-      allow list: if isHr() || isGroupLeader() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
+      allow list: if isHr() || isGroupLeader() || isBoss() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
+    }
+
+    match /exec_items/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isHr() || isBoss();
+    }
+
+    match /exec_assignments/{assignmentId} {
+      allow read: if isSignedIn() && (isHr() || isBoss() || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      allow create, delete: if (isHr() || isBoss()) && isValidId(assignmentId);
+      allow update: if isHr() || isBoss() || (
+        isSignedIn() && existing().evaluatorId == request.auth.token.email 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
+      );
+      allow list: if isHr() || isBoss() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
+    }
+
+    match /exec_results/{resultId} {
+      allow read: if isSignedIn() && (
+        isHr() || isBoss() ||
+        get(/databases/$(database)/documents/exec_assignments/$(resultId)).data.evaluatorId == request.auth.token.email
+      );
+      allow write: if isSignedIn() && (
+        isHr() || isBoss() ||
+        get(/databases/$(database)/documents/exec_assignments/$(resultId)).data.evaluatorId == request.auth.token.email
+      );
+    }
+
+    match /exec_finalScores/{finalScoreId} {
+      allow read: if isBoss() || isAdmin() || (isSignedIn() && existing().evaluateeId == request.auth.token.email);
+      allow write: if isBoss() || isAdmin();
+      allow list: if isBoss() || isAdmin() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
     }
   }
 }

@@ -10,12 +10,17 @@ import { Label } from '../../components/ui/label';
 import { useAuth } from '../../contexts/AuthContext';
 import * as XLSX from 'xlsx';
 
-export default function FinalResults() {
+export default function ExecutiveFinalResults() {
   const { user } = useAuth();
+  
+  if (user?.position !== '사장' && user?.role !== 'admin') {
+    return <div className="p-8 text-center text-red-500 font-bold">임원평가 확정 및 조회는 사장 직급 또는 관리자(Admin)만 가능합니다.</div>;
+  }
+  
   const [years, setYears] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState('');
   
-  const [evaluatees, setEvaluatees] = useState<any[]>([]); // Grouped results
+  const [evaluatees, setEvaluatees] = useState<any[]>([]); // Grouped exec_results
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [userPositions, setUserPositions] = useState<Record<string, string>>({});
   const [groupsMap, setGroupsMap] = useState<Record<string, string>>({});
@@ -29,7 +34,8 @@ export default function FinalResults() {
   const [finalScoreInput, setFinalScoreInput] = useState('');
 
   const isGroupLeader = user && user.role === 'user' && user.position?.endsWith('그룹장');
-  const isPresidentReadOnly = user?.position === '사장' && user?.role !== 'admin' && user?.role !== 'hr';
+  // 사장은 임원평가 최종 결과를 수정할 수 있으므로 읽기 전용이 아님
+  const isPresidentReadOnly = false;
 
   useEffect(() => {
     fetchBaseData();
@@ -83,37 +89,37 @@ export default function FinalResults() {
 
   const fetchResults = async () => {
     try {
-      // 1. Fetch assignments for this year
-      const q1 = query(collection(db, 'assignments'), where('year', '==', selectedYear));
-      const assignmentsSnap = await getDocs(q1);
-      const assignments = assignmentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // 1. Fetch exec_assignments for this year
+      const q1 = query(collection(db, 'exec_assignments'), where('year', '==', selectedYear));
+      const exec_assignmentsSnap = await getDocs(q1);
+      const exec_assignments = exec_assignmentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
       // 2. Fetch finalized scores if any
-      const q2 = query(collection(db, 'finalScores'), where('year', '==', selectedYear));
+      const q2 = query(collection(db, 'exec_finalScores'), where('year', '==', selectedYear));
       const finalSnap = await getDocs(q2);
-      const finalScoresMap : Record<string, any> = {};
-      finalSnap.docs.forEach(d => { finalScoresMap[d.data().evaluateeId] = d.data(); });
+      const exec_finalScoresMap : Record<string, any> = {};
+      finalSnap.docs.forEach(d => { exec_finalScoresMap[d.data().evaluateeId] = d.data(); });
 
-      // 3. Fetch qualitative comments (results)
-      const resultsSnap = await getDocs(collection(db, 'results'));
-      const resultsMap : Record<string, any> = {};
-      resultsSnap.docs.forEach(d => {
+      // 3. Fetch qualitative comments (exec_results)
+      const exec_resultsSnap = await getDocs(collection(db, 'exec_results'));
+      const exec_resultsMap : Record<string, any> = {};
+      exec_resultsSnap.docs.forEach(d => {
         // the document ID is the assignmentId
-        resultsMap[d.id] = d.data();
+        exec_resultsMap[d.id] = d.data();
       });
 
-      // Group assignments by evaluatee
+      // Group exec_assignments by evaluatee
       const grouped: Record<string, any> = {};
 
-      assignments.forEach((assn: any) => {
+      exec_assignments.forEach((assn: any) => {
         if (!grouped[assn.evaluateeId]) {
           grouped[assn.evaluateeId] = {
             evaluateeId: assn.evaluateeId,
             totalAssigned: 0,
             totalCompleted: 0,
             rawScoreSum: 0,
-            assignments: [],
-            finalState: finalScoresMap[assn.evaluateeId] || null
+            exec_assignments: [],
+            finalState: exec_finalScoresMap[assn.evaluateeId] || null
           };
         }
         grouped[assn.evaluateeId].totalAssigned++;
@@ -121,9 +127,9 @@ export default function FinalResults() {
           grouped[assn.evaluateeId].totalCompleted++;
           grouped[assn.evaluateeId].rawScoreSum += (assn.totalScore || 0);
           // attach qualitative comment
-          assn.comment = resultsMap[assn.id]?.comment || '';
+          assn.comment = exec_resultsMap[assn.id]?.comment || '';
         }
-        grouped[assn.evaluateeId].assignments.push(assn);
+        grouped[assn.evaluateeId].exec_assignments.push(assn);
       });
 
       setEvaluatees(Object.values(grouped));
@@ -152,7 +158,7 @@ export default function FinalResults() {
     if (!selectedEvaluatee || !selectedYear) return;
     const finalId = `${selectedYear}_${selectedEvaluatee.evaluateeId}`;
     
-    await setDoc(doc(db, 'finalScores', finalId), {
+    await setDoc(doc(db, 'exec_finalScores', finalId), {
       year: selectedYear,
       evaluateeId: selectedEvaluatee.evaluateeId,
       totalScore: parseFloat(finalScoreInput),
@@ -173,7 +179,7 @@ export default function FinalResults() {
       const isComplete = ev.totalCompleted === ev.totalAssigned;
       const rawAvg = ev.totalCompleted > 0 ? (ev.rawScoreSum / ev.totalCompleted).toFixed(2) : '-';
       
-      const commentsText = ev.assignments
+      const commentsText = ev.exec_assignments
         .filter((a: any) => a.comment)
         .map((a: any) => `[${usersMap[a.evaluatorId] || a.evaluatorId}] ${a.comment}`)
         .join('\n\n');
@@ -200,6 +206,8 @@ export default function FinalResults() {
   };
 
   const filteredEvaluatees = evaluatees.filter(ev => {
+    if (userPositions[ev.evaluateeId] !== '그룹장') return false;
+
     if (isGroupLeader) {
       const dep = user.department || user.position!.replace('장', '');
       return userDepartments[ev.evaluateeId] === dep;
@@ -212,7 +220,7 @@ export default function FinalResults() {
     <div className="space-y-6">
       <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">최종 평가 결과</h2>
+          <h2 className="text-5xl tracking-tighter">임원평가 최종 결과</h2>
           <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
         </div>
         <div className="flex gap-3">
@@ -356,7 +364,7 @@ export default function FinalResults() {
                 <div className="col-span-3 text-right">상태</div>
               </div>
               <div className="max-h-64 overflow-y-auto  text-sm bg-white">
-                {selectedEvaluatee?.assignments.map((assn: any) => (
+                {selectedEvaluatee?.exec_assignments.map((assn: any) => (
                   <div key={assn.id} className="p-3 border-b border-[#EEE] hover:bg-[#F9F9F9] transition-colors">
                     <div className="grid grid-cols-12 items-center">
                       <div className="col-span-4 font-bold">{usersMap[assn.evaluatorId] || assn.evaluatorId} {userPositions[assn.evaluatorId] ? `(${userPositions[assn.evaluatorId]})` : ''}</div>

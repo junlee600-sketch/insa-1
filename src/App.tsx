@@ -16,7 +16,14 @@ import EvaluationForm from './pages/EvaluationForm';
 import MyHistory from './pages/MyHistory';
 import ProfileSettings from './pages/ProfileSettings';
 
-function ProtectedRoute({ children, requiredRole, allowGroupLeader }: { children: React.ReactNode, requiredRole?: string[], allowGroupLeader?: boolean }) {
+// Executive Evaluation Pages
+import ExecutiveEvaluations from './pages/ExecutiveEvaluations';
+import ExecutiveEvaluationForm from './pages/ExecutiveEvaluationForm';
+import ExecutiveEvaluationItems from './pages/admin/ExecutiveEvaluationItems';
+import ExecutiveAssignments from './pages/admin/ExecutiveAssignments';
+import ExecutiveFinalResults from './pages/admin/ExecutiveFinalResults';
+
+function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPresident }: { children: React.ReactNode, requiredRole?: string[], allowGroupLeader?: boolean, allowPresident?: boolean }) {
   const { user, loading } = useAuth();
 
   if (loading) return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
@@ -25,6 +32,9 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader }: { children
   if (requiredRole) {
     let hasAccess = requiredRole.includes(user.role);
     if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) {
+      hasAccess = true;
+    }
+    if (!hasAccess && allowPresident && user.position === '사장') {
       hasAccess = true;
     }
     if (!hasAccess) return <Navigate to="/" replace />;
@@ -47,6 +57,8 @@ export default function App() {
             <Route path="profile" element={<ProfileSettings />} />
             <Route path="evaluate" element={<MyEvaluations />} />
             <Route path="evaluate/:assignmentId" element={<EvaluationForm />} />
+            <Route path="evaluate-executive" element={<ExecutiveEvaluations />} />
+            <Route path="evaluate-executive/:assignmentId" element={<ExecutiveEvaluationForm />} />
 
             {/* Admin / HR Views */}
             <Route 
@@ -66,12 +78,24 @@ export default function App() {
               element={<ProtectedRoute requiredRole={['admin', 'hr']}><EvaluationItems /></ProtectedRoute>} 
             />
             <Route 
+              path="admin/items-executive" 
+              element={<ProtectedRoute requiredRole={['admin', 'hr']}><ExecutiveEvaluationItems /></ProtectedRoute>} 
+            />
+            <Route 
               path="admin/assignments" 
               element={<ProtectedRoute requiredRole={['admin', 'hr']}><EvaluationAssignments /></ProtectedRoute>} 
             />
             <Route 
+              path="admin/assignments-executive" 
+              element={<ProtectedRoute requiredRole={['admin', 'hr']}><ExecutiveAssignments /></ProtectedRoute>} 
+            />
+            <Route 
               path="admin/results" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowGroupLeader={true}><FinalResults /></ProtectedRoute>} 
+              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowGroupLeader={true} allowPresident={true}><FinalResults /></ProtectedRoute>} 
+            />
+            <Route 
+              path="admin/results-executive" 
+              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>} 
             />
           </Route>
         </Routes>

@@ -127,6 +127,22 @@
     "finalScores/{finalScoreId}": {
       "schema": { "$ref": "#/entities/finalScore" },
       "description": "Calculated and HR-approved final score for a user's year"
+    },
+    "exec_items/{itemId}": {
+      "schema": { "$ref": "#/entities/evaluationItem" },
+      "description": "Specific questions for executive evaluation"
+    },
+    "exec_assignments/{assignmentId}": {
+      "schema": { "$ref": "#/entities/evaluationAssignment" },
+      "description": "Mapping from evaluator to evaluatee for executive evaluation"
+    },
+    "exec_results/{resultId}": {
+      "schema": { "$ref": "#/entities/evaluationResult" },
+      "description": "Submitted executive evaluation form data"
+    },
+    "exec_finalScores/{finalScoreId}": {
+      "schema": { "$ref": "#/entities/finalScore" },
+      "description": "Calculated and boss-approved final score for executive evaluation"
     }
   }
 }
