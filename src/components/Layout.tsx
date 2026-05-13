@@ -17,7 +17,7 @@ export function Layout() {
     { to: "/admin/assignments", label: "평가자 배정", roles: ['admin', 'hr'], category: "관리 기능" },
     { to: "/admin/results", label: "최종 평가 결과", roles: ['admin', 'hr', isGroupLeader ? 'user' : ''], category: "관리 기능" },
     { to: "/admin/users", label: "사용자 관리", roles: ['admin'], category: "시스템 설정" },
-    { to: "/admin/settings", label: "평가 연도 및 그룹", roles: ['admin'], category: "시스템 설정" },
+    { to: "/admin/settings", label: "평가 연도/그룹", roles: ['admin'], category: "시스템 설정" },
   ];
 
   const groupedNav = navItems.reduce((acc, item) => {
@@ -29,31 +29,37 @@ export function Layout() {
   }, {} as Record<string, typeof navItems>);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFB] text-[#1A1A1A]  flex overflow-hidden">
+    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[oklch(0.15_0_0)] text-gray-900 dark:text-gray-100 flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-[#E5E5E5] flex flex-col p-6 shrink-0 bg-[#FDFDFB]">
-        <div className="mb-10">
-          <h1 className="text-3xl tracking-tight leading-none text-[#000]">
-            한국종합 HRS<br/>
-            <span className="text-xs uppercase tracking-[0.2em] opacity-40">HR System v4.0</span>
+      <aside className="w-64 bg-white dark:bg-[oklch(0.2_0_0)] border-r border-gray-200 dark:border-gray-800 flex flex-col pt-8 pb-6 px-4 shrink-0 transition-colors">
+        <div className="mb-10 px-2">
+          <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            한국종합 HRS
           </h1>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">HR System v4.0</p>
         </div>
         
-        <nav className="flex-1 space-y-8 overflow-y-auto pr-2">
+        <nav className="flex-1 space-y-8 overflow-y-auto pr-1">
           {Object.entries(groupedNav).map(([category, items]) => {
             if (items.length === 0) return null;
             return (
-              <div key={category} className="space-y-4">
-                <p className="text-[10px] uppercase tracking-widest text-[#999]">{category}</p>
-                <ul className="space-y-3 text-sm">
+              <div key={category} className="space-y-2">
+                <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">{category}</p>
+                <ul className="space-y-0.5 text-sm">
                   {items.map((item) => {
-                    const isActive = location.pathname === item.to;
+                    const isActive = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to));
                     return (
-                      <li 
-                        key={item.to}
-                        className={`${isActive ? 'font-medium border-l-2 border-[#1A1A1A] pl-3 text-[#1A1A1A]' : 'text-[#777] hover:text-[#1A1A1A] pl-[14px]'}`}
-                      >
-                        <Link to={item.to} className="block w-full">{item.label}</Link>
+                      <li key={item.to}>
+                        <Link 
+                          to={item.to} 
+                          className={`block px-3 py-2 rounded-lg font-medium transition-colors duration-150
+                            ${isActive 
+                              ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100' 
+                              : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                            }`}
+                        >
+                          {item.label}
+                        </Link>
                       </li>
                     );
                   })}
@@ -63,26 +69,30 @@ export function Layout() {
           })}
         </nav>
 
-        <div className="pt-6 border-t border-[#EEE] mt-4">
+        <div className="pt-6 border-t border-gray-100 dark:border-gray-800 mt-4 px-2">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white text-[10px] uppercase">
+            <div className="w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-semibold uppercase">
               {user?.name?.substring(0, 2) || 'AD'}
             </div>
-            <div>
-              <p className="text-xs font-bold">{user?.name}</p>
-              <p className="text-[10px] text-[#999] capitalize">{user?.role} - {user?.department}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
+              <p className="text-xs text-gray-500 truncate capitalize">{user?.role} · {user?.department}</p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Link to="/profile" className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4">비밀번호 변경</Link>
-            <button onClick={logout} className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4">로그아웃</button>
+          <div className="flex gap-4">
+            <Link to="/profile" className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 transition-colors">
+              프로필 관리
+            </Link>
+            <button onClick={logout} className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 transition-colors">
+              로그아웃
+            </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-auto p-10">
+        <div className="flex-1 overflow-auto px-6 py-6 lg:px-10 lg:py-8">
           <Outlet />
         </div>
       </main>

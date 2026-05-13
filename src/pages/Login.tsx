@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 
 export default function Login() {
   const { login, authError, user } = useAuth();
@@ -32,62 +33,75 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FDFDFB] text-[#1A1A1A] p-4 ">
-      <div className="w-full max-w-lg border border-[#1A1A1A] bg-[#FDFDFB] p-12 shadow-2xl">
-        <div className="text-center mb-10 pb-10 border-b border-[#E5E5E5]">
-          <h1 className="text-5xl tracking-tight leading-none text-[#000] mb-4">
-            한국종합 HRS<br/>
-            <span className="text-xs uppercase tracking-[0.2em] opacity-40">HR System v4.0</span>
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7] dark:bg-[oklch(0.15_0_0)] text-gray-900 dark:text-gray-100 p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2 mb-2">
+            한국종합 HRS
           </h1>
-          <p className="text-sm text-[#777]">한국종합건축사사무소 인사평가 시스템</p>
+          <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">인사평가 시스템 v4.0</p>
         </div>
-        <form onSubmit={handleLogin} className="flex flex-col gap-6" autoComplete="off">
-          {(error || authError) && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs text-center flex flex-col gap-1">
-              {error && <span>{error}</span>}
-              {authError && (
-                <span>
-                  데이터 동기화 실패: {authError}
-                  {authError.toLowerCase().includes('offline') && (
-                    <span className="block mt-1 font-bold">네트워크 방화벽, 광고 차단기(AdBlock) 또는 브라우저의 쿠키 설정이 연결을 막고 있는지 확인해 주세요.</span>
+        
+        <Card className="border-none shadow-sm shadow-gray-200/50 dark:shadow-none p-2 sm:p-4">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-xl">로그인</CardTitle>
+            <CardDescription className="text-sm text-gray-500">
+              시스템에 접근하려면 계정 정보를 입력하세요.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="flex flex-col gap-5" autoComplete="off">
+              {(error || authError) && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl text-red-800 dark:text-red-300 text-sm flex flex-col gap-1">
+                  {error && <span>{error}</span>}
+                  {authError && (
+                    <span>
+                      데이터 동기화 실패: {authError}
+                      {authError.toLowerCase().includes('offline') && (
+                        <span className="block mt-1 font-medium">네트워크 방화벽, 광고 차단기(AdBlock) 또는 브라우저의 쿠키 설정이 연결을 막고 있는지 확인해 주세요.</span>
+                      )}
+                    </span>
                   )}
-                </span>
+                </div>
               )}
-            </div>
-          )}
-          <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 아이디 (Email)</label>
-            <input 
-              type="text" 
-              inputMode="email"
-              autoComplete="new-password"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] text-lg outline-none pb-2 transition-colors"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-[#999]">비밀번호 (Security Key)</label>
-            <input 
-              type="password" 
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] text-lg outline-none pb-2 transition-colors"
-            />
-          </div>
-          <button 
-            type="submit"
-            className="w-full py-4 mt-4 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors"
-          >
-            로그인
-          </button>
-          <p className="text-[10px] uppercase tracking-widest text-[#999] text-center mt-2">
-            인가된 계정만 접속 가능합니다.
-          </p>
-        </form>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
+                <input 
+                  type="text" 
+                  inputMode="email"
+                  autoComplete="new-password"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors text-sm"
+                  placeholder="이메일 주소를 입력하세요"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">비밀번호</label>
+                <input 
+                  type="password" 
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors text-sm"
+                  placeholder="비밀번호를 입력하세요"
+                />
+              </div>
+              <button 
+                type="submit"
+                className="w-full py-2.5 mt-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900 text-white font-medium rounded-xl transition-colors shadow-sm text-sm"
+              >
+                로그인
+              </button>
+            </form>
+          </CardContent>
+        </Card>
+        
+        <p className="text-xs text-center mt-8 text-gray-400">
+          인가된 계정만 접속 가능합니다.
+        </p>
       </div>
     </div>
   );
