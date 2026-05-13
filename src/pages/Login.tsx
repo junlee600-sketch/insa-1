@@ -37,7 +37,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2 mb-2">
-            한국종합 HRS
+            한국종합건축사사무소 HRS
           </h1>
           <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">인사평가 시스템 v4.0</p>
         </div>
