@@ -94,7 +94,8 @@ service cloud.firestore {
 
     match /finalScores/{finalScoreId} {
       allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || existing().evaluateeId == request.auth.token.email);
-      allow write: if isHr() || isGroupLeader();
+      allow create, update: if isHr() || isGroupLeader();
+      allow delete: if isHr() || isGroupLeader() || (isSignedIn() && existing().evaluateeId == request.auth.token.email);
       allow list: if isHr() || isGroupLeader() || isBoss() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
     }
 

@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 export default function MyHistory() {
   const { user } = useAuth();
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) fetchHistory();
@@ -29,9 +34,29 @@ export default function MyHistory() {
       setHistory(records);
     } catch (err: any) {
       console.error(err);
-      alert("데이터를 불러오는 중 오류가 발생했습니다: " + err.message);
+      setErrorMsg("데이터를 불러오는 중 오류가 발생했습니다: " + err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openDeleteModal = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecordToDelete(id);
+    setDeleteModalOpen(true);
+    setErrorMsg(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!recordToDelete) return;
+    try {
+      await deleteDoc(doc(db, 'finalScores', recordToDelete));
+      setHistory(history.filter(h => h.id !== recordToDelete));
+      setDeleteModalOpen(false);
+      setRecordToDelete(null);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("삭제 권한이 없거나 오류가 발생했습니다 (관리자 권한 필요).");
     }
   };
 
@@ -42,22 +67,29 @@ export default function MyHistory() {
       <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
         <div>
           <h2 className="text-5xl tracking-tighter">내 평가 이력</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">과거 평가 연도의 최종 확정 점수 기록</p>
+          <p className="mt-2 text-[#555] uppercase tracking-[0.2em] text-[15px]">과거 평가 연도의 최종 확정 점수 기록</p>
         </div>
       </header>
 
+      {errorMsg && (
+        <div className="bg-red-50 text-red-600 p-4 border border-red-200">
+          {errorMsg}
+        </div>
+      )}
+
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">총 완료된 평가 연도</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">총 완료된 평가 연도</p>
           <p className="text-2xl font-light tracking-tight">{history.length}</p>
         </div>
       </section>
 
       <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-        <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+        <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
           <div className="col-span-3">평가 연도</div>
           <div className="col-span-3 text-center">최종 상태</div>
-          <div className="col-span-6 text-right">최종 확정 점수</div>
+          <div className="col-span-4 text-right">최종 확정 점수</div>
+          <div className="col-span-2 text-right">관리</div>
         </div>
         
         <div className="flex-1 overflow-y-auto  text-sm">
@@ -70,14 +102,49 @@ export default function MyHistory() {
                 <div className="col-span-3 text-center">
                   <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[#1A1A1A] text-white">{record.status}</span>
                 </div>
-                <div className="col-span-6 text-right text-xl font-bold">
+                <div className="col-span-4 text-right text-xl font-bold">
                   {record.totalScore}
+                </div>
+                <div className="col-span-2 text-right">
+                  <button 
+                    onClick={(e) => openDeleteModal(record.id, e)}
+                    className="text-[12px] uppercase tracking-widest text-[#999] hover:text-red-600 underline underline-offset-4"
+                  >
+                    삭제
+                  </button>
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px] rounded-none border-[#1A1A1A]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-normal tracking-tight">이력 삭제</DialogTitle>
+            <DialogDescription className="text-[#555] mt-4">
+              정말 이 평가 이력을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다. (관리자 권한 필요)
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-8 flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              className="rounded-none border-[#E5E5E5] text-[#777] hover:bg-[#F5F5F5] hover:text-[#1A1A1A]"
+              onClick={() => setDeleteModalOpen(false)}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              className="rounded-none bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmDelete}
+            >
+              삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
