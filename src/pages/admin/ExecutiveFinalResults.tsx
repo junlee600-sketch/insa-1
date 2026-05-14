@@ -221,7 +221,7 @@ export default function ExecutiveFinalResults() {
       <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
         <div>
           <h2 className="text-5xl tracking-tighter">임원평가 최종 결과</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
+          <p className="mt-2 text-[#555] uppercase tracking-[0.2em] text-[15px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
         </div>
         <div className="flex gap-3">
           {selectedYear && evaluatees.length > 0 && (
@@ -259,15 +259,15 @@ export default function ExecutiveFinalResults() {
       {/* Quick Stats / Controls */}
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">진행 연도</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">진행 연도</p>
           <p className="text-2xl font-light tracking-tight">{selectedYear || '선택 안됨'}</p>
         </div>
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대상자 수 (필터됨)</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대상자 수 (필터됨)</p>
           <p className="text-2xl font-light tracking-tight">{filteredEvaluatees.length}명</p>
         </div>
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">전체 평가율 (필터됨)</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">전체 평가율 (필터됨)</p>
           <p className="text-2xl font-light tracking-tight">
              {filteredEvaluatees.length > 0 
                ? `${Math.round((filteredEvaluatees.reduce((sum, e) => sum + e.totalCompleted, 0) / filteredEvaluatees.reduce((sum, e) => sum + e.totalAssigned, 0)) * 100)}%` 
@@ -275,14 +275,14 @@ export default function ExecutiveFinalResults() {
           </p>
         </div>
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">현재 상태</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">현재 상태</p>
           <p className="text-2xl font-light tracking-tight text-emerald-700 underline underline-offset-4">평가 진행/검토 중</p>
         </div>
       </section>
 
       {selectedYear && (
         <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-2">직급</div>
             <div className="col-span-2">소속부서</div>

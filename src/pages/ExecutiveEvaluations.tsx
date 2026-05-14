@@ -87,28 +87,28 @@ export default function ExecutiveEvaluations() {
       <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
         <div>
           <h2 className="text-5xl tracking-tighter">내 임원평가 대기열</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">본인에게 배정된 임원평가를 진행합니다.</p>
+          <p className="mt-2 text-[#555] uppercase tracking-[0.2em] text-[15px]">본인에게 배정된 임원평가를 진행합니다.</p>
         </div>
       </header>
 
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">현재 진행 연도</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">현재 진행 연도</p>
           <p className="text-2xl font-light tracking-tight">{activeYear || '설정 안됨'}</p>
         </div>
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">총 할당 대상 그룹</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">총 할당 대상 그룹</p>
           <p className="text-2xl font-light tracking-tight">{exec_assignments.length}명</p>
         </div>
         <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대기 중</p>
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대기 중</p>
           <p className="text-2xl font-light tracking-tight">{exec_assignments.filter(a => a.status !== 'completed').length}건</p>
         </div>
       </section>
 
       {activeYear && (
         <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-2">직급</div>
             <div className="col-span-2">소속부서</div>
