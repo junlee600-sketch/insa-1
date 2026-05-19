@@ -24,6 +24,7 @@ export default function ExecutiveFinalResults() {
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [userPositions, setUserPositions] = useState<Record<string, string>>({});
   const [groupsMap, setGroupsMap] = useState<Record<string, string>>({});
+  const [itemsMap, setItemsMap] = useState<Record<string, string>>({});
   
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
@@ -55,10 +56,11 @@ export default function ExecutiveFinalResults() {
 
   const fetchBaseData = async () => {
     try {
-      const [yearsSnap, usersSnap, groupsSnap] = await Promise.all([
+      const [yearsSnap, usersSnap, groupsSnap, itemsSnap] = await Promise.all([
         getDocs(collection(db, 'years')),
         getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'groups'))
+        getDocs(collection(db, 'groups')),
+        getDocs(collection(db, 'exec_items'))
       ]);
       setYears(yearsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       
@@ -82,6 +84,10 @@ export default function ExecutiveFinalResults() {
       const gmap: Record<string, string> = {};
       groupsSnap.docs.forEach(d => { gmap[d.id] = d.data().name; });
       setGroupsMap(gmap);
+
+      const imap: Record<string, string> = {};
+      itemsSnap.docs.forEach(d => { imap[d.id] = d.data().question; });
+      setItemsMap(imap);
     } catch (e) {
       console.error("fetchBaseData error", e);
     }
@@ -128,6 +134,7 @@ export default function ExecutiveFinalResults() {
           grouped[assn.evaluateeId].rawScoreSum += (assn.totalScore || 0);
           // attach qualitative comment
           assn.comment = exec_resultsMap[assn.id]?.comment || '';
+          assn.scores = exec_resultsMap[assn.id]?.scores || {};
         }
         grouped[assn.evaluateeId].exec_assignments.push(assn);
       });
@@ -374,10 +381,25 @@ export default function ExecutiveFinalResults() {
                          <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assn.status === 'completed' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#777]'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
                       </div>
                     </div>
-                    {assn.comment && (
+                    {(assn.comment || (assn.scores && Object.keys(assn.scores).length > 0)) && (
                       <div className="mt-4 p-4 bg-[#F5F5F5] text-xs text-[#555] rounded whitespace-pre-wrap leading-relaxed">
-                        <span className="font-bold text-[#333] block mb-2 text-[10px] uppercase tracking-widest">정성 평가 의견</span>
-                        {assn.comment}
+                        {assn.scores && Object.keys(assn.scores).length > 0 && (
+                          <div className="mb-4 space-y-2">
+                             <span className="font-bold text-[#333] block mb-2 text-[10px] uppercase tracking-widest border-b border-[#E5E5E5] pb-1">점수 평가 내역</span>
+                             {Object.entries(assn.scores).map(([itemId, score], idx) => (
+                               <div key={itemId} className="flex justify-between border-b border-[#E5E5E5] pb-1 last:border-0 last:pb-0 gap-4">
+                                 <span className="text-[#333] flex-1 truncate">{itemsMap[itemId] || `문항 ${idx + 1}`}</span>
+                                 <span className="font-bold text-[#1A1A1A] whitespace-nowrap">{String(score)}점</span>
+                               </div>
+                             ))}
+                          </div>
+                        )}
+                        {assn.comment && (
+                          <div>
+                            <span className="font-bold text-[#333] block mb-2 text-[10px] uppercase tracking-widest border-b border-[#E5E5E5] pb-1">정성 평가 의견</span>
+                            {assn.comment}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
