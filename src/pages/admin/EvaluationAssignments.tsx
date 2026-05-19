@@ -223,34 +223,48 @@ export default function EvaluationAssignments() {
 
           <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col mt-8">
             <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
-              <div className="col-span-3">평가자</div>
-              <div className="col-span-3">대상자</div>
-              <div className="col-span-3">평가 대상 그룹</div>
-              <div className="col-span-2">진행 상태</div>
+              <div className="col-span-1">평가자</div>
+              <div className="col-span-1">직급</div>
+              <div className="col-span-2">부서</div>
+              <div className="col-span-1">대상자</div>
+              <div className="col-span-1">직급</div>
+              <div className="col-span-2">부서</div>
+              <div className="col-span-2">대상 그룹</div>
+              <div className="col-span-1">상태</div>
               <div className="col-span-1 text-right">작업</div>
             </div>
             <div className="flex-1 overflow-y-auto  text-sm">
               {assignments.length === 0 ? (
                 <div className="p-8 text-center text-[#777] font-sans">배정된 내역이 없습니다.</div>
               ) : (
-                assignments.map((assignment) => (
-                  <div key={assignment.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors">
-                    <div className="col-span-3 font-bold">{getUserName(assignment.evaluatorId)}</div>
-                    <div className="col-span-3 font-bold">{getUserName(assignment.evaluateeId)}</div>
-                    <div className="col-span-3 font-sans text-xs uppercase text-[#777]">{getGroupName(assignment.groupId)}</div>
-                    <div className="col-span-2">
-                      <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assignment.status === 'completed' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#1A1A1A]'}`}>{assignment.status === 'completed' ? '완료' : '대기'}</span>
+                assignments.map((assignment) => {
+                  const evorUser = users.find(u => (u.email || '').toLowerCase() === (assignment.evaluatorId || '').toLowerCase()) || { name: assignment.evaluatorId, position: '', department: '' };
+                  const eveeUser = users.find(u => (u.email || '').toLowerCase() === (assignment.evaluateeId || '').toLowerCase()) || { name: assignment.evaluateeId, position: '', department: '' };
+                  return (
+                    <div key={assignment.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors gap-2">
+                      <div className="col-span-1 font-bold truncate pr-1" title={evorUser.name}>{evorUser.name}</div>
+                      <div className="col-span-1 text-xs text-[#555] truncate pr-1" title={evorUser.position}>{evorUser.position || '-'}</div>
+                      <div className="col-span-2 text-xs uppercase text-[#777] truncate pr-1" title={evorUser.department}>{evorUser.department || '-'}</div>
+
+                      <div className="col-span-1 font-bold truncate pr-1" title={eveeUser.name}>{eveeUser.name}</div>
+                      <div className="col-span-1 text-xs text-[#555] truncate pr-1" title={eveeUser.position}>{eveeUser.position || '-'}</div>
+                      <div className="col-span-2 text-xs uppercase text-[#777] truncate pr-1" title={eveeUser.department}>{eveeUser.department || '-'}</div>
+
+                      <div className="col-span-2 font-sans text-xs uppercase text-[#777] truncate pr-1" title={getGroupName(assignment.groupId)}>{getGroupName(assignment.groupId)}</div>
+                      <div className="col-span-1">
+                        <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assignment.status === 'completed' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#1A1A1A]'}`}>{assignment.status === 'completed' ? '완료' : '대기'}</span>
+                      </div>
+                      <div className="col-span-1 text-right">
+                        <button 
+                          className="text-[10px] uppercase tracking-widest text-[#777] hover:text-red-700 underline underline-offset-4"
+                          onClick={() => { setConfirmData({ id: assignment.id, evor: getUserName(assignment.evaluatorId), evee: getUserName(assignment.evaluateeId) }); setConfirmOpen(true); }}
+                        >
+                          배정 취소
+                        </button>
+                      </div>
                     </div>
-                    <div className="col-span-1 text-right">
-                      <button 
-                        className="text-[10px] uppercase tracking-widest text-[#777] hover:text-red-700 underline underline-offset-4"
-                        onClick={() => { setConfirmData({ id: assignment.id, evor: getUserName(assignment.evaluatorId), evee: getUserName(assignment.evaluateeId) }); setConfirmOpen(true); }}
-                      >
-                        배정 취소
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

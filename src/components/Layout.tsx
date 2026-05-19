@@ -18,7 +18,7 @@ export function Layout() {
     { to: "/admin/items", label: "평가 항목 관리", roles: ['admin', 'hr'], category: "관리 기능" },
     { to: "/admin/items-executive", label: "임원평가 항목 관리", roles: ['admin', 'hr'], category: "관리 기능" },
     { to: "/admin/assignments", label: "평가자 배정", roles: ['admin', 'hr'], category: "관리 기능" },
-    { to: "/admin/assignments-executive", label: "임원평가 대상자 배정", roles: ['admin', 'hr'], category: "관리 기능" },
+    { to: "/admin/assignments-executive", label: "임원평가 배정", roles: ['admin', 'hr'], category: "관리 기능" },
     { to: "/admin/results", label: "최종 평가 결과", roles: ['admin', 'hr', isGroupLeader || user?.position === '사장' ? 'user' : ''], category: "관리 기능" },
     { to: "/admin/results-executive", label: "임원평가 최종 결과", roles: ['admin', 'hr', user?.position === '사장' ? 'user' : ''], category: "관리 기능" },
     { to: "/admin/users", label: "사용자 관리", roles: ['admin'], category: "시스템 설정" },
