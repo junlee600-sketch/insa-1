@@ -5,12 +5,16 @@ import { updatePassword } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 export default function ProfileSettings() {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({ name: '', department: '', position: '', password: '', newPassword: '' });
+  const [formData, setFormData] = useState({ name: '', department: '', position: '', password: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalMsg, setErrorModalMsg] = useState('');
 
   useEffect(() => {
     if (user?.email) {
@@ -32,21 +36,33 @@ export default function ProfileSettings() {
     try {
       // Update password if fields are filled
       if (formData.newPassword) {
+        if (formData.newPassword !== formData.confirmPassword) {
+          setErrorModalMsg('비밀번호가 일치하지 않습니다.');
+          setErrorModalOpen(true);
+          setLoading(false);
+          return;
+        }
         if (formData.newPassword.length < 6) {
-          throw new Error('새 비밀번호는 최소 6자 이상이어야 합니다.');
+          setErrorModalMsg('새 비밀번호는 최소 6자 이상이어야 합니다.');
+          setErrorModalOpen(true);
+          setLoading(false);
+          return;
         }
         try {
           await updatePassword(auth.currentUser, formData.newPassword);
-          setFormData(prev => ({ ...prev, password: '', newPassword: '' }));
+          setFormData(prev => ({ ...prev, password: '', newPassword: '', confirmPassword: '' }));
         } catch (pwErr: any) {
           console.error(pwErr);
+          let errMsg = '비밀번호 변경에 실패했습니다: ' + pwErr.message;
           if (pwErr.code === 'auth/requires-recent-login') {
-            throw new Error('비밀번호를 변경하려면 최신 로그인 정보가 필요합니다. 다시 로그인 후 시도해 주세요.');
+            errMsg = '비밀번호를 변경하려면 최신 로그인 정보가 필요합니다. 다시 로그인 후 시도해 주세요.';
+          } else if (pwErr.code === 'auth/weak-password') {
+            errMsg = '비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.';
           }
-          if (pwErr.code === 'auth/weak-password') {
-            throw new Error('비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.');
-          }
-          throw new Error('비밀번호 변경에 실패했습니다: ' + pwErr.message);
+          setErrorModalMsg(errMsg);
+          setErrorModalOpen(true);
+          setLoading(false);
+          return;
         }
       }
 
@@ -126,6 +142,16 @@ export default function ProfileSettings() {
                   className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] px-0"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">새 비밀번호 확인</Label>
+                <Input 
+                  type="password"
+                  value={formData.confirmPassword} 
+                  onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
+                  placeholder="비밀번호 다시 입력"
+                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] px-0"
+                />
+              </div>
             </div>
           </div>
 
@@ -140,6 +166,20 @@ export default function ProfileSettings() {
           </div>
         </form>
       </div>
+
+      <Dialog open={errorModalOpen} onOpenChange={setErrorModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-lg">오류</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 text-sm text-gray-700">
+            {errorModalMsg}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setErrorModalOpen(false)} className="bg-[#1A1A1A] hover:bg-[#333] text-white">확인</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
