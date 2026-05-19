@@ -176,28 +176,40 @@ export default function FinalResults() {
     if (!selectedYear || filteredEvaluatees.length === 0) return alert('다운로드할 결과 데이터가 없습니다.');
 
     const yearData = years.find(y => y.id === selectedYear);
+    
+    // Find max number of evaluators to create dynamic columns
+    const maxEvaluators = Math.max(...filteredEvaluatees.map(ev => ev.assignments.length), 0);
+
     const exportData = filteredEvaluatees.map(ev => {
       const isComplete = ev.totalCompleted === ev.totalAssigned;
       const rawAvg = ev.totalCompleted > 0 ? (ev.rawScoreSum / ev.totalCompleted).toFixed(2) : '-';
       
-      const commentsText = ev.assignments
-        .filter((a: any) => a.comment)
-        .map((a: any) => `[${usersMap[a.evaluatorId] || a.evaluatorId}] ${a.comment}`)
-        .join('\n\n');
-
-      return {
+      const row: any = {
         '연도': yearData?.year || selectedYear,
         '피평가자(대상자) 이름': usersMap[ev.evaluateeId] || ev.evaluateeId,
         '직급': userPositions[ev.evaluateeId] || '-',
-        '이메일': ev.evaluateeId,
+        '부서': userDepartments[ev.evaluateeId] || '-',
         '할당 건수': ev.totalAssigned,
         '완료 건수': ev.totalCompleted,
         '진행률': isComplete ? '완료' : '진행중',
         '원점수 평균': rawAvg,
         '최종 확정 점수': ev.finalState ? ev.finalState.totalScore : '미확정',
         '상태': ev.finalState ? '확정됨' : '대기 중',
-        '정성 평가 의견': commentsText
       };
+
+      // Add dynamic columns for each evaluator
+      ev.assignments.forEach((assn: any, idx: number) => {
+        const i = idx + 1;
+        const evorName = usersMap[assn.evaluatorId] || assn.evaluatorId;
+        row[`평가자${i} 이름`] = evorName;
+        row[`평가자${i} 직급`] = userPositions[assn.evaluatorId] || '-';
+        row[`평가자${i} 대상 그룹`] = groupsMap[assn.groupId] || '-';
+        row[`평가자${i} 상태`] = assn.status === 'completed' ? '완료' : '대기';
+        row[`평가자${i} 점수`] = assn.status === 'completed' ? assn.totalScore : '-';
+        row[`평가자${i} 정성 평가 의견`] = assn.comment || '';
+      });
+
+      return row;
     });
 
     const ws = XLSX.utils.json_to_sheet(exportData);
