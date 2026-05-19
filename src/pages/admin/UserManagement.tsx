@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { db, secondaryAuth, auth } from '../../lib/firebase';
 import { Button } from '../../components/ui/button';
@@ -45,10 +45,13 @@ export default function UserManagement() {
     }
     
     try {
+      let emailForPwd = formData.email;
+      if (!emailForPwd.includes('@')) emailForPwd += '@han-guk.co.kr';
+
       const response = await fetch('/api/admin/update-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, newPassword: adminForcePassword })
+        body: JSON.stringify({ email: emailForPwd, newPassword: adminForcePassword })
       });
       
       const data = await response.json();
@@ -71,6 +74,11 @@ export default function UserManagement() {
     try {
       let isAuthInUse = false;
 
+      let finalEmail = formData.email.trim().toLowerCase();
+      if (!finalEmail.includes('@')) {
+        finalEmail += '@han-guk.co.kr';
+      }
+
       if (!isEditing) {
         if (!formData.password || formData.password.length < 6) {
           setErrorMsg('비밀번호는 최소 6자 이상이어야 합니다.');
@@ -78,7 +86,7 @@ export default function UserManagement() {
         }
         // Force create auth account without signing current admin out
         try {
-          await createUserWithEmailAndPassword(secondaryAuth, formData.email.toLowerCase(), formData.password);
+          await createUserWithEmailAndPassword(secondaryAuth, finalEmail, formData.password);
           await signOut(secondaryAuth);
         } catch (authErr: any) {
           if (authErr.code === 'auth/email-already-in-use') {
@@ -89,9 +97,9 @@ export default function UserManagement() {
         }
       }
 
-      const userRef = doc(db, 'users', formData.email.toLowerCase());
+      const userRef = doc(db, 'users', finalEmail);
       await setDoc(userRef, {
-        email: formData.email.toLowerCase(),
+        email: finalEmail,
         name: formData.name,
         department: formData.department,
         position: formData.position,
@@ -104,12 +112,12 @@ export default function UserManagement() {
       fetchUsers();
 
       if (isAuthInUse) {
-        window.alert(`[${formData.email}] 계정은 이미 인증 시스템 서버에 가입되어 있어 성공적으로 데이터베이스 목록에 복구 및 연동되었습니다.\n\n단, 비밀번호는 새로 입력하신 비밀번호로 변경되지 않았으며 기존 인증 시스템 내 비밀번호가 그대로 유지됩니다. (변경이 필요한 경우 기존 사용자가 '비밀번호 재설정'을 해야 합니다)`);
+        window.alert(`[${finalEmail}] 계정은 이미 인증 시스템 서버에 가입되어 있어 성공적으로 데이터베이스 목록에 복구 및 연동되었습니다.\n\n단, 비밀번호는 새로 입력하신 비밀번호로 변경되지 않았으며 기존 인증 시스템 내 비밀번호가 그대로 유지됩니다. (변경이 필요한 경우 기존 사용자가 '비밀번호 재설정'을 해야 합니다)`);
       }
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-email') {
-        setErrorMsg('유효하지 않은 이메일 형식입니다.');
+        setErrorMsg('아이디에 사용할 수 없는 문자가 포함되어 있습니다.');
       } else if (err.code === 'auth/weak-password') {
         setErrorMsg('비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.');
       } else {
@@ -119,8 +127,65 @@ export default function UserManagement() {
   };
 
   const handleDelete = async (email: string) => {
-    await deleteDoc(doc(db, 'users', email));
-    fetchUsers();
+    try {
+      let emailForPwd = email;
+      if (!emailForPwd.includes('@')) emailForPwd += '@han-guk.co.kr';
+
+      // 1. Try to delete the Firebase Auth user via backend (ignores error if service account missing)
+      try {
+        await fetch('/api/admin/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailForPwd, authOnly: true })
+        });
+      } catch (err) {
+        console.warn('Backend auth deletion failed, but continuing with DB deletion', err);
+      }
+
+      // 2. Delete from users collection
+      await deleteDoc(doc(db, 'users', emailForPwd));
+
+      // 3. Delete related assignments and their results (evaluator)
+      const deleteRelatedAsEvaluator = async (colName: string, resColName: string) => {
+        const q = query(collection(db, colName), where('evaluatorId', '==', emailForPwd));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+          await deleteDoc(doc(db, resColName, d.id));
+          await deleteDoc(doc(db, colName, d.id));
+        }
+      };
+      await deleteRelatedAsEvaluator('assignments', 'results');
+      await deleteRelatedAsEvaluator('exec_assignments', 'exec_results');
+
+      // 4. Delete related assignments and their results (evaluatee)
+      const deleteRelatedAsEvaluatee = async (colName: string, resColName: string) => {
+        const q = query(collection(db, colName), where('evaluateeId', '==', emailForPwd));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+          await deleteDoc(doc(db, resColName, d.id));
+          await deleteDoc(doc(db, colName, d.id));
+        }
+      };
+      await deleteRelatedAsEvaluatee('assignments', 'results');
+      await deleteRelatedAsEvaluatee('exec_assignments', 'exec_results');
+
+      // 5. Delete final scores
+      const deleteFinalScores = async (colName: string) => {
+        const q = query(collection(db, colName), where('evaluateeId', '==', emailForPwd));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+          await deleteDoc(doc(db, colName, d.id));
+        }
+      };
+      await deleteFinalScores('finalScores');
+      await deleteFinalScores('exec_finalScores');
+
+      alert('사용자 및 모든 관련 데이터가 성공적으로 삭제되었습니다.');
+      fetchUsers();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || '삭제에 실패했습니다.');
+    }
   };
 
   const handleDeleteConfirm = () => {
@@ -130,7 +195,7 @@ export default function UserManagement() {
   };
 
   const openEdit = (user: any) => {
-    setFormData({ email: user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role });
+    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role });
     setAdminForcePassword('');
     setIsEditing(true);
     setErrorMsg('');
@@ -149,7 +214,7 @@ export default function UserManagement() {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([{
-      '로그인 아이디 (이메일)': 'user@company.com',
+      '로그인 ID': 'user01',
       '초기 비밀번호': 'Abcd123!',
       '사용자 이름': '홍길동',
       '소속 부서': '인사팀',
@@ -179,16 +244,20 @@ export default function UserManagement() {
         setLoading(true);
 
         for (const row of data) {
-          const email = String(row['로그인 아이디 (이메일)'] || '').trim().toLowerCase();
+          let email = String(row['로그인 ID'] || row['로그인 아이디 (이메일)'] || '').trim().toLowerCase();
           const password = String(row['초기 비밀번호'] || '').trim();
           const name = String(row['사용자 이름'] || '').trim();
           const department = String(row['소속 부서'] || '').trim();
           const position = String(row['직급'] || '').trim();
           let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
           
-          if (!email || !name || !email.includes('@')) {
+          if (!email || !name) {
             failCount++;
             continue;
+          }
+
+          if (!email.includes('@')) {
+            email += '@han-guk.co.kr';
           }
           
           if (role !== 'admin' && role !== 'user') {
@@ -279,7 +348,7 @@ export default function UserManagement() {
               {errorMsg && <div className="text-red-700 text-xs p-2 bg-red-50 border border-red-200">{errorMsg}</div>}
               {successMsg && <div className="text-green-700 text-xs p-2 bg-green-50 border border-green-200">{successMsg}</div>}
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 아이디 (이메일)</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 ID</Label>
                 <Input 
                   value={formData.email} 
                   onChange={e => setFormData({...formData, email: e.target.value})} 
@@ -392,7 +461,7 @@ export default function UserManagement() {
 
       <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col mt-8">
         <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
-          <div className="col-span-3">로그인 아이디 (이메일)</div>
+          <div className="col-span-3">로그인 ID</div>
           <div className="col-span-2">사용자 이름</div>
           <div className="col-span-2">직급</div>
           <div className="col-span-2">소속 부서</div>
@@ -402,7 +471,7 @@ export default function UserManagement() {
         <div className="flex-1 overflow-y-auto  text-sm">
           {users.map((user) => (
             <div key={user.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors">
-              <div className="col-span-3 text-[#777] truncate pr-2">{user.email}</div>
+              <div className="col-span-3 text-[#777] truncate pr-2">{user.email?.includes('@') ? user.email.split('@')[0] : user.email}</div>
               <div className="col-span-2 font-bold text-lg truncate pr-2">{user.name}</div>
               <div className="col-span-2 font-sans text-xs text-[#555] truncate pr-2">{user.position || '-'}</div>
               <div className="col-span-2 font-sans text-xs uppercase text-[#777] truncate pr-2">{user.department}</div>
@@ -423,7 +492,7 @@ export default function UserManagement() {
         open={confirmOpen} 
         onOpenChange={setConfirmOpen}
         title="사용자 삭제"
-        description={`정말로 사용자 '${confirmData?.name}' 님을 삭제하시겠습니까? 프로필 접근 권한이 모두 제거되며 되돌릴 수 없습니다.`}
+        description={`정말로 사용자 '${confirmData?.name}' 님을 삭제하시겠습니까? 관련 평가 및 확정 점수 데이터를 포함한 모든 데이터가 완전히 삭제되며 복구할 수 없습니다.`}
         onConfirm={handleDeleteConfirm}
       />
     </div>

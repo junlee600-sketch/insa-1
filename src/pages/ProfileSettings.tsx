@@ -76,9 +76,9 @@ export default function ProfileSettings() {
         )}
         <form onSubmit={handleSave} className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 아이디 (이메일)</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-[#999]">ID</Label>
             <Input 
-              value={user?.email || ''} 
+              value={user?.email?.includes('@') ? user.email.split('@')[0] : user?.email || ''} 
               disabled
               className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
             />

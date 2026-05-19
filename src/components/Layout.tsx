@@ -8,11 +8,12 @@ export function Layout() {
   const location = useLocation();
 
   const isGroupLeader = user?.position?.endsWith('그룹장');
+  const isExecutive = ['본부장', '그룹장', '사장'].includes(user?.position || '');
 
   const navItems = [
     { to: "/", label: "대시보드", roles: ['admin', 'hr', 'user'], category: "기본" },
     { to: "/evaluate", label: "내 평가 진행", roles: ['admin', 'hr', 'user'], category: "기본" },
-    { to: "/evaluate-executive", label: "임원평가 진행", roles: ['admin', 'hr', 'user'], category: "기본" },
+    { to: "/evaluate-executive", label: "임원평가 진행", roles: ['admin', 'hr', isExecutive ? 'user' : ''], category: "기본" },
     { to: "/history", label: "내 평가 이력", roles: ['admin', 'hr'], category: "기본" },
     { to: "/admin/items", label: "평가 항목 관리", roles: ['admin', 'hr'], category: "관리 기능" },
     { to: "/admin/items-executive", label: "임원평가 항목 관리", roles: ['admin', 'hr'], category: "관리 기능" },

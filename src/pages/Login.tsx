@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 export default function Login() {
   const { login, authError, user } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -20,12 +20,16 @@ export default function Login() {
     e.preventDefault();
     try {
       setError('');
-      await login(email.trim().toLowerCase(), password);
+      let finalEmail = loginId.trim().toLowerCase();
+      if (!finalEmail.includes('@')) {
+        finalEmail += '@han-guk.co.kr';
+      }
+      await login(finalEmail, password);
     } catch (err: any) {
       if (err.code === 'auth/network-request-failed') {
         setError('네트워크 요청에 실패했습니다. 타사 쿠키 차단 해제, 광고 차단 확장 프로그램(AdBlock 등) 비활성화 또는 인터넷 연결을 확인해 주세요.');
       } else if (err.code === 'auth/invalid-credential') {
-        setError('이메일 또는 비밀번호가 일치하지 않습니다. 다시 확인해 주세요.');
+        setError('ID 또는 비밀번호가 일치하지 않습니다. 다시 확인해 주세요.');
       } else {
         setError(err.message || '인증에 실패했습니다. 자격 증명을 확인해 주세요.');
       }
@@ -65,16 +69,15 @@ export default function Login() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">로그인 ID</label>
                 <input 
                   type="text" 
-                  inputMode="email"
-                  autoComplete="new-password"
+                  autoComplete="username"
                   required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  value={loginId}
+                  onChange={e => setLoginId(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors text-sm"
-                  placeholder="이메일 주소를 입력하세요"
+                  placeholder="아이디를 입력하세요"
                 />
               </div>
               <div className="space-y-1.5">

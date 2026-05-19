@@ -19,8 +19,8 @@ export default function Dashboard() {
           <CardContent className="space-y-6">
             <div className="space-y-4 text-sm">
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-500">이메일</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">{user?.email}</span>
+                <span className="text-gray-500">ID</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{user?.email?.includes('@') ? user.email.split('@')[0] : user?.email}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
                 <span className="text-gray-500">부서</span>

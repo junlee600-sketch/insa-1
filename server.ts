@@ -64,6 +64,75 @@ async function startServer() {
       }
     });
 
+    // API Route: Delete user completely
+    app.post("/api/admin/delete-user", async (req, res) => {
+      try {
+        const { email } = req.body;
+        if (!email) {
+           return res.status(400).json({ error: "Missing email" });
+        }
+        
+        const pbAdmin = getFirebaseAdmin();
+        const db = pbAdmin.firestore();
+        
+        // 1. Delete from Auth
+        try {
+          const userRecord = await pbAdmin.auth().getUserByEmail(email);
+          await pbAdmin.auth().deleteUser(userRecord.uid);
+          console.log(`Deleted user from Auth: ${email}`);
+        } catch (authErr: any) {
+          console.log(`Auth user not found or error: ${authErr.message}`);
+        }
+        
+        if (req.body.authOnly) {
+           return res.json({ success: true, message: "User deleted from Auth" });
+        }
+        
+        // 2. Delete from users collection
+        await db.collection("users").doc(email).delete();
+        
+        // 3. Delete related assignments and their results (evaluator)
+        const deleteRelatedAsEvaluator = async (collectionName: string, resultsCollection: string) => {
+          const snap = await db.collection(collectionName).where("evaluatorId", "==", email).get();
+          for (const doc of snap.docs) {
+            await db.collection(resultsCollection).doc(doc.id).delete();
+            await doc.ref.delete();
+          }
+        };
+        await deleteRelatedAsEvaluator("assignments", "results");
+        await deleteRelatedAsEvaluator("exec_assignments", "exec_results");
+
+        // 4. Delete related assignments and their results (evaluatee)
+        const deleteRelatedAsEvaluatee = async (collectionName: string, resultsCollection: string) => {
+          const snap = await db.collection(collectionName).where("evaluateeId", "==", email).get();
+          for (const doc of snap.docs) {
+            await db.collection(resultsCollection).doc(doc.id).delete();
+            await doc.ref.delete();
+          }
+        };
+        await deleteRelatedAsEvaluatee("assignments", "results");
+        await deleteRelatedAsEvaluatee("exec_assignments", "exec_results");
+
+        // 5. Delete final scores
+        const deleteFinalScores = async (collectionName: string) => {
+          const snap = await db.collection(collectionName).where("evaluateeId", "==", email).get();
+          for (const doc of snap.docs) {
+            await doc.ref.delete();
+          }
+        };
+        await deleteFinalScores("finalScores");
+        await deleteFinalScores("exec_finalScores");
+        
+        res.json({ success: true, message: "사용자 및 모든 관련 데이터가 성공적으로 삭제되었습니다." });
+      } catch (error: any) {
+        console.error("Error deleting user:", error);
+        if (error.message.includes("FIREBASE_SERVICE_ACCOUNT_KEY") || error.message.includes("설정이 필요합니다")) {
+           return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
+        }
+        res.status(500).json({ error: error.message || "Failed to delete user" });
+      }
+    });
+
     // Vite middleware for development
     if (process.env.NODE_ENV !== "production") {
       const { createServer: createViteServer } = await import("vite");

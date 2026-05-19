@@ -362,7 +362,7 @@ export default function FinalResults() {
                 <div className="col-span-2 text-center">점수</div>
                 <div className="col-span-3 text-right">상태</div>
               </div>
-              <div className="max-h-64 overflow-y-auto  text-sm bg-white">
+              <div className="max-h-[320px] overflow-y-auto text-sm bg-white">
                 {selectedEvaluatee?.assignments.map((assn: any) => (
                   <div key={assn.id} className="p-3 border-b border-[#EEE] hover:bg-[#F9F9F9] transition-colors">
                     <div className="grid grid-cols-12 items-center">

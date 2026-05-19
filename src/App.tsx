@@ -23,7 +23,7 @@ import ExecutiveEvaluationItems from './pages/admin/ExecutiveEvaluationItems';
 import ExecutiveAssignments from './pages/admin/ExecutiveAssignments';
 import ExecutiveFinalResults from './pages/admin/ExecutiveFinalResults';
 
-function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPresident }: { children: React.ReactNode, requiredRole?: string[], allowGroupLeader?: boolean, allowPresident?: boolean }) {
+function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPresident, allowExecutives }: { children: React.ReactNode, requiredRole?: string[], allowGroupLeader?: boolean, allowPresident?: boolean, allowExecutives?: boolean }) {
   const { user, loading } = useAuth();
 
   if (loading) return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
@@ -35,6 +35,9 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
       hasAccess = true;
     }
     if (!hasAccess && allowPresident && user.position === '사장') {
+      hasAccess = true;
+    }
+    if (!hasAccess && allowExecutives && ['본부장', '그룹장', '사장'].includes(user.position || '')) {
       hasAccess = true;
     }
     if (!hasAccess) return <Navigate to="/" replace />;
@@ -57,8 +60,14 @@ export default function App() {
             <Route path="profile" element={<ProfileSettings />} />
             <Route path="evaluate" element={<MyEvaluations />} />
             <Route path="evaluate/:assignmentId" element={<EvaluationForm />} />
-            <Route path="evaluate-executive" element={<ExecutiveEvaluations />} />
-            <Route path="evaluate-executive/:assignmentId" element={<ExecutiveEvaluationForm />} />
+            <Route 
+              path="evaluate-executive" 
+              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluations /></ProtectedRoute>} 
+            />
+            <Route 
+              path="evaluate-executive/:assignmentId" 
+              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluationForm /></ProtectedRoute>} 
+            />
 
             {/* Admin / HR Views */}
             <Route 
