@@ -7,7 +7,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-8">
       <header className="mb-8">
-        <h2 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">환영합니다, {user?.name}님</h2>
+        <h2 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">환영합니다, {user?.name} {user?.position}님</h2>
         <p className="mt-2 text-sm text-gray-500">한국종합건축사사무소 인사평가 시스템 개요</p>
       </header>
       
@@ -25,6 +25,10 @@ export default function Dashboard() {
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
                 <span className="text-gray-500">부서</span>
                 <span className="font-medium text-gray-900 dark:text-gray-100">{user?.department}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
+                <span className="text-gray-500">직급</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{user?.position}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-gray-500">권한</span>
