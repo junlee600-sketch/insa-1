@@ -138,9 +138,10 @@ export default function EvaluationAssignments() {
     const matchedUser = users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
     if (matchedUser) {
       const positionStr = matchedUser.position ? ` ${matchedUser.position}` : '';
-      return `${matchedUser.name}${positionStr}`;
+      const name = matchedUser.name?.includes('@') ? matchedUser.name.split('@')[0] : matchedUser.name;
+      return `${name}${positionStr}`;
     }
-    return email;
+    return email.includes('@') ? email.split('@')[0] : email;
   };
 
   const getGroupName = (id: string) => groups.find(g => g.id === id)?.name || id;
@@ -190,18 +191,32 @@ export default function EvaluationAssignments() {
             <div className="space-y-2 col-span-1">
               <Label className="text-[10px] uppercase tracking-widest text-[#999]">평가자</Label>
               <Select value={evaluatorId} onValueChange={setEvaluatorId}>
-                <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="사용자 선택" /></SelectTrigger>
+                <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
+                  <SelectValue placeholder="사용자 선택">
+                    {evaluatorId ? getUserName(evaluatorId).trim() : "사용자 선택"}
+                  </SelectValue>
+                </SelectTrigger>
                 <SelectContent>
-                  {users.map(u => <SelectItem key={u.email} value={u.email}>{u.name || u.email} {u.position ? `(${u.position})` : ''}</SelectItem>)}
+                  {users.map(u => {
+                    const displayName = u.name?.includes('@') ? u.name.split('@')[0] : (u.name || (u.email ? u.email.split('@')[0] : ''));
+                    return <SelectItem key={u.email} value={u.email}>{displayName}</SelectItem>;
+                  })}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2 col-span-1">
               <Label className="text-[10px] uppercase tracking-widest text-[#999]">피평가자 (대상자)</Label>
               <Select value={evaluateeId} onValueChange={setEvaluateeId}>
-                <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="사용자 선택" /></SelectTrigger>
+                <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
+                  <SelectValue placeholder="사용자 선택">
+                    {evaluateeId ? getUserName(evaluateeId).trim() : "사용자 선택"}
+                  </SelectValue>
+                </SelectTrigger>
                 <SelectContent>
-                  {users.map(u => <SelectItem key={u.email} value={u.email}>{u.name || u.email} {u.position ? `(${u.position})` : ''}</SelectItem>)}
+                  {users.map(u => {
+                    const displayName = u.name?.includes('@') ? u.name.split('@')[0] : (u.name || (u.email ? u.email.split('@')[0] : ''));
+                    return <SelectItem key={u.email} value={u.email}>{displayName}</SelectItem>;
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -240,13 +255,17 @@ export default function EvaluationAssignments() {
                 assignments.map((assignment) => {
                   const evorUser = users.find(u => (u.email || '').toLowerCase() === (assignment.evaluatorId || '').toLowerCase()) || { name: assignment.evaluatorId, position: '', department: '' };
                   const eveeUser = users.find(u => (u.email || '').toLowerCase() === (assignment.evaluateeId || '').toLowerCase()) || { name: assignment.evaluateeId, position: '', department: '' };
+                  
+                  const evorName = evorUser.name?.includes('@') ? evorUser.name.split('@')[0] : (evorUser.name || '알 수 없음');
+                  const eveeName = eveeUser.name?.includes('@') ? eveeUser.name.split('@')[0] : (eveeUser.name || '알 수 없음');
+                  
                   return (
                     <div key={assignment.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors gap-2">
-                      <div className="col-span-1 font-bold truncate pr-1" title={evorUser.name}>{evorUser.name}</div>
+                      <div className="col-span-1 font-bold truncate pr-1" title={evorName}>{evorName}</div>
                       <div className="col-span-1 text-xs text-[#555] truncate pr-1" title={evorUser.position}>{evorUser.position || '-'}</div>
                       <div className="col-span-2 text-xs uppercase text-[#777] truncate pr-1" title={evorUser.department}>{evorUser.department || '-'}</div>
 
-                      <div className="col-span-1 font-bold truncate pr-1" title={eveeUser.name}>{eveeUser.name}</div>
+                      <div className="col-span-1 font-bold truncate pr-1" title={eveeName}>{eveeName}</div>
                       <div className="col-span-1 text-xs text-[#555] truncate pr-1" title={eveeUser.position}>{eveeUser.position || '-'}</div>
                       <div className="col-span-2 text-xs uppercase text-[#777] truncate pr-1" title={eveeUser.department}>{eveeUser.department || '-'}</div>
 
