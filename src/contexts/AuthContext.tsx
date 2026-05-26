@@ -28,59 +28,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState('');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribe: () => void;
+
+    const initializeAuth = async () => {
       try {
-        setAuthError('');
-        if (firebaseUser) {
-          const email = firebaseUser.email;
-          if (!email) {
-            setUser(null);
-            setLoading(false);
-            return;
-          }
-          
-          const userDocRef = doc(db, 'users', email.toLowerCase());
-          const userDoc = await getDoc(userDocRef);
-
-          let appUser: AppUser;
-
-          if (userDoc.exists()) {
-            appUser = { uid: firebaseUser.uid, ...userDoc.data() } as AppUser;
-            // Ensure uid is stored/updated
-            if (userDoc.data().uid !== firebaseUser.uid) {
-              await setDoc(userDocRef, { uid: firebaseUser.uid }, { merge: true });
-            }
-          } else {
-            appUser = {
-              uid: firebaseUser.uid,
-              email: email.toLowerCase(),
-              name: firebaseUser.displayName || '시스템 관리자',
-              department: '관리부',
-              role: 'admin',
-            };
-            await setDoc(userDocRef, {
-              uid: appUser.uid,
-              email: appUser.email,
-              name: appUser.name,
-              department: appUser.department,
-              role: appUser.role,
-              createdAt: serverTimestamp()
-            });
-          }
-          setUser(appUser);
-        } else {
-          setUser(null);
-        }
-      } catch (err: any) {
-        console.error("Auth sync error:", err);
-        setAuthError(err.message || '데이터 동기화 오류');
-        setUser(null);
-      } finally {
-        setLoading(false);
+        // Set persistence to session so that closing the tab logs the user out
+        await setPersistence(auth, browserSessionPersistence);
+      } catch (error) {
+        console.error("Failed to set persistence:", error);
       }
-    });
 
-    return () => unsubscribe();
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        try {
+          setAuthError('');
+          if (firebaseUser) {
+            const email = firebaseUser.email;
+            if (!email) {
+              setUser(null);
+              setLoading(false);
+              return;
+            }
+            
+            const userDocRef = doc(db, 'users', email.toLowerCase());
+            const userDoc = await getDoc(userDocRef);
+
+            let appUser: AppUser;
+
+            if (userDoc.exists()) {
+              appUser = { uid: firebaseUser.uid, ...userDoc.data() } as AppUser;
+              // Ensure uid is stored/updated
+              if (userDoc.data().uid !== firebaseUser.uid) {
+                await setDoc(userDocRef, { uid: firebaseUser.uid }, { merge: true });
+              }
+            } else {
+              appUser = {
+                uid: firebaseUser.uid,
+                email: email.toLowerCase(),
+                name: firebaseUser.displayName || '시스템 관리자',
+                department: '관리부',
+                role: 'admin',
+              };
+              await setDoc(userDocRef, {
+                uid: appUser.uid,
+                email: appUser.email,
+                name: appUser.name,
+                department: appUser.department,
+                role: appUser.role,
+                createdAt: serverTimestamp()
+              });
+            }
+            setUser(appUser);
+          } else {
+            setUser(null);
+          }
+        } catch (err: any) {
+          console.error("Auth sync error:", err);
+          setAuthError(err.message || '데이터 동기화 오류');
+          setUser(null);
+        } finally {
+          setLoading(false);
+        }
+      });
+    };
+
+    initializeAuth();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   useEffect(() => {
