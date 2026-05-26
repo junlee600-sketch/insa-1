@@ -9,12 +9,21 @@ export default function Login() {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [rememberId, setRememberId] = useState(false);
 
   useEffect(() => {
     if (user) {
       navigate('/');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    const savedId = localStorage.getItem('savedLoginId');
+    if (savedId) {
+      setLoginId(savedId);
+      setRememberId(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +33,13 @@ export default function Login() {
       if (!finalEmail.includes('@')) {
         finalEmail += '@han-guk.co.kr';
       }
+      
+      if (rememberId) {
+        localStorage.setItem('savedLoginId', loginId);
+      } else {
+        localStorage.removeItem('savedLoginId');
+      }
+
       await login(finalEmail, password);
     } catch (err: any) {
       if (err.code === 'auth/network-request-failed') {
@@ -92,6 +108,18 @@ export default function Login() {
                   placeholder="비밀번호를 입력하세요"
                 />
               </div>
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="checkbox"
+                  id="rememberId"
+                  checked={rememberId}
+                  onChange={(e) => setRememberId(e.target.checked)}
+                  className="rounded border-gray-300 text-gray-900 focus:ring-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:checked:bg-gray-100"
+                />
+                <label htmlFor="rememberId" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+                  아이디 저장
+                </label>
+              </div>
               <button 
                 type="submit"
                 className="w-full py-2.5 mt-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900 text-white font-medium rounded-xl transition-colors shadow-sm text-sm"
@@ -102,8 +130,19 @@ export default function Login() {
           </CardContent>
         </Card>
         
-        <p className="text-xs text-center mt-8 text-gray-400">
-          인가된 계정만 접속 가능합니다.
+        <p className="text-xs text-center mt-8 text-gray-400 flex flex-col gap-2 items-center justify-center">
+          <span>인가된 계정만 접속 가능합니다.</span>
+          {window.self !== window.top && (
+            <a 
+              href={window.location.href} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              새 창으로 접속하기
+            </a>
+          )}
         </p>
       </div>
     </div>

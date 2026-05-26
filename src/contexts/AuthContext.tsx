@@ -83,6 +83,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    let inactivityTimer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      if (user) {
+        inactivityTimer = setTimeout(() => {
+          logout();
+        }, 600 * 1000); // 600 seconds
+      }
+    };
+
+    if (user) {
+      resetTimer();
+      // Listen for user activity
+      window.addEventListener('mousemove', resetTimer);
+      window.addEventListener('keydown', resetTimer);
+      window.addEventListener('scroll', resetTimer);
+      window.addEventListener('click', resetTimer);
+    }
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+      window.removeEventListener('scroll', resetTimer);
+      window.removeEventListener('click', resetTimer);
+    };
+  }, [user]);
+
   const login = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email.toLowerCase(), password);
   };
