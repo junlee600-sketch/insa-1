@@ -130,19 +130,8 @@ export default function Login() {
           </CardContent>
         </Card>
         
-        <p className="text-xs text-center mt-8 text-gray-400 flex flex-col gap-2 items-center justify-center">
-          <span>인가된 계정만 접속 가능합니다.</span>
-          {window.self !== window.top && (
-            <a 
-              href={window.location.href} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-              새 창으로 접속하기
-            </a>
-          )}
+        <p className="text-xs text-center mt-8 text-gray-400">
+          인가된 계정만 접속 가능합니다.
         </p>
       </div>
     </div>
