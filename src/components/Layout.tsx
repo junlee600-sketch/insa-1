@@ -41,7 +41,7 @@ export function Layout() {
           <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center gap-2">
             한국종합 HRS
           </h1>
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">HR System v4.0</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">HR System v1.0</p>
         </div>
         
         <nav className="flex-1 space-y-8 overflow-y-auto pr-1">
