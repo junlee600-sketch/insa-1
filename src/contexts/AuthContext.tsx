@@ -109,17 +109,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user && currentUser && currentUser.metadata.lastSignInTime) {
         const loginTime = new Date(currentUser.metadata.lastSignInTime).getTime();
         const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
+        const timeoutDuration = 3 * 60 * 60 * 1000; // 3 hours
         const timeElapsed = now - loginTime;
 
-        if (timeElapsed >= oneHour) {
+        if (timeElapsed >= timeoutDuration) {
           logout();
-          alert('보안을 위해 로그인 후 1시간이 경과되어 자동 로그아웃 되었습니다.');
+          alert('보안을 위해 로그인 후 3시간이 경과되어 자동 로그아웃 되었습니다.');
         } else {
           absoluteTimer = setTimeout(() => {
             logout();
-            alert('보안을 위해 로그인 후 1시간이 경과되어 자동 로그아웃 되었습니다.');
-          }, oneHour - timeElapsed);
+            alert('보안을 위해 로그인 후 3시간이 경과되어 자동 로그아웃 되었습니다.');
+          }, timeoutDuration - timeElapsed);
         }
       }
     };
@@ -131,9 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = auth.currentUser;
         if (currentUser && currentUser.metadata.lastSignInTime) {
           const loginTime = new Date(currentUser.metadata.lastSignInTime).getTime();
-          if (Date.now() - loginTime >= 60 * 60 * 1000) {
+          if (Date.now() - loginTime >= 3 * 60 * 60 * 1000) {
             logout();
-            alert('보안을 위해 로그인 후 1시간이 경과되어 자동 로그아웃 되었습니다.');
+            alert('보안을 위해 로그인 후 3시간이 경과되어 자동 로그아웃 되었습니다.');
           }
         }
       }, 60000);
