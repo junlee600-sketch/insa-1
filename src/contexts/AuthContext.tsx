@@ -101,32 +101,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let inactivityTimer: NodeJS.Timeout;
+    let absoluteTimer: NodeJS.Timeout;
+    let interval: NodeJS.Timeout;
 
-    const resetTimer = () => {
-      clearTimeout(inactivityTimer);
-      if (user) {
-        inactivityTimer = setTimeout(() => {
+    const checkTimeout = () => {
+      const currentUser = auth.currentUser;
+      if (user && currentUser && currentUser.metadata.lastSignInTime) {
+        const loginTime = new Date(currentUser.metadata.lastSignInTime).getTime();
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+        const timeElapsed = now - loginTime;
+
+        if (timeElapsed >= oneHour) {
           logout();
-        }, 600 * 1000); // 600 seconds
+          alert('보안을 위해 로그인 후 1시간이 경과되어 자동 로그아웃 되었습니다.');
+        } else {
+          absoluteTimer = setTimeout(() => {
+            logout();
+            alert('보안을 위해 로그인 후 1시간이 경과되어 자동 로그아웃 되었습니다.');
+          }, oneHour - timeElapsed);
+        }
       }
     };
 
+    checkTimeout();
+
     if (user) {
-      resetTimer();
-      // Listen for user activity
-      window.addEventListener('mousemove', resetTimer);
-      window.addEventListener('keydown', resetTimer);
-      window.addEventListener('scroll', resetTimer);
-      window.addEventListener('click', resetTimer);
+      interval = setInterval(() => {
+        const currentUser = auth.currentUser;
+        if (currentUser && currentUser.metadata.lastSignInTime) {
+          const loginTime = new Date(currentUser.metadata.lastSignInTime).getTime();
+          if (Date.now() - loginTime >= 60 * 60 * 1000) {
+            logout();
+            alert('보안을 위해 로그인 후 1시간이 경과되어 자동 로그아웃 되었습니다.');
+          }
+        }
+      }, 60000);
     }
 
     return () => {
-      clearTimeout(inactivityTimer);
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('scroll', resetTimer);
-      window.removeEventListener('click', resetTimer);
+      clearTimeout(absoluteTimer);
+      clearInterval(interval);
     };
   }, [user]);
 
