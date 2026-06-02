@@ -45,19 +45,7 @@ export default function EvaluationSettings() {
   const fetchGroups = async () => {
     const snap = await getDocs(collection(db, 'groups'));
     const fetchedGroups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // If empty, init default 4 groups
-    if (fetchedGroups.length === 0) {
-      const defaultGroups = [
-        { id: 'self', name: 'Self Evaluation' },
-        { id: 'peer', name: 'Peer Evaluation' },
-        { id: 'manager', name: 'Manager Evaluation' },
-        { id: 'subordinate', name: 'Subordinate Evaluation' },
-      ];
-      await Promise.all(defaultGroups.map(g => setDoc(doc(db, 'groups', g.id), { name: g.name })));
-      setGroups(defaultGroups);
-    } else {
-      setGroups(fetchedGroups);
-    }
+    setGroups(fetchedGroups);
   };
 
   const saveSettings = async () => {

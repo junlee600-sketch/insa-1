@@ -40,8 +40,7 @@ service cloud.firestore {
         )
       );
 
-      allow create: if isAdmin() ||
-        (request.auth.token.email == userId && userId == 'admin@360.com');
+      allow create: if isAdmin();
 
       allow delete: if isAdmin();
 

@@ -114,10 +114,11 @@ export default function EvaluationItems() {
       {selectedYear && selectedGroup && (
         <div className="space-y-6">
           <div className="flex gap-4">
-            <Input 
-              placeholder="새로운 평가 문항을 입력하세요..." 
-              value={newItemQuestion} 
-              onChange={e => setNewItemQuestion(e.target.value)} 
+            <Input
+              placeholder="새로운 평가 문항을 입력하세요..."
+              maxLength={500}
+              value={newItemQuestion}
+              onChange={e => setNewItemQuestion(e.target.value)}
               className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A]  text-sm"
             />
             <Button onClick={addItem} className="uppercase tracking-widest text-xs px-6 py-2 rounded-none bg-[#1A1A1A] text-white">항목 추가</Button>
