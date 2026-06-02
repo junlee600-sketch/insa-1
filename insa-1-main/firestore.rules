@@ -88,6 +88,7 @@ service cloud.firestore {
         isHr() || isGroupLeader() ||
         get(/databases/$(database)/documents/assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
+      allow delete: if isAdmin();
     }
 
     match /finalScores/{finalScoreId} {
@@ -123,6 +124,7 @@ service cloud.firestore {
         isHr() || isBoss() ||
         get(/databases/$(database)/documents/exec_assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
+      allow delete: if isAdmin();
     }
 
     match /exec_finalScores/{finalScoreId} {

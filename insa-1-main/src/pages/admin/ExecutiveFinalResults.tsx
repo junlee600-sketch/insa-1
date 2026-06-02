@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, query, where, documentId, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, query, where, documentId, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -56,30 +56,12 @@ export default function ExecutiveFinalResults() {
 
   const fetchBaseData = async () => {
     try {
-      const [yearsSnap, usersSnap, groupsSnap, itemsSnap] = await Promise.all([
+      const [yearsSnap, groupsSnap, itemsSnap] = await Promise.all([
         getDocs(collection(db, 'years')),
-        getDocs(collection(db, 'users')),
         getDocs(collection(db, 'groups')),
         getDocs(collection(db, 'exec_items'))
       ]);
       setYears(yearsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      const umap: Record<string, string> = {};
-      const dmap: Record<string, string> = {};
-      const pmap: Record<string, string> = {};
-      const deptSet = new Set<string>();
-      
-      usersSnap.docs.forEach(d => { 
-        const data = d.data();
-        umap[data.email] = data.name; 
-        dmap[data.email] = data.department || '';
-        pmap[data.email] = data.position || '';
-        if (data.department) deptSet.add(data.department);
-      });
-      setUsersMap(umap);
-      setUserDepartments(dmap);
-      setUserPositions(pmap);
-      setDepartments(Array.from(deptSet).sort());
 
       const gmap: Record<string, string> = {};
       groupsSnap.docs.forEach(d => { gmap[d.id] = d.data().name; });
@@ -115,6 +97,31 @@ export default function ExecutiveFinalResults() {
         const rSnap = await getDocs(rq);
         rSnap.docs.forEach(d => { exec_resultsMap[d.id] = d.data(); });
       }
+
+      // 4. Fetch user info for all referenced users individually (avoids list permission requirement)
+      const allUserIds = new Set<string>();
+      exec_assignments.forEach((assn: any) => {
+        allUserIds.add(assn.evaluateeId);
+        allUserIds.add(assn.evaluatorId);
+      });
+      const umap: Record<string, string> = {};
+      const dmap: Record<string, string> = {};
+      const pmap: Record<string, string> = {};
+      const deptSet = new Set<string>();
+      await Promise.all([...allUserIds].map(async (id: string) => {
+        const userDoc = await getDoc(doc(db, 'users', id));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          umap[data.email] = data.name;
+          dmap[data.email] = data.department || '';
+          pmap[data.email] = data.position || '';
+          if (data.department) deptSet.add(data.department);
+        }
+      }));
+      setUsersMap(umap);
+      setUserDepartments(dmap);
+      setUserPositions(pmap);
+      setDepartments(Array.from(deptSet).sort());
 
       // Group exec_assignments by evaluatee
       const grouped: Record<string, any> = {};
