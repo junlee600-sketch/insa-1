@@ -73,7 +73,9 @@ service cloud.firestore {
       allow create, delete: if isHr() && isValidId(assignmentId);
       allow update: if isHr() || isGroupLeader() || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email
-        && incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+        && existing().status != 'completed'
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
+        && incoming().totalScore is number && incoming().totalScore >= 0
       );
       allow list: if isHr() || isGroupLeader() || isBoss() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }
@@ -106,7 +108,9 @@ service cloud.firestore {
       allow create, delete: if (isHr() || isBoss()) && isValidId(assignmentId);
       allow update: if isHr() || isBoss() || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email
-        && incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+        && existing().status != 'completed'
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
+        && incoming().totalScore is number && incoming().totalScore >= 0
       );
       allow list: if isHr() || isBoss() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }

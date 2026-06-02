@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, query, where, documentId, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -106,13 +106,15 @@ export default function ExecutiveFinalResults() {
       const exec_finalScoresMap : Record<string, any> = {};
       finalSnap.docs.forEach(d => { exec_finalScoresMap[d.data().evaluateeId] = d.data(); });
 
-      // 3. Fetch qualitative comments (exec_results)
-      const exec_resultsSnap = await getDocs(collection(db, 'exec_results'));
-      const exec_resultsMap : Record<string, any> = {};
-      exec_resultsSnap.docs.forEach(d => {
-        // the document ID is the assignmentId
-        exec_resultsMap[d.id] = d.data();
-      });
+      // 3. Fetch exec_results only for this year's assignment IDs (batched, max 30 per query)
+      const exec_assignmentIds = exec_assignments.map((a: any) => a.id);
+      const exec_resultsMap: Record<string, any> = {};
+      for (let i = 0; i < exec_assignmentIds.length; i += 30) {
+        const batch = exec_assignmentIds.slice(i, i + 30);
+        const rq = query(collection(db, 'exec_results'), where(documentId(), 'in', batch));
+        const rSnap = await getDocs(rq);
+        rSnap.docs.forEach(d => { exec_resultsMap[d.id] = d.data(); });
+      }
 
       // Group exec_assignments by evaluatee
       const grouped: Record<string, any> = {};
@@ -163,12 +165,19 @@ export default function ExecutiveFinalResults() {
 
   const confirmScore = async () => {
     if (!selectedEvaluatee || !selectedYear) return;
+
+    const score = parseFloat(finalScoreInput);
+    if (!isFinite(score) || score < 0) {
+      alert('유효한 점수를 입력하세요 (0 이상의 숫자).');
+      return;
+    }
+
     const finalId = `${selectedYear}_${selectedEvaluatee.evaluateeId}`;
-    
+
     await setDoc(doc(db, 'exec_finalScores', finalId), {
       year: selectedYear,
       evaluateeId: selectedEvaluatee.evaluateeId,
-      totalScore: parseFloat(finalScoreInput),
+      totalScore: score,
       status: 'confirmed',
       confirmedAt: serverTimestamp()
     });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, getDoc, getDocs, setDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, runTransaction, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -105,27 +105,17 @@ export default function ExecutiveEvaluationForm() {
     if (!assignmentId) return;
 
     try {
-      // Calculate total score
       const totalScore = Object.values(scores).reduce((a, b) => Number(a) + Number(b), 0);
+      const resultRef = doc(db, 'exec_results', assignmentId);
+      const assignmentRef = doc(db, 'exec_assignments', assignmentId);
 
-      // Save result mapping strictly 1:1 with assignment ID
-      await setDoc(doc(db, 'exec_results', assignmentId), {
-        assignmentId,
-        scores,
-        comment,
-        submittedAt: serverTimestamp()
+      await runTransaction(db, async (tx) => {
+        tx.set(resultRef, { assignmentId, scores, comment, submittedAt: serverTimestamp() });
+        tx.set(assignmentRef, { status: 'completed', totalScore }, { merge: true });
       });
 
-      // Update assignment status
-      await setDoc(doc(db, 'exec_assignments', assignmentId), {
-        status: 'completed',
-        totalScore // raw total based on current scale
-      }, { merge: true });
-
       showAlert('평가가 성공적으로 제출되었습니다!');
-      setTimeout(() => {
-        navigate('/evaluate-executive');
-      }, 1500);
+      setTimeout(() => { navigate('/evaluate-executive'); }, 1500);
     } catch (error: any) {
       console.error("Submission error:", error);
       showAlert(`평가 제출 중 오류가 발생했습니다.\n${error.message}`);
@@ -182,9 +172,10 @@ export default function ExecutiveEvaluationForm() {
 
           <div className="space-y-4 pt-10">
             <p className="text-[10px] uppercase tracking-widest text-[#999]">정성 평가 의견 (선택사항)</p>
-            <textarea 
+            <textarea
               placeholder="평가 대상자에 대한 추가적인 의견이나 맥락을 작성해주세요..."
               rows={5}
+              maxLength={2000}
               value={comment}
               onChange={e => setComment(e.target.value)}
               disabled={isCompleted}

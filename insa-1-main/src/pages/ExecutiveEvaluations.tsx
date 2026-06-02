@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, documentId } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
@@ -53,16 +53,20 @@ export default function ExecutiveEvaluations() {
       const filtered = allAssignments.filter(a => a.year === yearToQuery);
       setAssignments(filtered);
 
-      // Fetch related users & groups for mapping names
-      const usersSnap = await getDocs(collection(db, 'users'));
+      // Fetch only the users referenced in assignments (individual reads, not list query)
       const umap: Record<string, string> = {};
       const pmap: Record<string, string> = {};
       const dmap: Record<string, string> = {};
-      usersSnap.docs.forEach(d => { 
-        umap[d.data().email] = d.data().name; 
-        pmap[d.data().email] = d.data().position || '';
-        dmap[d.data().email] = d.data().department || '';
-      });
+      const uniqueIds = [...new Set(filtered.map(a => a.evaluateeId))];
+      await Promise.all(uniqueIds.map(async (id: string) => {
+        const userDoc = await getDoc(doc(db, 'users', id));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          umap[data.email] = data.name;
+          pmap[data.email] = data.position || '';
+          dmap[data.email] = data.department || '';
+        }
+      }));
       setUsersMap(umap);
       setUserPositions(pmap);
       setUserDepartments(dmap);

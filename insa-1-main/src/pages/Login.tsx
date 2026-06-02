@@ -18,7 +18,7 @@ export default function Login() {
   }, [user, navigate]);
 
   useEffect(() => {
-    const savedId = localStorage.getItem('savedLoginId');
+    const savedId = sessionStorage.getItem('savedLoginId');
     if (savedId) {
       setLoginId(savedId);
       setRememberId(true);
@@ -35,9 +35,9 @@ export default function Login() {
       }
       
       if (rememberId) {
-        localStorage.setItem('savedLoginId', loginId);
+        sessionStorage.setItem('savedLoginId', loginId);
       } else {
-        localStorage.removeItem('savedLoginId');
+        sessionStorage.removeItem('savedLoginId');
       }
 
       await login(finalEmail, password);
@@ -100,7 +100,7 @@ export default function Login() {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">비밀번호</label>
                 <input 
                   type="password" 
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
