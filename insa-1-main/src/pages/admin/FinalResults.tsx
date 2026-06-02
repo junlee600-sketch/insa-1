@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, query, where, documentId, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Button } from '../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -100,13 +100,15 @@ export default function FinalResults() {
       const finalScoresMap : Record<string, any> = {};
       finalSnap.docs.forEach(d => { finalScoresMap[d.data().evaluateeId] = d.data(); });
 
-      // 3. Fetch qualitative comments (results)
-      const resultsSnap = await getDocs(collection(db, 'results'));
-      const resultsMap : Record<string, any> = {};
-      resultsSnap.docs.forEach(d => {
-        // the document ID is the assignmentId
-        resultsMap[d.id] = d.data();
-      });
+      // 3. Fetch results only for this year's assignment IDs (batched, max 30 per query)
+      const assignmentIds = assignments.map((a: any) => a.id);
+      const resultsMap: Record<string, any> = {};
+      for (let i = 0; i < assignmentIds.length; i += 30) {
+        const batch = assignmentIds.slice(i, i + 30);
+        const rq = query(collection(db, 'results'), where(documentId(), 'in', batch));
+        const rSnap = await getDocs(rq);
+        rSnap.docs.forEach(d => { resultsMap[d.id] = d.data(); });
+      }
 
       // Group assignments by evaluatee
       const grouped: Record<string, any> = {};
@@ -157,12 +159,19 @@ export default function FinalResults() {
 
   const confirmScore = async () => {
     if (!selectedEvaluatee || !selectedYear) return;
+
+    const score = parseFloat(finalScoreInput);
+    if (!isFinite(score) || score < 0) {
+      alert('유효한 점수를 입력하세요 (0 이상의 숫자).');
+      return;
+    }
+
     const finalId = `${selectedYear}_${selectedEvaluatee.evaluateeId}`;
-    
+
     await setDoc(doc(db, 'finalScores', finalId), {
       year: selectedYear,
       evaluateeId: selectedEvaluatee.evaluateeId,
-      totalScore: parseFloat(finalScoreInput),
+      totalScore: score,
       status: 'confirmed',
       confirmedAt: serverTimestamp()
     });
