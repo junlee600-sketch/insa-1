@@ -21,7 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { readExcelRows, downloadExcelFile } from '../../lib/excel';
+import { readExcelRows, downloadExcelFile, validateExcelFile } from '../../lib/excel';
+import { logger } from '../../lib/logger';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
@@ -52,8 +53,8 @@ export default function UserManagement() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-    if (!adminForcePassword || adminForcePassword.length < 6) {
-      setErrorMsg("최소 6자 이상의 새 비밀번호를 입력해주세요.");
+    if (!adminForcePassword || adminForcePassword.length < 8 || !/[A-Za-z]/.test(adminForcePassword) || !/[0-9]/.test(adminForcePassword)) {
+      setErrorMsg("비밀번호는 최소 8자 이상이며 영문자와 숫자를 포함해야 합니다.");
       return;
     }
     
@@ -71,8 +72,8 @@ export default function UserManagement() {
       setSuccessMsg(`[${formData.email}] 계정의 비밀번호가 성공적으로 즉시 변경되었습니다.`);
       setAdminForcePassword('');
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg('비밀번호 강제 변경 실패: ' + err.message);
+      logger.error(err);
+      setErrorMsg('비밀번호 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -89,8 +90,8 @@ export default function UserManagement() {
       }
 
       if (!isEditing) {
-        if (!formData.password || formData.password.length < 6) {
-          setErrorMsg('비밀번호는 최소 6자 이상이어야 합니다.');
+        if (!formData.password || formData.password.length < 8 || !/[A-Za-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
+          setErrorMsg('비밀번호는 최소 8자 이상이며 영문자와 숫자를 포함해야 합니다.');
           return;
         }
         // Force create auth account without signing current admin out
@@ -124,13 +125,13 @@ export default function UserManagement() {
         window.alert(`[${finalEmail}] 계정은 이미 인증 시스템 서버에 가입되어 있어 성공적으로 데이터베이스 목록에 복구 및 연동되었습니다.\n\n단, 비밀번호는 새로 입력하신 비밀번호로 변경되지 않았으며 기존 인증 시스템 내 비밀번호가 그대로 유지됩니다. (변경이 필요한 경우 기존 사용자가 '비밀번호 재설정'을 해야 합니다)`);
       }
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       if (err.code === 'auth/invalid-email') {
         setErrorMsg('아이디에 사용할 수 없는 문자가 포함되어 있습니다.');
       } else if (err.code === 'auth/weak-password') {
         setErrorMsg('비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.');
       } else {
-        setErrorMsg(err.message || '저장에 실패했습니다.');
+        setErrorMsg('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
     }
   };
@@ -144,7 +145,7 @@ export default function UserManagement() {
       try {
         await adminFetch('/api/admin/delete-user', { email: emailForPwd, authOnly: true });
       } catch (err) {
-        console.warn('Backend auth deletion failed, but continuing with DB deletion', err);
+        logger.warn('Backend auth deletion failed, but continuing with DB deletion', err);
       }
 
       // 2. Delete from users collection
@@ -188,8 +189,8 @@ export default function UserManagement() {
       alert('사용자 및 모든 관련 데이터가 성공적으로 삭제되었습니다.');
       fetchUsers();
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || '삭제에 실패했습니다.');
+      logger.error(err);
+      alert('삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -232,6 +233,9 @@ export default function UserManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const validationError = validateExcelFile(file);
+    if (validationError) { alert(validationError); e.target.value = ''; return; }
+
     try {
       const data = await readExcelRows(file);
       let successCount = 0;
@@ -263,7 +267,7 @@ export default function UserManagement() {
 
         try {
           if (!existingUser) {
-            if (!password || password.length < 6) {
+            if (!password || password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
               failCount++;
               continue;
             }
@@ -291,7 +295,7 @@ export default function UserManagement() {
 
           successCount++;
         } catch (err) {
-          console.error(err);
+          logger.error(err);
           failCount++;
         }
       }
@@ -299,7 +303,7 @@ export default function UserManagement() {
       fetchUsers();
       alert(`일괄 처리가 완료되었습니다.\n성공: ${successCount}건\n실패: ${failCount}건`);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       alert('파일 처리 중 오류가 발생했습니다.');
       setLoading(false);
     }

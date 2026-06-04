@@ -47,7 +47,7 @@ export default function Login() {
       } else if (err.code === 'auth/invalid-credential') {
         setError('ID 또는 비밀번호가 일치하지 않습니다. 다시 확인해 주세요.');
       } else {
-        setError(err.message || '인증에 실패했습니다. 자격 증명을 확인해 주세요.');
+        setError('인증에 실패했습니다. 자격 증명을 확인해 주세요.');
       }
     }
   };

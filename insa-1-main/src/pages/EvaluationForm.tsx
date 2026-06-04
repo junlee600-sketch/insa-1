@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, doc, getDoc, getDocs, runTransaction, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { logger } from '../lib/logger';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
@@ -80,7 +81,7 @@ export default function EvaluationForm() {
       }
 
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       alert('Failed to load evaluation data.');
     } finally {
       setLoading(false);
@@ -117,8 +118,8 @@ export default function EvaluationForm() {
       showAlert('평가가 성공적으로 제출되었습니다!');
       setTimeout(() => { navigate('/evaluate'); }, 1500);
     } catch (error: any) {
-      console.error("Submission error:", error);
-      showAlert(`평가 제출 중 오류가 발생했습니다.\n${error.message}`);
+      logger.error("Submission error:", error);
+      showAlert('평가 제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 

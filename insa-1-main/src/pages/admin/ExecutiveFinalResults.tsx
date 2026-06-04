@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { useAuth } from '../../contexts/AuthContext';
 import { downloadExcelFile } from '../../lib/excel';
+import { logger } from '../../lib/logger';
 
 export default function ExecutiveFinalResults() {
   const { user } = useAuth();
@@ -71,7 +72,7 @@ export default function ExecutiveFinalResults() {
       itemsSnap.docs.forEach(d => { imap[d.id] = d.data().question; });
       setItemsMap(imap);
     } catch (e) {
-      console.error("fetchBaseData error", e);
+      logger.error("fetchBaseData error", e);
     }
   };
 
@@ -150,7 +151,7 @@ export default function ExecutiveFinalResults() {
 
       setEvaluatees(Object.values(grouped));
     } catch (e: any) {
-      console.error("fetchResults error", e);
+      logger.error("fetchResults error", e);
       alert("데이터를 불러오지 못했습니다. 권한이 부족하거나 오류가 발생했습니다: " + e.message);
     }
   };

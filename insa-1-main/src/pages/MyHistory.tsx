@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { logger } from '../lib/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
@@ -8,6 +9,7 @@ import { Button } from '../components/ui/button';
 
 export default function MyHistory() {
   const { user } = useAuth();
+  const canDelete = user?.role === 'admin' || user?.role === 'hr';
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -33,8 +35,8 @@ export default function MyHistory() {
       records.sort((a, b) => b.year.localeCompare(a.year));
       setHistory(records);
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg("데이터를 불러오는 중 오류가 발생했습니다: " + err.message);
+      logger.error(err);
+      setErrorMsg("데이터를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해 주세요.");
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,7 @@ export default function MyHistory() {
       setDeleteModalOpen(false);
       setRecordToDelete(null);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setErrorMsg("삭제 권한이 없거나 오류가 발생했습니다 (관리자 권한 필요).");
     }
   };
@@ -106,12 +108,14 @@ export default function MyHistory() {
                   {record.totalScore}
                 </div>
                 <div className="col-span-2 text-right">
-                  <button 
-                    onClick={(e) => openDeleteModal(record.id, e)}
-                    className="text-[12px] uppercase tracking-widest text-[#999] hover:text-red-600 underline underline-offset-4"
-                  >
-                    삭제
-                  </button>
+                  {canDelete && (
+                    <button
+                      onClick={(e) => openDeleteModal(record.id, e)}
+                      className="text-[12px] uppercase tracking-widest text-[#999] hover:text-red-600 underline underline-offset-4"
+                    >
+                      삭제
+                    </button>
+                  )}
                 </div>
               </div>
             ))

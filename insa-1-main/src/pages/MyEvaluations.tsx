@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, getDoc, query, where, documentId } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { logger } from '../lib/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
@@ -77,8 +78,8 @@ export default function MyEvaluations() {
       setGroupsMap(gmap);
 
     } catch (err: any) {
-      console.error("Fetch Error:", err);
-      alert("데이터를 불러오는 중 오류가 발생했습니다: " + err.message);
+      logger.error("Fetch Error:", err);
+      alert("데이터를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해 주세요.");
     } finally {
       setLoading(false);
     }

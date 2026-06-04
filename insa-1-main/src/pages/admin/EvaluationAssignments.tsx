@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Label } from '../../components/ui/label';
 import { v4 as uuidv4 } from 'uuid';
-import { readExcelRows, downloadExcelFile } from '../../lib/excel';
+import { readExcelRows, downloadExcelFile, validateExcelFile } from '../../lib/excel';
+import { logger } from '../../lib/logger';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 
 export default function EvaluationAssignments() {
@@ -82,6 +83,9 @@ export default function EvaluationAssignments() {
     const file = e.target.files?.[0];
     if (!file || !selectedYear) return alert('연도를 먼저 선택한 후 파일을 업로드해 주세요.');
 
+    const validationError = validateExcelFile(file);
+    if (validationError) { alert(validationError); e.target.value = ''; return; }
+
     try {
       const data = await readExcelRows(file);
       for (const row of data) {
@@ -107,7 +111,7 @@ export default function EvaluationAssignments() {
       fetchAssignments();
       alert('업로드가 처리되었습니다.');
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       alert('파일 처리 중 오류가 발생했습니다.');
     }
     e.target.value = '';

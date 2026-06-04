@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updatePassword } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
+import { logger } from '../lib/logger';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
@@ -42,8 +43,8 @@ export default function ProfileSettings() {
           setLoading(false);
           return;
         }
-        if (formData.newPassword.length < 6) {
-          setErrorModalMsg('새 비밀번호는 최소 6자 이상이어야 합니다.');
+        if (formData.newPassword.length < 8 || !/[A-Za-z]/.test(formData.newPassword) || !/[0-9]/.test(formData.newPassword)) {
+          setErrorModalMsg('새 비밀번호는 최소 8자 이상이며 영문자와 숫자를 포함해야 합니다.');
           setErrorModalOpen(true);
           setLoading(false);
           return;
@@ -52,8 +53,8 @@ export default function ProfileSettings() {
           await updatePassword(auth.currentUser, formData.newPassword);
           setFormData(prev => ({ ...prev, password: '', newPassword: '', confirmPassword: '' }));
         } catch (pwErr: any) {
-          console.error(pwErr);
-          let errMsg = '비밀번호 변경에 실패했습니다: ' + pwErr.message;
+          logger.error(pwErr);
+          let errMsg = '비밀번호 변경에 실패했습니다.';
           if (pwErr.code === 'auth/requires-recent-login') {
             errMsg = '비밀번호를 변경하려면 최신 로그인 정보가 필요합니다. 다시 로그인 후 시도해 주세요.';
           } else if (pwErr.code === 'auth/weak-password') {
@@ -68,8 +69,8 @@ export default function ProfileSettings() {
 
       setMsg({ type: 'success', text: '내 정보가 성공적으로 변경되었습니다.' });
     } catch (err: any) {
-      console.error(err);
-      setMsg({ type: 'error', text: err.message || '저장 중 오류가 발생했습니다.' });
+      logger.error(err);
+      setMsg({ type: 'error', text: '저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' });
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User as FirebaseUser, onAuthStateChanged, signOut, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { logger } from '../lib/logger';
 
 export interface AppUser {
   uid: string;
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Set persistence to session so that closing the tab logs the user out
         await setPersistence(auth, browserSessionPersistence);
       } catch (error) {
-        console.error("Failed to set persistence:", error);
+        logger.error("Failed to set persistence:", error);
       }
 
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
           }
         } catch (err: any) {
-          console.error("Auth sync error:", err);
+          logger.error("Auth sync error:", err);
           setAuthError(err.message || '데이터 동기화 오류');
           setUser(null);
         } finally {

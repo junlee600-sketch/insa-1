@@ -1,5 +1,16 @@
 import ExcelJS from 'exceljs';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+export function validateExcelFile(file: File): string | null {
+  if (file.size > MAX_FILE_SIZE) return '파일 크기는 5MB를 초과할 수 없습니다.';
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) {
+    return 'Excel 파일(.xlsx, .xls)만 업로드할 수 있습니다.';
+  }
+  return null;
+}
+
 export async function readExcelRows(file: File): Promise<Record<string, string>[]> {
   const buffer = await file.arrayBuffer();
   const workbook = new ExcelJS.Workbook();

@@ -68,7 +68,30 @@ async function startServer() {
     // 허용 출처: APP_URL 환경변수 또는 개발 환경의 localhost
     const allowedOrigin = process.env.APP_URL || "http://localhost:8080";
     app.use(cors({ origin: allowedOrigin }));
-    app.use(helmet());
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: [
+            "'self'",
+            "https://*.firebaseio.com",
+            "https://*.googleapis.com",
+            "https://identitytoolkit.googleapis.com",
+            "https://securetoken.googleapis.com",
+            "wss://*.firebaseio.com",
+          ],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          fontSrc: ["'self'", "data:"],
+          frameSrc: ["'none'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+    }));
     app.use(express.json({ limit: '10kb' }));
 
     // 관리자 API: IP당 15분에 10회 제한
