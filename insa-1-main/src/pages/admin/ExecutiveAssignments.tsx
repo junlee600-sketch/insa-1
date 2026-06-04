@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Label } from '../../components/ui/label';
 import { v4 as uuidv4 } from 'uuid';
-import * as XLSX from 'xlsx';
+import { readExcelRows, downloadExcelFile } from '../../lib/excel';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 
 export default function ExecutiveAssignments() {
@@ -81,24 +81,15 @@ export default function ExecutiveAssignments() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selectedYear) return alert('연도를 먼저 선택한 후 파일을 업로드해 주세요.');
-    
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      const bstr = evt.target?.result;
-      const wb = XLSX.read(bstr, { type: 'binary' });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws) as any[];
 
-      // Expected columns: 평가자 이름 (or Email), 피평가자 이름, 그룹명
+    try {
+      const data = await readExcelRows(file);
       for (const row of data) {
         const evorQuery = String(row['평가자 이름'] || row['Evaluator Email'] || row['Evaluator Name'] || '').trim();
         const eveeQuery = String(row['피평가자 이름'] || row['Evaluatee Email'] || row['Evaluatee Name'] || '').trim();
         const gName = String(row['그룹명'] || row['Group'] || '').trim();
-        
+
         const matchedGroup = groups.find(g => g.name.toLowerCase() === gName.toLowerCase());
-        
-        // Match user by name or email
         const validEvor = users.find(u => (u.name || '').trim() === evorQuery || (u.email || '').toLowerCase() === evorQuery.toLowerCase());
         const validEvee = users.find(u => (u.name || '').trim() === eveeQuery || (u.email || '').toLowerCase() === eveeQuery.toLowerCase());
 
@@ -115,22 +106,19 @@ export default function ExecutiveAssignments() {
       }
       fetchAssignments();
       alert('업로드가 처리되었습니다.');
-      // Reset file input
-      e.target.value = '';
-    };
-    reader.readAsBinaryString(file);
+    } catch (err) {
+      console.error(err);
+      alert('파일 처리 중 오류가 발생했습니다.');
+    }
+    e.target.value = '';
   };
 
-  const downloadTemplate = () => {
-    // Generate template
-    const ws = XLSX.utils.json_to_sheet([{
+  const downloadTemplate = async () => {
+    await downloadExcelFile([{
       '평가자 이름': '홍길동',
       '피평가자 이름': '김철수',
       '그룹명': '그룹명입력'
-    }]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Assignments");
-    XLSX.writeFile(wb, "Assignment_Template.xlsx");
+    }], "Assignments", "Assignment_Template.xlsx");
   };
 
   const getUserName = (email: string) => {

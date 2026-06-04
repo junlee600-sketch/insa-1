@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { useAuth } from '../../contexts/AuthContext';
-import * as XLSX from 'xlsx';
+import { downloadExcelFile } from '../../lib/excel';
 
 export default function FinalResults() {
   const { user } = useAuth();
@@ -188,7 +188,7 @@ export default function FinalResults() {
     alert('최종 점수가 확정되어 저장되었습니다.');
   };
 
-  const downloadExcel = () => {
+  const downloadExcel = async () => {
     if (!selectedYear || filteredEvaluatees.length === 0) return alert('다운로드할 결과 데이터가 없습니다.');
 
     const yearData = years.find(y => y.id === selectedYear);
@@ -228,10 +228,7 @@ export default function FinalResults() {
       return row;
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Final Results");
-    XLSX.writeFile(wb, `Final_Evaluation_Results_${yearData?.year || selectedYear}.xlsx`);
+    await downloadExcelFile(exportData, "Final Results", `Final_Evaluation_Results_${yearData?.year || selectedYear}.xlsx`);
   };
 
   const filteredEvaluatees = evaluatees.filter(ev => {

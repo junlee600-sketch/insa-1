@@ -3,6 +3,7 @@ import path from "path";
 import admin from "firebase-admin";
 import cors from "cors";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 
 async function startServer() {
@@ -68,10 +69,19 @@ async function startServer() {
     const allowedOrigin = process.env.APP_URL || "http://localhost:8080";
     app.use(cors({ origin: allowedOrigin }));
     app.use(helmet());
-    app.use(express.json());
+    app.use(express.json({ limit: '10kb' }));
+
+    // 관리자 API: IP당 15분에 10회 제한
+    const adminLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 10,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }
+    });
 
     // API Route: Update user password
-    app.post("/api/admin/update-password", async (req, res) => {
+    app.post("/api/admin/update-password", adminLimiter, async (req, res) => {
       const caller = await verifyAdminToken(req, res);
       if (!caller) return;
 
@@ -97,12 +107,12 @@ async function startServer() {
         if (error.message.includes("FIREBASE_SERVICE_ACCOUNT_KEY")) {
            return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
         }
-        res.status(500).json({ error: error.message || "Failed to update password" });
+        res.status(500).json({ error: "비밀번호 변경 중 오류가 발생했습니다." });
       }
     });
 
     // API Route: Delete user completely
-    app.post("/api/admin/delete-user", async (req, res) => {
+    app.post("/api/admin/delete-user", adminLimiter, async (req, res) => {
       const caller = await verifyAdminToken(req, res);
       if (!caller) return;
 
@@ -169,7 +179,7 @@ async function startServer() {
         if (error.message.includes("FIREBASE_SERVICE_ACCOUNT_KEY") || error.message.includes("설정이 필요합니다")) {
            return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
         }
-        res.status(500).json({ error: error.message || "Failed to delete user" });
+        res.status(500).json({ error: "사용자 삭제 중 오류가 발생했습니다." });
       }
     });
 

@@ -4,7 +4,8 @@ import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 
 import { db, secondaryAuth, auth } from '../../lib/firebase';
 
 async function adminFetch(path: string, body: object) {
-  const idToken = await auth.currentUser?.getIdToken();
+  if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+  const idToken = await auth.currentUser.getIdToken();
   return fetch(path, {
     method: 'POST',
     headers: {
@@ -20,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import * as XLSX from 'xlsx';
+import { readExcelRows, downloadExcelFile } from '../../lib/excel';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
@@ -216,105 +217,93 @@ export default function UserManagement() {
     setIsOpen(true);
   };
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.json_to_sheet([{
+  const downloadTemplate = async () => {
+    await downloadExcelFile([{
       '로그인 ID': 'user01',
       '초기 비밀번호': 'Abcd123!',
       '사용자 이름': '홍길동',
       '소속 부서': '인사팀',
       '직급': '사원',
       '권한 (admin/user)': 'user'
-    }]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Users");
-    XLSX.writeFile(wb, "User_Registration_Template.xlsx");
+    }], "Users", "User_Registration_Template.xlsx");
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws) as any[];
 
-        let successCount = 0;
-        let failCount = 0;
-        setLoading(true);
+    try {
+      const data = await readExcelRows(file);
+      let successCount = 0;
+      let failCount = 0;
+      setLoading(true);
 
-        for (const row of data) {
-          let email = String(row['로그인 ID'] || row['로그인 아이디 (이메일)'] || '').trim().toLowerCase();
-          const password = String(row['초기 비밀번호'] || '').trim();
-          const name = String(row['사용자 이름'] || '').trim();
-          const department = String(row['소속 부서'] || '').trim();
-          const position = String(row['직급'] || '').trim();
-          let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
-          
-          if (!email || !name) {
-            failCount++;
-            continue;
-          }
+      for (const row of data) {
+        let email = String(row['로그인 ID'] || row['로그인 아이디 (이메일)'] || '').trim().toLowerCase();
+        const password = String(row['초기 비밀번호'] || '').trim();
+        const name = String(row['사용자 이름'] || '').trim();
+        const department = String(row['소속 부서'] || '').trim();
+        const position = String(row['직급'] || '').trim();
+        let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
 
-          if (!email.includes('@')) {
-            email += '@han-guk.co.kr';
-          }
-          
-          if (role !== 'admin' && role !== 'user') {
-             role = 'user';
-          }
-          
-          let existingUser = users.find(u => u.email === email);
+        if (!email || !name) {
+          failCount++;
+          continue;
+        }
 
-          try {
-            if (!existingUser) {
-              if (!password || password.length < 6) {
+        if (!email.includes('@')) {
+          email += '@han-guk.co.kr';
+        }
+
+        if (role !== 'admin' && role !== 'user') {
+          role = 'user';
+        }
+
+        const existingUser = users.find(u => u.email === email);
+
+        try {
+          if (!existingUser) {
+            if (!password || password.length < 6) {
+              failCount++;
+              continue;
+            }
+            try {
+              await createUserWithEmailAndPassword(secondaryAuth, email, password);
+              await signOut(secondaryAuth);
+            } catch (authErr: any) {
+              if (authErr.code !== 'auth/email-already-in-use') {
                 failCount++;
                 continue;
               }
-              try {
-                await createUserWithEmailAndPassword(secondaryAuth, email, password);
-                await signOut(secondaryAuth);
-              } catch (authErr: any) {
-                if (authErr.code !== 'auth/email-already-in-use') {
-                  failCount++;
-                  continue;
-                }
-              }
             }
-
-            const userRef = doc(db, 'users', email);
-            await setDoc(userRef, {
-              email: email,
-              name: name,
-              department: department,
-              position: position,
-              role: role,
-              createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
-              uid: existingUser ? existingUser.uid : '' 
-            }, { merge: true });
-
-            successCount++;
-          } catch(err) {
-             console.error(err);
-             failCount++;
           }
+
+          const userRef = doc(db, 'users', email);
+          await setDoc(userRef, {
+            email,
+            name,
+            department,
+            position,
+            role,
+            createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
+            uid: existingUser ? existingUser.uid : ''
+          }, { merge: true });
+
+          successCount++;
+        } catch (err) {
+          console.error(err);
+          failCount++;
         }
-        
-        fetchUsers();
-        alert(`일괄 처리가 완료되었습니다.\\n성공: ${successCount}건\\n실패: ${failCount}건`);
-      } catch (err) {
-         console.error(err);
-         alert('파일 처리 중 오류가 발생했습니다.');
-         setLoading(false);
       }
-      e.target.value = '';
-    };
-    reader.readAsBinaryString(file);
+
+      fetchUsers();
+      alert(`일괄 처리가 완료되었습니다.\n성공: ${successCount}건\n실패: ${failCount}건`);
+    } catch (err) {
+      console.error(err);
+      alert('파일 처리 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+    e.target.value = '';
   };
 
   if (loading) return <div>사용자 정보를 불러오는 중입니다...</div>;
