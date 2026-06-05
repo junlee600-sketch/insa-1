@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🌐 브라우저에서 미리보기 (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "🚀 개발 서버 시작 (포트 8080)",
+      "presentation": {
+        "hidden": false,
+        "group": "preview",
+        "order": 1
+      }
+    },
+    {
+      "name": "🌐 브라우저에서 미리보기 (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "🚀 개발 서버 시작 (포트 8080)",
+      "presentation": {
+        "hidden": false,
+        "group": "preview",
+        "order": 2
+      }
+    }
+  ]
+}

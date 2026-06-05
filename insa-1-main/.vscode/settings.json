@@ -1,0 +1,30 @@
+{
+  "livePreview.defaultPreviewPath": "http://localhost:8080",
+  "livePreview.serverRoot": "/",
+  "livePreview.openPreviewTarget": "embeddedPreview",
+  "livePreview.portNumber": 8080,
+
+  "liveServer.settings.port": 8080,
+  "liveServer.settings.NoBrowser": true,
+  "liveServer.settings.root": "/",
+  "liveServer.settings.ignoreFiles": [
+    ".vscode/**",
+    "**/*.tsx",
+    "**/*.ts",
+    "node_modules/**"
+  ],
+
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  "files.exclude": {
+    "node_modules": true,
+    "dist": true
+  }
+}

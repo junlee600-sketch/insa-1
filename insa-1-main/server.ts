@@ -65,11 +65,15 @@ async function startServer() {
       }
     }
 
+    const isProd = process.env.NODE_ENV === "production";
+
     // 허용 출처: APP_URL 환경변수 또는 개발 환경의 localhost
     const allowedOrigin = process.env.APP_URL || "http://localhost:8080";
-    app.use(cors({ origin: allowedOrigin }));
+    app.use(cors({ origin: isProd ? allowedOrigin : true }));
     app.use(helmet({
-      contentSecurityPolicy: {
+      // 개발환경: CSP 비활성화 (Vite HMR 인라인 스크립트·iframe 허용)
+      // 프로덕션: 엄격한 CSP 적용
+      contentSecurityPolicy: isProd ? {
         directives: {
           defaultSrc: ["'self'"],
           connectSrc: [
@@ -89,8 +93,11 @@ async function startServer() {
           baseUri: ["'self'"],
           formAction: ["'self'"],
         },
-      },
+      } : false,
+      frameguard: isProd ? undefined : false,
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: isProd ? undefined : false,
+      crossOriginOpenerPolicy: isProd ? undefined : false,
     }));
     app.use(express.json({ limit: '10kb' }));
 

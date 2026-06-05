@@ -11,3 +11,4 @@ firebase.json
 .firebaserc
 insa-1-main/
 seed-admin.js
+server.js
