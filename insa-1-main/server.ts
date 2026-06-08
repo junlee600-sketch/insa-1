@@ -60,7 +60,7 @@ async function startServer() {
         }
         return callerEmail;
       } catch (err: any) {
-        res.status(401).json({ error: "유효하지 않은 토큰: " + err.message });
+        res.status(401).json({ error: "유효하지 않은 토큰입니다." });
         return null;
       }
     }
@@ -120,8 +120,8 @@ async function startServer() {
         if (!email || !newPassword) {
            return res.status(400).json({ error: "Missing email or newPassword" });
         }
-        if (typeof newPassword !== "string" || newPassword.length < 6) {
-          return res.status(400).json({ error: "비밀번호는 6자 이상이어야 합니다." });
+        if (typeof newPassword !== "string" || newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+          return res.status(400).json({ error: "비밀번호는 8자 이상이며 영문자와 숫자를 포함해야 합니다." });
         }
 
         const pbAdmin = getFirebaseAdmin();
@@ -159,9 +159,9 @@ async function startServer() {
         try {
           const userRecord = await pbAdmin.auth().getUserByEmail(email);
           await pbAdmin.auth().deleteUser(userRecord.uid);
-          console.log(`Deleted user from Auth: ${email}`);
+          console.log("Deleted user from Auth.");
         } catch (authErr: any) {
-          console.log(`Auth user not found or error: ${authErr.message}`);
+          console.log("Auth user not found or already removed.");
         }
 
         if (req.body.authOnly) {
