@@ -101,6 +101,16 @@ async function startServer() {
     }));
     app.use(express.json({ limit: '10kb' }));
 
+    // 전체 서버: IP당 15분에 300회 제한 (DoS 방어)
+    const globalLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 300,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }
+    });
+    app.use(globalLimiter);
+
     // 관리자 API: IP당 15분에 10회 제한
     const adminLimiter = rateLimit({
       windowMs: 15 * 60 * 1000,
@@ -119,6 +129,9 @@ async function startServer() {
         const { email, newPassword } = req.body;
         if (!email || !newPassword) {
            return res.status(400).json({ error: "Missing email or newPassword" });
+        }
+        if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return res.status(400).json({ error: "유효하지 않은 이메일 형식입니다." });
         }
         if (typeof newPassword !== "string" || newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
           return res.status(400).json({ error: "비밀번호는 8자 이상이며 영문자와 숫자를 포함해야 합니다." });
@@ -150,6 +163,9 @@ async function startServer() {
         const { email } = req.body;
         if (!email) {
            return res.status(400).json({ error: "Missing email" });
+        }
+        if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return res.status(400).json({ error: "유효하지 않은 이메일 형식입니다." });
         }
 
         const pbAdmin = getFirebaseAdmin();

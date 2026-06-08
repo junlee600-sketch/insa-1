@@ -75,7 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (err: any) {
           logger.error("Auth sync error:", err);
-          setAuthError(err.message || '데이터 동기화 오류');
+          const code: string = err?.code || '';
+          if (code.includes('offline') || code.includes('unavailable')) {
+            setAuthError('네트워크 연결을 확인해 주세요. (offline)');
+          } else if (code.includes('permission-denied')) {
+            setAuthError('접근 권한이 없습니다.');
+          } else {
+            setAuthError('데이터 동기화 오류가 발생했습니다.');
+          }
           setUser(null);
         } finally {
           setLoading(false);
