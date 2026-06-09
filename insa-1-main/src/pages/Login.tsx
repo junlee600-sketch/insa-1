@@ -58,7 +58,7 @@ export default function Login() {
   }, [user, navigate]);
 
   useEffect(() => {
-    const savedId = sessionStorage.getItem('savedLoginId');
+    const savedId = localStorage.getItem('savedLoginId');
     if (savedId) {
       setLoginId(savedId);
       setRememberId(true);
@@ -76,9 +76,9 @@ export default function Login() {
       }
 
       if (rememberId) {
-        sessionStorage.setItem('savedLoginId', loginId);
+        localStorage.setItem('savedLoginId', loginId);
       } else {
-        sessionStorage.removeItem('savedLoginId');
+        localStorage.removeItem('savedLoginId');
       }
 
       await login(finalEmail, password);
