@@ -1,0 +1,8 @@
+.git
+.gitignore
+node_modules/
+insa-1-main/node_modules/
+insa-1-main/dist/
+insa-1-main/.vscode/
+*.log
+.tmp.driveupload/
