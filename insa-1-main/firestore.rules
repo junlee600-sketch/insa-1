@@ -23,7 +23,7 @@ service cloud.firestore {
     }
 
     function isGroupLeader() {
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position.matches('.*그룹장.*');
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position.matches('^.+그룹장$');
     }
 
     function isBoss() {

@@ -67,9 +67,13 @@ async function startServer() {
 
     const isProd = process.env.NODE_ENV === "production";
 
+    // Cloud Run / 리버스 프록시 환경에서 실제 클라이언트 IP를 rate limiter에 전달
+    app.set('trust proxy', 1);
+
     // 허용 출처: APP_URL 환경변수 또는 개발 환경의 localhost
     const allowedOrigin = process.env.APP_URL || "http://localhost:8080";
-    app.use(cors({ origin: isProd ? allowedOrigin : true }));
+    const devOrigins = ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173'];
+    app.use(cors({ origin: isProd ? allowedOrigin : devOrigins }));
     app.use(helmet({
       // 개발환경: CSP 비활성화 (Vite HMR 인라인 스크립트·iframe 허용)
       // 프로덕션: 엄격한 CSP 적용

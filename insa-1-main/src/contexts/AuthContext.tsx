@@ -151,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await signOut(auth);
+    localStorage.removeItem('savedLoginId');
   };
 
   return (

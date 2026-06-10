@@ -93,7 +93,7 @@ export default function EvaluationItems() {
       <section className="bg-[#F9F9F9] border border-[#E5E5E5] p-6 mb-10 flex gap-8 items-end">
         <div className="space-y-2 flex-1">
           <Label className="text-[10px] uppercase tracking-widest text-[#999]">평가 연도 주기</Label>
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
             <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="연도 선택" /></SelectTrigger>
             <SelectContent>
               {years.map(y => <SelectItem key={y.id} value={y.id}>{y.year}</SelectItem>)}
@@ -102,7 +102,7 @@ export default function EvaluationItems() {
         </div>
         <div className="space-y-2 flex-1">
           <Label className="text-[10px] uppercase tracking-widest text-[#999]">평가 그룹 (대상 형태)</Label>
-          <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+          <Select value={selectedGroup} onValueChange={(v) => setSelectedGroup(v ?? '')}>
             <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="그룹 선택" /></SelectTrigger>
             <SelectContent>
               {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}

@@ -151,7 +151,7 @@ export default function EvaluationAssignments() {
         <div className="flex gap-8 items-end w-full">
           <div className="space-y-2 flex-1">
             <Label className="text-[10px] uppercase tracking-widest text-[#999]">평가 연도 주기</Label>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
               <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="연도 선택" /></SelectTrigger>
               <SelectContent>
                 {years.map(y => <SelectItem key={y.id} value={y.id}>{y.year}</SelectItem>)}
@@ -182,7 +182,7 @@ export default function EvaluationAssignments() {
           <div className="grid grid-cols-4 gap-6 items-end pb-8 border-b border-[#EEE]">
             <div className="space-y-2 col-span-1">
               <Label className="text-[10px] uppercase tracking-widest text-[#999]">평가자</Label>
-              <Select value={evaluatorId} onValueChange={setEvaluatorId}>
+              <Select value={evaluatorId} onValueChange={(v) => setEvaluatorId(v ?? '')}>
                 <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
                   <SelectValue placeholder="사용자 선택">
                     {evaluatorId ? getUserName(evaluatorId).trim() : "사용자 선택"}
@@ -198,7 +198,7 @@ export default function EvaluationAssignments() {
             </div>
             <div className="space-y-2 col-span-1">
               <Label className="text-[10px] uppercase tracking-widest text-[#999]">피평가자 (대상자)</Label>
-              <Select value={evaluateeId} onValueChange={setEvaluateeId}>
+              <Select value={evaluateeId} onValueChange={(v) => setEvaluateeId(v ?? '')}>
                 <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
                   <SelectValue placeholder="사용자 선택">
                     {evaluateeId ? getUserName(evaluateeId).trim() : "사용자 선택"}
@@ -214,7 +214,7 @@ export default function EvaluationAssignments() {
             </div>
             <div className="space-y-2 col-span-1">
               <Label className="text-[10px] uppercase tracking-widest text-[#999]">그룹 지정</Label>
-              <Select value={groupId} onValueChange={setGroupId}>
+              <Select value={groupId} onValueChange={(v) => setGroupId(v ?? '')}>
                 <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="그룹 선택" /></SelectTrigger>
                 <SelectContent>
                   {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}

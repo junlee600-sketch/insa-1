@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, where, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { db, secondaryAuth, auth } from '../../lib/firebase';
 
@@ -36,6 +36,7 @@ export default function UserManagement() {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmData, setConfirmData] = useState<{id: string, name: string} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -137,60 +138,72 @@ export default function UserManagement() {
   };
 
   const handleDelete = async (email: string) => {
+    if (isDeleting) return;
+    setIsDeleting(true);
     try {
       let emailForPwd = email;
       if (!emailForPwd.includes('@')) emailForPwd += '@han-guk.co.kr';
 
-      // 1. Try to delete the Firebase Auth user via backend (ignores error if service account missing)
+      // 1. Delete Firebase Auth user via backend
       try {
         await adminFetch('/api/admin/delete-user', { email: emailForPwd, authOnly: true });
       } catch (err) {
         logger.warn('Backend auth deletion failed, but continuing with DB deletion', err);
       }
 
-      // 2. Delete from users collection
-      await deleteDoc(doc(db, 'users', emailForPwd));
-
-      // 3. Delete related assignments and their results (evaluator)
-      const deleteRelatedAsEvaluator = async (colName: string, resColName: string) => {
-        const q = query(collection(db, colName), where('evaluatorId', '==', emailForPwd));
-        const snap = await getDocs(q);
-        for (const d of snap.docs) {
-          await deleteDoc(doc(db, resColName, d.id));
-          await deleteDoc(doc(db, colName, d.id));
-        }
+      // 2. Query all related docs first, then batch-delete for atomicity
+      const collectDocsToDelete = async (colName: string, field: string) => {
+        const snap = await getDocs(query(collection(db, colName), where(field, '==', emailForPwd)));
+        return snap.docs;
       };
-      await deleteRelatedAsEvaluator('assignments', 'results');
-      await deleteRelatedAsEvaluator('exec_assignments', 'exec_results');
 
-      // 4. Delete related assignments and their results (evaluatee)
-      const deleteRelatedAsEvaluatee = async (colName: string, resColName: string) => {
-        const q = query(collection(db, colName), where('evaluateeId', '==', emailForPwd));
-        const snap = await getDocs(q);
-        for (const d of snap.docs) {
-          await deleteDoc(doc(db, resColName, d.id));
-          await deleteDoc(doc(db, colName, d.id));
-        }
-      };
-      await deleteRelatedAsEvaluatee('assignments', 'results');
-      await deleteRelatedAsEvaluatee('exec_assignments', 'exec_results');
+      const [
+        evalorAssignments, evalorExecAssignments,
+        evaleeAssignments, evaleeExecAssignments,
+        finalScoresDocs, execFinalScoresDocs,
+      ] = await Promise.all([
+        collectDocsToDelete('assignments', 'evaluatorId'),
+        collectDocsToDelete('exec_assignments', 'evaluatorId'),
+        collectDocsToDelete('assignments', 'evaluateeId'),
+        collectDocsToDelete('exec_assignments', 'evaluateeId'),
+        collectDocsToDelete('finalScores', 'evaluateeId'),
+        collectDocsToDelete('exec_finalScores', 'evaluateeId'),
+      ]);
 
-      // 5. Delete final scores
-      const deleteFinalScores = async (colName: string) => {
-        const q = query(collection(db, colName), where('evaluateeId', '==', emailForPwd));
-        const snap = await getDocs(q);
-        for (const d of snap.docs) {
-          await deleteDoc(doc(db, colName, d.id));
-        }
-      };
-      await deleteFinalScores('finalScores');
-      await deleteFinalScores('exec_finalScores');
+      const batch = writeBatch(db);
+
+      // Delete user document
+      batch.delete(doc(db, 'users', emailForPwd));
+
+      // Delete assignments and their results
+      for (const d of evalorAssignments) {
+        batch.delete(doc(db, 'results', d.id));
+        batch.delete(d.ref);
+      }
+      for (const d of evalorExecAssignments) {
+        batch.delete(doc(db, 'exec_results', d.id));
+        batch.delete(d.ref);
+      }
+      for (const d of evaleeAssignments) {
+        batch.delete(doc(db, 'results', d.id));
+        batch.delete(d.ref);
+      }
+      for (const d of evaleeExecAssignments) {
+        batch.delete(doc(db, 'exec_results', d.id));
+        batch.delete(d.ref);
+      }
+      for (const d of finalScoresDocs) batch.delete(d.ref);
+      for (const d of execFinalScoresDocs) batch.delete(d.ref);
+
+      await batch.commit();
 
       alert('사용자 및 모든 관련 데이터가 성공적으로 삭제되었습니다.');
       fetchUsers();
     } catch (err: any) {
       logger.error(err);
       alert('삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -394,7 +407,7 @@ export default function UserManagement() {
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-[#999]">소속 부서</Label>
                 <div className="flex gap-2">
-                  <Select value={formData.department} onValueChange={v => setFormData({...formData, department: v})}>
+                  <Select value={formData.department} onValueChange={(v) => setFormData({...formData, department: v ?? ''})}>
                     <SelectTrigger className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
                       <SelectValue placeholder="부서 선택 혹은 직접 입력" />
                     </SelectTrigger>
@@ -416,7 +429,7 @@ export default function UserManagement() {
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-[#999]">직급/직책</Label>
                 <div className="flex gap-2">
-                  <Select value={formData.position} onValueChange={v => setFormData({...formData, position: v})}>
+                  <Select value={formData.position} onValueChange={(v) => setFormData({...formData, position: v ?? ''})}>
                     <SelectTrigger className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
                       <SelectValue placeholder="직급 선택 혹은 직접 입력" />
                     </SelectTrigger>
@@ -438,7 +451,7 @@ export default function UserManagement() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-[#999]">권한 레벨</Label>
-                <Select value={formData.role} onValueChange={v => setFormData({...formData, role: v})}>
+                <Select value={formData.role} onValueChange={(v) => setFormData({...formData, role: v ?? ''})}>
                   <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">사용자</SelectItem>

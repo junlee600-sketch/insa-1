@@ -105,7 +105,7 @@ export default function EvaluationSettings() {
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-2">
             <Label className="text-[10px] uppercase tracking-widest text-[#999]">현재 활성화된 항목 연도</Label>
-            <Select value={activeYear} onValueChange={setActiveYear}>
+            <Select value={activeYear} onValueChange={(v) => setActiveYear(v ?? '')}>
               <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
                 <SelectValue placeholder="연도 선택" />
               </SelectTrigger>
@@ -118,7 +118,7 @@ export default function EvaluationSettings() {
           </div>
           <div className="space-y-2">
             <Label className="text-[10px] uppercase tracking-widest text-[#999]">점수 평가 척도</Label>
-            <Select value={scale} onValueChange={setScale}>
+            <Select value={scale} onValueChange={(v) => setScale(v ?? '')}>
               <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="5">5점 척도</SelectItem>

@@ -169,8 +169,8 @@ export default function FinalResults() {
     if (!selectedEvaluatee || !selectedYear) return;
 
     const score = parseFloat(finalScoreInput);
-    if (!isFinite(score) || score < 0) {
-      alert('유효한 점수를 입력하세요 (0 이상의 숫자).');
+    if (!isFinite(score) || score < 0 || score > 100) {
+      alert('유효한 점수를 입력하세요 (0~100 범위).');
       return;
     }
 
@@ -258,7 +258,7 @@ export default function FinalResults() {
             </button>
           )}
           <div className="w-48">
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment} disabled={!!isGroupLeader}>
+            <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')} disabled={!!isGroupLeader}>
               <SelectTrigger className="border-[#1A1A1A] rounded-none bg-transparent">
                 <SelectValue placeholder="소속 부서 선택" />
               </SelectTrigger>
@@ -269,7 +269,7 @@ export default function FinalResults() {
             </Select>
           </div>
           <div className="w-48">
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
               <SelectTrigger className="border-[#1A1A1A] rounded-none bg-transparent">
                 <SelectValue placeholder="조회할 평가 연도 선택" />
               </SelectTrigger>

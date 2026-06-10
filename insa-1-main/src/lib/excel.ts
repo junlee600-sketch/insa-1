@@ -2,11 +2,19 @@ import ExcelJS from 'exceljs';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+const VALID_EXCEL_MIME_TYPES = [
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+];
+
 export function validateExcelFile(file: File): string | null {
   if (file.size > MAX_FILE_SIZE) return '파일 크기는 5MB를 초과할 수 없습니다.';
   const name = file.name.toLowerCase();
   if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) {
     return 'Excel 파일(.xlsx, .xls)만 업로드할 수 있습니다.';
+  }
+  if (file.type && !VALID_EXCEL_MIME_TYPES.includes(file.type)) {
+    return '유효한 Excel 파일만 업로드할 수 있습니다.';
   }
   return null;
 }
@@ -30,7 +38,11 @@ export async function readExcelRows(file: File): Promise<Record<string, string>[
       const obj: Record<string, string> = {};
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         const header = headers[colNumber - 1];
-        if (header) obj[header] = String(cell.value ?? '');
+        if (header) {
+          // Strip leading formula injection characters (=, +, -, @)
+          const raw = String(cell.value ?? '');
+          obj[header] = raw.replace(/^[=+\-@\t\r]/, '');
+        }
       });
       if (Object.keys(obj).length > 0) rows.push(obj);
     }

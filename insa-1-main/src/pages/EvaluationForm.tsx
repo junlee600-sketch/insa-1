@@ -20,6 +20,7 @@ export default function EvaluationForm() {
   const [comment, setComment] = useState('');
   
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dialog states
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -103,7 +104,8 @@ export default function EvaluationForm() {
 
   const executeSubmit = async () => {
     setConfirmModalOpen(false);
-    if (!assignmentId) return;
+    if (!assignmentId || isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
       const totalScore = Object.values(scores).reduce((a, b) => Number(a) + Number(b), 0);
@@ -111,6 +113,10 @@ export default function EvaluationForm() {
       const assignmentRef = doc(db, 'assignments', assignmentId);
 
       await runTransaction(db, async (tx) => {
+        const assnSnap = await tx.get(assignmentRef);
+        if (assnSnap.data()?.status === 'completed') {
+          throw new Error('이미 제출된 평가입니다.');
+        }
         tx.set(resultRef, { assignmentId, scores, comment, submittedAt: serverTimestamp() });
         tx.set(assignmentRef, { status: 'completed', totalScore }, { merge: true });
       });
@@ -119,7 +125,8 @@ export default function EvaluationForm() {
       setTimeout(() => { navigate('/evaluate'); }, 1500);
     } catch (error: any) {
       logger.error("Submission error:", error);
-      showAlert('평가 제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      showAlert(error.message === '이미 제출된 평가입니다.' ? error.message : '평가 제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      setIsSubmitting(false);
     }
   };
 
@@ -217,11 +224,12 @@ export default function EvaluationForm() {
             >
               취소
             </button>
-            <button 
-              className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors"
+            <button
+              className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={executeSubmit}
+              disabled={isSubmitting}
             >
-              제출하기
+              {isSubmitting ? '제출 중...' : '제출하기'}
             </button>
           </div>
         </DialogContent>
