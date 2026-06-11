@@ -399,7 +399,10 @@ export default function ExecutiveFinalResults() {
                 <div className="col-span-2 text-right">상태</div>
               </div>
               <div className="max-h-[320px] overflow-y-auto text-sm bg-white">
-                {selectedEvaluatee?.exec_assignments.map((assn: any) => (
+                {[...(selectedEvaluatee?.exec_assignments ?? [])].sort((a: any, b: any) => {
+                  const order = (g: string) => { const n = groupsMap[g] || ''; return n.includes('자기') ? 0 : n.includes('하향') ? 1 : n.includes('상향') ? 2 : 3; };
+                  return order(a.groupId) - order(b.groupId) || (groupsMap[a.groupId] || '').localeCompare(groupsMap[b.groupId] || '');
+                }).map((assn: any) => (
                   <div key={assn.id} className="p-3 border-b border-[#EEE] hover:bg-[#F9F9F9] transition-colors">
                     <div className="grid grid-cols-12 items-center gap-2">
                       <div className="col-span-2 font-bold truncate pr-1" title={usersMap[assn.evaluatorId] || assn.evaluatorId}>{usersMap[assn.evaluatorId] || assn.evaluatorId}</div>
