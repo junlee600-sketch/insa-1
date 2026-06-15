@@ -16,6 +16,8 @@ import EvaluationForm from './pages/EvaluationForm';
 import MyHistory from './pages/MyHistory';
 import ProfileSettings from './pages/ProfileSettings';
 
+import MenuPermissions from './pages/admin/MenuPermissions';
+
 // Executive Evaluation Pages
 import ExecutiveEvaluations from './pages/ExecutiveEvaluations';
 import ExecutiveEvaluationForm from './pages/ExecutiveEvaluationForm';
@@ -102,9 +104,13 @@ export default function App() {
               path="admin/results" 
               element={<ProtectedRoute requiredRole={['admin', 'hr']} allowGroupLeader={true} allowPresident={true}><FinalResults /></ProtectedRoute>} 
             />
-            <Route 
-              path="admin/results-executive" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>} 
+            <Route
+              path="admin/results-executive"
+              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>}
+            />
+            <Route
+              path="admin/menu-permissions"
+              element={<ProtectedRoute requiredRole={['admin']}><MenuPermissions /></ProtectedRoute>}
             />
           </Route>
         </Routes>

@@ -1,37 +1,76 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { LayoutDashboard, ListTodo, History, Users, Settings, ClipboardList, PenBox, CheckSquare } from 'lucide-react';
 
+type RolePerms = { admin: boolean; hr: boolean; user: boolean };
+
+const DEFAULT_PERMS: Record<string, RolePerms> = {
+  "/": { admin: true, hr: true, user: true },
+  "/evaluate": { admin: true, hr: true, user: true },
+  "/evaluate-executive": { admin: true, hr: true, user: false },
+  "/history": { admin: true, hr: true, user: false },
+  "/admin/items": { admin: true, hr: true, user: false },
+  "/admin/items-executive": { admin: true, hr: true, user: false },
+  "/admin/assignments": { admin: true, hr: true, user: false },
+  "/admin/assignments-executive": { admin: true, hr: true, user: false },
+  "/admin/results": { admin: true, hr: true, user: false },
+  "/admin/results-executive": { admin: true, hr: true, user: false },
+  "/admin/users": { admin: true, hr: false, user: false },
+  "/admin/settings": { admin: true, hr: false, user: false },
+  "/admin/menu-permissions": { admin: true, hr: false, user: false },
+};
+
+const ALL_NAV = [
+  { to: "/", label: "대시보드", category: "기본", specialRoles: [] as string[] },
+  { to: "/evaluate", label: "내 평가 진행", category: "기본", specialRoles: [] },
+  { to: "/evaluate-executive", label: "임원평가 진행", category: "기본", specialRoles: ['executive'] },
+  { to: "/history", label: "내 평가 이력", category: "기본", specialRoles: [] },
+  { to: "/admin/items", label: "평가 항목 관리", category: "관리 기능", specialRoles: [] },
+  { to: "/admin/items-executive", label: "임원평가 항목 관리", category: "관리 기능", specialRoles: [] },
+  { to: "/admin/assignments", label: "평가자 배정", category: "관리 기능", specialRoles: [] },
+  { to: "/admin/assignments-executive", label: "임원평가 배정", category: "관리 기능", specialRoles: [] },
+  { to: "/admin/results", label: "최종 평가 결과", category: "관리 기능", specialRoles: ['groupLeader', 'president'] },
+  { to: "/admin/results-executive", label: "임원평가 최종 결과", category: "관리 기능", specialRoles: ['president'] },
+  { to: "/admin/users", label: "사용자 관리", category: "시스템 설정", specialRoles: [] },
+  { to: "/admin/settings", label: "평가 연도/그룹", category: "시스템 설정", specialRoles: [] },
+  { to: "/admin/menu-permissions", label: "메뉴 권한 관리", category: "시스템 설정", specialRoles: [] },
+];
+
 export function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [perms, setPerms] = useState<Record<string, RolePerms>>(DEFAULT_PERMS);
+
+  useEffect(() => {
+    getDoc(doc(db, 'settings', 'menuPermissions')).then(snap => {
+      if (snap.exists()) setPerms({ ...DEFAULT_PERMS, ...snap.data() as Record<string, RolePerms> });
+    });
+  }, []);
 
   const isGroupLeader = user?.position?.endsWith('그룹장');
   const isExecutive = ['본부장', '그룹장', '사장'].includes(user?.position || '');
+  const isPresident = user?.position === '사장';
+  const role = user?.role || '';
 
-  const navItems = [
-    { to: "/", label: "대시보드", roles: ['admin', 'hr', 'user'], category: "기본" },
-    { to: "/evaluate", label: "내 평가 진행", roles: ['admin', 'hr', 'user'], category: "기본" },
-    { to: "/evaluate-executive", label: "임원평가 진행", roles: ['admin', 'hr', isExecutive ? 'user' : ''], category: "기본" },
-    { to: "/history", label: "내 평가 이력", roles: ['admin', 'hr'], category: "기본" },
-    { to: "/admin/items", label: "평가 항목 관리", roles: ['admin', 'hr'], category: "관리 기능" },
-    { to: "/admin/items-executive", label: "임원평가 항목 관리", roles: ['admin', 'hr'], category: "관리 기능" },
-    { to: "/admin/assignments", label: "평가자 배정", roles: ['admin', 'hr'], category: "관리 기능" },
-    { to: "/admin/assignments-executive", label: "임원평가 배정", roles: ['admin', 'hr'], category: "관리 기능" },
-    { to: "/admin/results", label: "최종 평가 결과", roles: ['admin', 'hr', isGroupLeader || user?.position === '사장' ? 'user' : ''], category: "관리 기능" },
-    { to: "/admin/results-executive", label: "임원평가 최종 결과", roles: ['admin', 'hr', user?.position === '사장' ? 'user' : ''], category: "관리 기능" },
-    { to: "/admin/users", label: "사용자 관리", roles: ['admin'], category: "시스템 설정" },
-    { to: "/admin/settings", label: "평가 연도/그룹", roles: ['admin'], category: "시스템 설정" },
-  ];
+  const canAccess = (item: typeof ALL_NAV[0]) => {
+    const p = perms[item.to];
+    if (!p) return false;
+    if (p[role as 'admin' | 'hr' | 'user']) return true;
+    if (item.specialRoles.includes('executive') && isExecutive) return true;
+    if (item.specialRoles.includes('groupLeader') && isGroupLeader) return true;
+    if (item.specialRoles.includes('president') && isPresident) return true;
+    return false;
+  };
 
-  const groupedNav = navItems.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    if (item.roles.includes(user?.role || '')) {
-      acc[item.category].push(item);
-    }
+  const groupedNav = ALL_NAV.reduce((acc, item) => {
+    if (!acc[item.category]) acc[item.category] = [] as typeof ALL_NAV;
+    if (canAccess(item)) acc[item.category].push(item);
     return acc;
-  }, {} as Record<string, typeof navItems>);
+  }, {} as Record<string, typeof ALL_NAV>);
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] dark:bg-[oklch(0.15_0_0)] text-gray-900 dark:text-gray-100 flex overflow-hidden">
