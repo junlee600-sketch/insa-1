@@ -165,7 +165,7 @@ export default function UserManagement() {
       if (err.code === 'auth/invalid-email') {
         setErrorMsg('아이디에 사용할 수 없는 문자가 포함되어 있습니다.');
       } else if (err.code === 'auth/weak-password') {
-        setErrorMsg('비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.');
+        setErrorMsg('비밀번호가 너무 약합니다. 8자 이상으로 설정해 주세요.');
       } else {
         setErrorMsg('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
@@ -181,7 +181,7 @@ export default function UserManagement() {
 
       // 1. Delete Firebase Auth user via backend
       try {
-        await adminFetch('/api/admin/delete-user', { email: emailForPwd, authOnly: true });
+        await adminFetch('/api/admin/delete-user', { email: emailForPwd });
       } catch (err) {
         logger.warn('Backend auth deletion failed, but continuing with DB deletion', err);
       }
@@ -413,7 +413,7 @@ export default function UserManagement() {
                     value={formData.password} 
                     onChange={e => setFormData({...formData, password: e.target.value})} 
                     className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
-                    placeholder="최소 6자 이상"
+                    placeholder="최소 8자 이상"
                   />
                 </div>
               )}
@@ -426,7 +426,7 @@ export default function UserManagement() {
                       value={adminForcePassword} 
                       onChange={e => setAdminForcePassword(e.target.value)} 
                       className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
-                      placeholder="새 비밀번호 (6자 이상)"
+                      placeholder="새 비밀번호 (8자 이상)"
                     />
                     <button type="button" onClick={handleForcePasswordChange} className="px-5 py-2 whitespace-nowrap bg-[#1A1A1A] text-white text-[10px] hover:bg-[#333] transition-colors uppercase tracking-widest">
                       적용

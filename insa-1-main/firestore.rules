@@ -57,11 +57,17 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email));
+      // 본인 프로필은 항상 읽기 가능. 타인 프로필은 HR 이상 또는 임원/그룹장만 가능.
+      allow get: if isSignedIn() && (
+        request.auth.token.email == userId ||
+        isHr() || isAdmin() ||
+        isGroupLeader() || isBoss()
+      );
 
       allow update: if (
         isSignedIn() && (
           isAdmin() ||
+          // 본인은 name, department, updatedAt, uid 만 수정 가능 (role, position, menuPermissions 자가수정 불가)
           (request.auth.token.email == userId && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'updatedAt', 'uid']))
         )
       );
@@ -97,15 +103,25 @@ service cloud.firestore {
     }
 
     match /assignments/{assignmentId} {
-      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/assignments') || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      // get: 개별 문서 조회 (평가자/피평가자 본인 또는 관리자)
+      allow get: if isSignedIn() && (
+        isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/assignments') ||
+        existing().evaluatorId == request.auth.token.email ||
+        existing().evaluateeId == request.auth.token.email
+      );
+      // list: 쿼리는 관리자급만 허용. 일반 평가자는 where 조건 포함 쿼리만 허용.
+      allow list: if isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/assignments') || canAccessMenu('/admin/results');
+
       allow create, delete: if (isHr() || canAccessMenu('/admin/assignments')) && isValidId(assignmentId);
+
       allow update: if isHr() || isGroupLeader() || canAccessMenu('/admin/assignments') || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email
         && existing().status != 'completed'
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
+        // 평가자는 status를 pending 또는 completed 값으로만 변경 가능 (임의 문자열 방지)
+        && incoming().status in ['pending', 'completed']
         && incoming().totalScore is number && incoming().totalScore >= 0
       );
-      allow list: if isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/assignments') || canAccessMenu('/admin/results') || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }
 
     match /results/{resultId} {
@@ -121,10 +137,13 @@ service cloud.firestore {
     }
 
     match /finalScores/{finalScoreId} {
-      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/results') || existing().evaluateeId == request.auth.token.email);
+      allow get: if isSignedIn() && (
+        isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/results') ||
+        existing().evaluateeId == request.auth.token.email
+      );
+      allow list: if isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/results');
       allow create, update: if isHr() || isGroupLeader() || canAccessMenu('/admin/results');
       allow delete: if isHr() || isGroupLeader() || canAccessMenu('/admin/results');
-      allow list: if isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/results') || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
     }
 
     match /exec_items/{itemId} {
@@ -133,15 +152,23 @@ service cloud.firestore {
     }
 
     match /exec_assignments/{assignmentId} {
-      allow read: if isSignedIn() && (isHr() || isBoss() || canAccessMenu('/admin/assignments-executive') || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      allow get: if isSignedIn() && (
+        isHr() || isBoss() || canAccessMenu('/admin/assignments-executive') ||
+        existing().evaluatorId == request.auth.token.email ||
+        existing().evaluateeId == request.auth.token.email
+      );
+      allow list: if isHr() || isBoss() || canAccessMenu('/admin/assignments-executive') || canAccessMenu('/admin/results-executive');
+
       allow create, delete: if (isHr() || isBoss() || canAccessMenu('/admin/assignments-executive')) && isValidId(assignmentId);
+
       allow update: if isHr() || isBoss() || canAccessMenu('/admin/assignments-executive') || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email
         && existing().status != 'completed'
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
+        // 임의 status 문자열 방지
+        && incoming().status in ['pending', 'completed']
         && incoming().totalScore is number && incoming().totalScore >= 0
       );
-      allow list: if isHr() || isBoss() || canAccessMenu('/admin/assignments-executive') || canAccessMenu('/admin/results-executive') || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }
 
     match /exec_results/{resultId} {
@@ -157,9 +184,12 @@ service cloud.firestore {
     }
 
     match /exec_finalScores/{finalScoreId} {
-      allow read: if isSignedIn() && (isBoss() || isAdmin() || canAccessMenu('/admin/results-executive') || existing().evaluateeId == request.auth.token.email);
+      allow get: if isSignedIn() && (
+        isBoss() || isAdmin() || canAccessMenu('/admin/results-executive') ||
+        existing().evaluateeId == request.auth.token.email
+      );
+      allow list: if isBoss() || isAdmin() || canAccessMenu('/admin/results-executive');
       allow write: if isBoss() || isAdmin() || canAccessMenu('/admin/results-executive');
-      allow list: if isBoss() || isAdmin() || canAccessMenu('/admin/results-executive') || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
     }
   }
 }
