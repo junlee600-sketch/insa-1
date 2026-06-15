@@ -1,0 +1,6 @@
+insa-1-main/node_modules
+insa-1-main/dist
+insa-1-main/.env
+.git
+.gitignore
+insa-1-main/firebase-blueprint.json
