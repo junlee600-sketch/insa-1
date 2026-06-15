@@ -39,7 +39,9 @@ export function Layout() {
       <aside className="w-64 bg-white dark:bg-[oklch(0.2_0_0)] border-r border-gray-200 dark:border-gray-800 flex flex-col pt-8 pb-6 px-4 shrink-0 transition-colors">
         <div className="mb-10 px-2">
           <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            한국종합 HRS
+            <Link to="/" className="hover:opacity-75 transition-opacity">
+              한국종합 HRS
+            </Link>
           </h1>
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">HR System v1.0</p>
         </div>
