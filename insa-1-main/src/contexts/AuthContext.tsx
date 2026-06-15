@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User as FirebaseUser, onAuthStateChanged, signOut, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { logger } from '../lib/logger';
 
@@ -28,75 +28,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
+  const userDocUnsub = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    let unsubscribe: () => void;
+    let authUnsub: () => void;
 
     const initializeAuth = async () => {
       try {
-        // Set persistence to session so that closing the tab logs the user out
         await setPersistence(auth, browserSessionPersistence);
       } catch (error) {
         logger.error("Failed to set persistence:", error);
       }
 
-      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        try {
-          setAuthError('');
-          if (firebaseUser) {
-            const email = firebaseUser.email;
-            if (!email) {
-              setUser(null);
-              setLoading(false);
-              return;
-            }
-            
-            const userDocRef = doc(db, 'users', email.toLowerCase());
-            const userDoc = await getDoc(userDocRef);
+      authUnsub = onAuthStateChanged(auth, async (firebaseUser) => {
+        // 이전 사용자 문서 리스너 해제
+        if (userDocUnsub.current) {
+          userDocUnsub.current();
+          userDocUnsub.current = null;
+        }
 
-            let appUser: AppUser;
+        setAuthError('');
 
-            if (userDoc.exists()) {
-              appUser = { uid: firebaseUser.uid, ...userDoc.data() } as AppUser;
-              // Ensure uid is stored/updated
-              if (userDoc.data().uid !== firebaseUser.uid) {
-                await setDoc(userDocRef, { uid: firebaseUser.uid }, { merge: true });
-              }
-            } else {
-              // 등록되지 않은 계정은 접근 차단
+        if (!firebaseUser?.email) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        const email = firebaseUser.email.toLowerCase();
+        const userDocRef = doc(db, 'users', email);
+
+        // 실시간 리스너로 사용자 문서 구독 (권한 변경 즉시 반영)
+        userDocUnsub.current = onSnapshot(userDocRef, async (snap) => {
+          try {
+            if (!snap.exists()) {
               await signOut(auth);
               setUser(null);
-              setLoading(false);
               setAuthError('등록되지 않은 계정입니다. 관리자에게 문의하세요.');
               return;
             }
+
+            const data = snap.data();
+            const appUser: AppUser = { uid: firebaseUser.uid, ...data } as AppUser;
+
+            if (data.uid !== firebaseUser.uid) {
+              await setDoc(userDocRef, { uid: firebaseUser.uid }, { merge: true });
+            }
+
             setUser(appUser);
-          } else {
+          } catch (err: any) {
+            logger.error("User doc sync error:", err);
+            const code: string = err?.code || '';
+            if (code.includes('offline') || code.includes('unavailable')) {
+              setAuthError('네트워크 연결을 확인해 주세요. (offline)');
+            } else if (code.includes('permission-denied')) {
+              setAuthError('접근 권한이 없습니다.');
+            } else {
+              setAuthError('데이터 동기화 오류가 발생했습니다.');
+            }
             setUser(null);
+          } finally {
+            setLoading(false);
           }
-        } catch (err: any) {
-          logger.error("Auth sync error:", err);
-          const code: string = err?.code || '';
-          if (code.includes('offline') || code.includes('unavailable')) {
-            setAuthError('네트워크 연결을 확인해 주세요. (offline)');
-          } else if (code.includes('permission-denied')) {
-            setAuthError('접근 권한이 없습니다.');
-          } else {
-            setAuthError('데이터 동기화 오류가 발생했습니다.');
-          }
+        }, (err) => {
+          logger.error("Snapshot error:", err);
           setUser(null);
-        } finally {
           setLoading(false);
-        }
+        });
       });
     };
 
     initializeAuth();
 
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      if (authUnsub) authUnsub();
+      if (userDocUnsub.current) userDocUnsub.current();
     };
   }, []);
 
