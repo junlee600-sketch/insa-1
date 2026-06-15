@@ -30,6 +30,15 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position == '사장';
     }
 
+    // 사용자별 개별 메뉴 권한 체크
+    function hasMenuAccess(menuPath) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.token.email))
+        && 'menuPermissions' in getUser(request.auth.token.email)
+        && menuPath in getUser(request.auth.token.email).menuPermissions
+        && getUser(request.auth.token.email).menuPermissions[menuPath] == true;
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email));
 
@@ -41,13 +50,16 @@ service cloud.firestore {
       );
 
       allow create: if isAdmin();
-
       allow delete: if isAdmin();
-
-      allow list: if isHr() || isAdmin();
+      allow list: if isHr() || isAdmin() || hasMenuAccess('/admin/users');
     }
 
     match /settings/global {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /settings/menuPermissions {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
@@ -64,73 +76,73 @@ service cloud.firestore {
 
     match /items/{itemId} {
       allow read: if isSignedIn();
-      allow write: if isHr();
+      allow write: if isHr() || hasMenuAccess('/admin/items');
     }
 
     match /assignments/{assignmentId} {
-      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
-      allow create, delete: if isHr() && isValidId(assignmentId);
-      allow update: if isHr() || isGroupLeader() || (
+      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || hasMenuAccess('/admin/assignments') || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      allow create, delete: if (isHr() || hasMenuAccess('/admin/assignments')) && isValidId(assignmentId);
+      allow update: if isHr() || isGroupLeader() || hasMenuAccess('/admin/assignments') || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email
         && existing().status != 'completed'
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
         && incoming().totalScore is number && incoming().totalScore >= 0
       );
-      allow list: if isHr() || isGroupLeader() || isBoss() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
+      allow list: if isHr() || isGroupLeader() || isBoss() || hasMenuAccess('/admin/assignments') || hasMenuAccess('/admin/results') || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }
 
     match /results/{resultId} {
       allow read: if isSignedIn() && (
-        isHr() || isGroupLeader() || isBoss() ||
+        isHr() || isGroupLeader() || isBoss() || hasMenuAccess('/admin/results') ||
         get(/databases/$(database)/documents/assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
       allow create: if isSignedIn() && (
-        isHr() || isGroupLeader() ||
+        isHr() || isGroupLeader() || hasMenuAccess('/admin/results') ||
         get(/databases/$(database)/documents/assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
       allow delete: if isAdmin();
     }
 
     match /finalScores/{finalScoreId} {
-      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || existing().evaluateeId == request.auth.token.email);
-      allow create, update: if isHr() || isGroupLeader();
-      allow delete: if isHr() || isGroupLeader();
-      allow list: if isHr() || isGroupLeader() || isBoss() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
+      allow read: if isSignedIn() && (isHr() || isGroupLeader() || isBoss() || hasMenuAccess('/admin/results') || existing().evaluateeId == request.auth.token.email);
+      allow create, update: if isHr() || isGroupLeader() || hasMenuAccess('/admin/results');
+      allow delete: if isHr() || isGroupLeader() || hasMenuAccess('/admin/results');
+      allow list: if isHr() || isGroupLeader() || isBoss() || hasMenuAccess('/admin/results') || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
     }
 
     match /exec_items/{itemId} {
       allow read: if isSignedIn();
-      allow write: if isHr() || isBoss();
+      allow write: if isHr() || isBoss() || hasMenuAccess('/admin/items-executive');
     }
 
     match /exec_assignments/{assignmentId} {
-      allow read: if isSignedIn() && (isHr() || isBoss() || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
-      allow create, delete: if (isHr() || isBoss()) && isValidId(assignmentId);
-      allow update: if isHr() || isBoss() || (
+      allow read: if isSignedIn() && (isHr() || isBoss() || hasMenuAccess('/admin/assignments-executive') || existing().evaluatorId == request.auth.token.email || existing().evaluateeId == request.auth.token.email);
+      allow create, delete: if (isHr() || isBoss() || hasMenuAccess('/admin/assignments-executive')) && isValidId(assignmentId);
+      allow update: if isHr() || isBoss() || hasMenuAccess('/admin/assignments-executive') || (
         isSignedIn() && existing().evaluatorId == request.auth.token.email
         && existing().status != 'completed'
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
         && incoming().totalScore is number && incoming().totalScore >= 0
       );
-      allow list: if isHr() || isBoss() || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
+      allow list: if isHr() || isBoss() || hasMenuAccess('/admin/assignments-executive') || hasMenuAccess('/admin/results-executive') || (isSignedIn() && (resource.data.evaluatorId == request.auth.token.email || resource.data.evaluateeId == request.auth.token.email));
     }
 
     match /exec_results/{resultId} {
       allow read: if isSignedIn() && (
-        isHr() || isBoss() ||
+        isHr() || isBoss() || hasMenuAccess('/admin/results-executive') ||
         get(/databases/$(database)/documents/exec_assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
       allow create: if isSignedIn() && (
-        isHr() || isBoss() ||
+        isHr() || isBoss() || hasMenuAccess('/admin/results-executive') ||
         get(/databases/$(database)/documents/exec_assignments/$(resultId)).data.evaluatorId == request.auth.token.email
       );
       allow delete: if isAdmin();
     }
 
     match /exec_finalScores/{finalScoreId} {
-      allow read: if isBoss() || isAdmin() || (isSignedIn() && existing().evaluateeId == request.auth.token.email);
-      allow write: if isBoss() || isAdmin();
-      allow list: if isBoss() || isAdmin() || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
+      allow read: if isSignedIn() && (isBoss() || isAdmin() || hasMenuAccess('/admin/results-executive') || existing().evaluateeId == request.auth.token.email);
+      allow write: if isBoss() || isAdmin() || hasMenuAccess('/admin/results-executive');
+      allow list: if isBoss() || isAdmin() || hasMenuAccess('/admin/results-executive') || (isSignedIn() && resource.data.evaluateeId == request.auth.token.email);
     }
   }
 }
