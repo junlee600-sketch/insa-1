@@ -46,6 +46,7 @@ export default function UserManagement() {
     setLoading(true);
     const querySnapshot = await getDocs(collection(db, 'users'));
     const userData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    userData.sort((a: any, b: any) => (a.department || '').localeCompare(b.department || '', 'ko'));
     setUsers(userData);
     setLoading(false);
   };
