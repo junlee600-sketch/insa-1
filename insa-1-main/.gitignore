@@ -6,7 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
-firebase-applet-config.json
 firebase.json
 .firebaserc
 insa-1-main/
