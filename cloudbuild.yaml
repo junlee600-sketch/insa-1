@@ -1,11 +1,12 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    dir: 'insa-1-main'
     args:
       - 'build'
       - '-t'
       - 'gcr.io/$PROJECT_ID/insa-1:latest'
-      - '.'
+      - '-f'
+      - 'insa-1-main/Dockerfile'
+      - 'insa-1-main'
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
