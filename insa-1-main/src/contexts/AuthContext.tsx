@@ -11,6 +11,7 @@ export interface AppUser {
   department: string;
   position?: string;
   role: 'admin' | 'hr' | 'user';
+  menuPermissions?: Record<string, boolean>;
 }
 
 interface AuthContextType {

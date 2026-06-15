@@ -57,6 +57,11 @@ export function Layout() {
   const role = user?.role || '';
 
   const canAccess = (item: typeof ALL_NAV[0]) => {
+    // 사용자별 개별 권한이 설정된 경우 우선 적용
+    if (user?.menuPermissions && item.to in user.menuPermissions) {
+      return user.menuPermissions[item.to];
+    }
+    // 역할 기반 권한 체크
     const p = perms[item.to];
     if (!p) return false;
     if (p[role as 'admin' | 'hr' | 'user']) return true;

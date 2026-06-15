@@ -15,6 +15,28 @@ async function adminFetch(path: string, body: object) {
     body: JSON.stringify(body),
   });
 }
+const ALL_MENUS = [
+  { to: "/", label: "대시보드", category: "기본" },
+  { to: "/evaluate", label: "내 평가 진행", category: "기본" },
+  { to: "/evaluate-executive", label: "임원평가 진행", category: "기본" },
+  { to: "/history", label: "내 평가 이력", category: "기본" },
+  { to: "/admin/items", label: "평가 항목 관리", category: "관리 기능" },
+  { to: "/admin/items-executive", label: "임원평가 항목 관리", category: "관리 기능" },
+  { to: "/admin/assignments", label: "평가자 배정", category: "관리 기능" },
+  { to: "/admin/assignments-executive", label: "임원평가 배정", category: "관리 기능" },
+  { to: "/admin/results", label: "최종 평가 결과", category: "관리 기능" },
+  { to: "/admin/results-executive", label: "임원평가 최종 결과", category: "관리 기능" },
+  { to: "/admin/users", label: "사용자 관리", category: "시스템 설정" },
+  { to: "/admin/settings", label: "평가 연도/그룹", category: "시스템 설정" },
+  { to: "/admin/menu-permissions", label: "메뉴 권한 관리", category: "시스템 설정" },
+];
+
+const ROLE_DEFAULT_PERMS: Record<string, Record<string, boolean>> = {
+  admin: { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/users": true, "/admin/settings": true, "/admin/menu-permissions": true },
+  hr:    { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
+  user:  { "/": true, "/evaluate": true, "/evaluate-executive": false, "/history": false, "/admin/items": false, "/admin/items-executive": false, "/admin/assignments": false, "/admin/assignments-executive": false, "/admin/results": false, "/admin/results-executive": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
+};
+
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -29,6 +51,8 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user' });
+  const [userMenuPerms, setUserMenuPerms] = useState<Record<string, boolean> | null>(null);
+  const [showMenuPerms, setShowMenuPerms] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -110,15 +134,19 @@ export default function UserManagement() {
       }
 
       const userRef = doc(db, 'users', finalEmail);
-      await setDoc(userRef, {
+      const saveData: any = {
         email: finalEmail,
         name: formData.name,
         department: formData.department,
         position: formData.position,
         role: formData.role,
         createdAt: serverTimestamp(),
-        uid: '' // Will be populatd on their first login
-      }, { merge: true });
+        uid: '',
+      };
+      if (userMenuPerms !== null) {
+        saveData.menuPermissions = userMenuPerms;
+      }
+      await setDoc(userRef, saveData, { merge: true });
       
       setIsOpen(false);
       fetchUsers();
@@ -216,6 +244,8 @@ export default function UserManagement() {
 
   const openEdit = (user: any) => {
     setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role });
+    setUserMenuPerms(user.menuPermissions ?? null);
+    setShowMenuPerms(false);
     setAdminForcePassword('');
     setIsEditing(true);
     setErrorMsg('');
@@ -225,6 +255,8 @@ export default function UserManagement() {
 
   const openNew = () => {
     setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user' });
+    setUserMenuPerms(null);
+    setShowMenuPerms(false);
     setAdminForcePassword('');
     setIsEditing(false);
     setErrorMsg('');
@@ -461,6 +493,55 @@ export default function UserManagement() {
                   </SelectContent>
                 </Select>
               </div>
+              {isEditing && (
+                <div className="space-y-2 pt-4 border-t border-[#EEE]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenuPerms(v => !v);
+                      if (userMenuPerms === null) {
+                        setUserMenuPerms({ ...ROLE_DEFAULT_PERMS[formData.role] });
+                      }
+                    }}
+                    className="w-full text-left text-[10px] uppercase tracking-widest text-[#555] flex justify-between items-center py-1"
+                  >
+                    <span>개별 메뉴 권한 설정</span>
+                    <span>{showMenuPerms ? '▲' : '▼'}</span>
+                  </button>
+                  {showMenuPerms && userMenuPerms !== null && (
+                    <div className="border border-[#EEE] p-3 space-y-3 max-h-60 overflow-y-auto">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[9px] text-[#999] uppercase tracking-widest">역할 기반 기본값 재정의</span>
+                        <button
+                          type="button"
+                          onClick={() => { setUserMenuPerms(null); setShowMenuPerms(false); }}
+                          className="text-[9px] text-red-500 uppercase tracking-widest underline"
+                        >
+                          초기화 (역할 기본값 사용)
+                        </button>
+                      </div>
+                      {Object.entries(
+                        ALL_MENUS.reduce((acc, m) => { if (!acc[m.category]) acc[m.category] = []; acc[m.category].push(m); return acc; }, {} as Record<string, typeof ALL_MENUS>)
+                      ).map(([cat, items]) => (
+                        <div key={cat}>
+                          <p className="text-[9px] uppercase tracking-widest text-[#AAA] mb-1">{cat}</p>
+                          {items.map(m => (
+                            <label key={m.to} className="flex items-center gap-2 py-1 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={userMenuPerms[m.to] ?? false}
+                                onChange={e => setUserMenuPerms(prev => ({ ...prev!, [m.to]: e.target.checked }))}
+                                className="w-3.5 h-3.5 accent-[#1A1A1A]"
+                              />
+                              <span className="text-xs text-[#333]">{m.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="pt-4 flex justify-end">
                 <button onClick={handleSave} className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors w-full">저장하기</button>
               </div>
