@@ -25,23 +25,29 @@ import ExecutiveEvaluationItems from './pages/admin/ExecutiveEvaluationItems';
 import ExecutiveAssignments from './pages/admin/ExecutiveAssignments';
 import ExecutiveFinalResults from './pages/admin/ExecutiveFinalResults';
 
-function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPresident, allowExecutives }: { children: React.ReactNode, requiredRole?: string[], allowGroupLeader?: boolean, allowPresident?: boolean, allowExecutives?: boolean }) {
+function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPresident, allowExecutives, menuPath }: {
+  children: React.ReactNode;
+  requiredRole?: string[];
+  allowGroupLeader?: boolean;
+  allowPresident?: boolean;
+  allowExecutives?: boolean;
+  menuPath?: string;
+}) {
   const { user, loading } = useAuth();
 
   if (loading) return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
   if (!user) return <Navigate to="/login" replace />;
-  
+
+  // 사용자별 개별 권한이 설정된 경우 우선 적용
+  if (menuPath && user.menuPermissions && menuPath in user.menuPermissions) {
+    return user.menuPermissions[menuPath] ? <>{children}</> : <Navigate to="/" replace />;
+  }
+
   if (requiredRole) {
     let hasAccess = requiredRole.includes(user.role);
-    if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) {
-      hasAccess = true;
-    }
-    if (!hasAccess && allowPresident && user.position === '사장') {
-      hasAccess = true;
-    }
-    if (!hasAccess && allowExecutives && ['본부장', '그룹장', '사장'].includes(user.position || '')) {
-      hasAccess = true;
-    }
+    if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) hasAccess = true;
+    if (!hasAccess && allowPresident && user.position === '사장') hasAccess = true;
+    if (!hasAccess && allowExecutives && ['본부장', '그룹장', '사장'].includes(user.position || '')) hasAccess = true;
     if (!hasAccess) return <Navigate to="/" replace />;
   }
 
@@ -62,55 +68,55 @@ export default function App() {
             <Route path="profile" element={<ProfileSettings />} />
             <Route path="evaluate" element={<MyEvaluations />} />
             <Route path="evaluate/:assignmentId" element={<EvaluationForm />} />
-            <Route 
-              path="evaluate-executive" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluations /></ProtectedRoute>} 
+            <Route
+              path="evaluate-executive"
+              element={<ProtectedRoute menuPath="/evaluate-executive" requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluations /></ProtectedRoute>}
             />
-            <Route 
-              path="evaluate-executive/:assignmentId" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluationForm /></ProtectedRoute>} 
+            <Route
+              path="evaluate-executive/:assignmentId"
+              element={<ProtectedRoute menuPath="/evaluate-executive" requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluationForm /></ProtectedRoute>}
             />
 
             {/* Admin / HR Views */}
-            <Route 
-              path="history" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']}><MyHistory /></ProtectedRoute>} 
+            <Route
+              path="history"
+              element={<ProtectedRoute menuPath="/history" requiredRole={['admin', 'hr']}><MyHistory /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/users" 
-              element={<ProtectedRoute requiredRole={['admin']}><UserManagement /></ProtectedRoute>} 
+            <Route
+              path="admin/users"
+              element={<ProtectedRoute menuPath="/admin/users" requiredRole={['admin']}><UserManagement /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/settings" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']}><EvaluationSettings /></ProtectedRoute>} 
+            <Route
+              path="admin/settings"
+              element={<ProtectedRoute menuPath="/admin/settings" requiredRole={['admin', 'hr']}><EvaluationSettings /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/items" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']}><EvaluationItems /></ProtectedRoute>} 
+            <Route
+              path="admin/items"
+              element={<ProtectedRoute menuPath="/admin/items" requiredRole={['admin', 'hr']}><EvaluationItems /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/items-executive" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']}><ExecutiveEvaluationItems /></ProtectedRoute>} 
+            <Route
+              path="admin/items-executive"
+              element={<ProtectedRoute menuPath="/admin/items-executive" requiredRole={['admin', 'hr']}><ExecutiveEvaluationItems /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/assignments" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']}><EvaluationAssignments /></ProtectedRoute>} 
+            <Route
+              path="admin/assignments"
+              element={<ProtectedRoute menuPath="/admin/assignments" requiredRole={['admin', 'hr']}><EvaluationAssignments /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/assignments-executive" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']}><ExecutiveAssignments /></ProtectedRoute>} 
+            <Route
+              path="admin/assignments-executive"
+              element={<ProtectedRoute menuPath="/admin/assignments-executive" requiredRole={['admin', 'hr']}><ExecutiveAssignments /></ProtectedRoute>}
             />
-            <Route 
-              path="admin/results" 
-              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowGroupLeader={true} allowPresident={true}><FinalResults /></ProtectedRoute>} 
+            <Route
+              path="admin/results"
+              element={<ProtectedRoute menuPath="/admin/results" requiredRole={['admin', 'hr']} allowGroupLeader={true} allowPresident={true}><FinalResults /></ProtectedRoute>}
             />
             <Route
               path="admin/results-executive"
-              element={<ProtectedRoute requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>}
+              element={<ProtectedRoute menuPath="/admin/results-executive" requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>}
             />
             <Route
               path="admin/menu-permissions"
-              element={<ProtectedRoute requiredRole={['admin']}><MenuPermissions /></ProtectedRoute>}
+              element={<ProtectedRoute menuPath="/admin/menu-permissions" requiredRole={['admin']}><MenuPermissions /></ProtectedRoute>}
             />
           </Route>
         </Routes>
