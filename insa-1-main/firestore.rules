@@ -43,12 +43,12 @@ service cloud.firestore {
     // 역할별 메뉴 권한 체크 (settings/menuPermissions 기반)
     function hasRoleMenuAccess(menuPath) {
       let u = getUser(request.auth.token.email);
-      let mp = get(/databases/$(database)/documents/settings/menuPermissions).data;
       return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.token.email))
         && exists(/databases/$(database)/documents/settings/menuPermissions)
-        && menuPath in mp
-        && u.role in mp[menuPath]
-        && mp[menuPath][u.role] == true;
+        && menuPath in get(/databases/$(database)/documents/settings/menuPermissions).data
+        && u.role in get(/databases/$(database)/documents/settings/menuPermissions).data[menuPath]
+        && get(/databases/$(database)/documents/settings/menuPermissions).data[menuPath][u.role] == true;
     }
 
     // 개별 또는 역할별 메뉴 권한 중 하나라도 허용

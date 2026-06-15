@@ -21,7 +21,7 @@ const ALL_NAV = [
 export function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const perms = useMenuPermissions();
+  const { perms } = useMenuPermissions();
 
   const isGroupLeader = user?.position?.endsWith('그룹장');
   const isExecutive = ['본부장', '그룹장', '사장'].includes(user?.position || '');

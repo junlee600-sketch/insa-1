@@ -21,22 +21,35 @@ export const DEFAULT_PERMS: Record<string, RolePerms> = {
   "/admin/menu-permissions": { admin: true, hr: false, user: false },
 };
 
-const MenuPermissionsContext = createContext<Record<string, RolePerms>>(DEFAULT_PERMS);
+interface MenuPermissionsContextType {
+  perms: Record<string, RolePerms>;
+  loaded: boolean;
+}
+
+const MenuPermissionsContext = createContext<MenuPermissionsContextType>({
+  perms: DEFAULT_PERMS,
+  loaded: false,
+});
 
 export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
   const [perms, setPerms] = useState<Record<string, RolePerms>>(DEFAULT_PERMS);
+  const [loaded, setLoaded] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(doc(db, 'settings', 'menuPermissions'), snap => {
       setPerms(snap.exists() ? { ...DEFAULT_PERMS, ...(snap.data() as Record<string, RolePerms>) } : DEFAULT_PERMS);
+      setLoaded(true);
+    }, () => {
+      // 읽기 실패 시 기본값 사용
+      setLoaded(true);
     });
     return unsub;
   }, [user]);
 
   return (
-    <MenuPermissionsContext.Provider value={perms}>
+    <MenuPermissionsContext.Provider value={{ perms, loaded }}>
       {children}
     </MenuPermissionsContext.Provider>
   );

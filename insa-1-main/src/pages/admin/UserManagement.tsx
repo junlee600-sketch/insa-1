@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, where, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, deleteField, serverTimestamp, query, where, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { db, secondaryAuth, auth } from '../../lib/firebase';
 
@@ -140,11 +140,17 @@ export default function UserManagement() {
         department: formData.department,
         position: formData.position,
         role: formData.role,
-        createdAt: serverTimestamp(),
-        uid: '',
+        updatedAt: serverTimestamp(),
       };
+      if (!isEditing) {
+        saveData.createdAt = serverTimestamp();
+        saveData.uid = '';
+      }
       if (userMenuPerms !== null) {
         saveData.menuPermissions = userMenuPerms;
+      } else if (isEditing) {
+        // 초기화 시 개별 권한 필드 완전 삭제
+        saveData.menuPermissions = deleteField();
       }
       await setDoc(userRef, saveData, { merge: true });
       

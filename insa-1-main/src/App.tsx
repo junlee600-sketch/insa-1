@@ -35,14 +35,19 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
   menuPath?: string;
 }) {
   const { user, loading } = useAuth();
-  const menuPerms = useMenuPermissions();
+  const { perms: menuPerms, loaded: menuPermsLoaded } = useMenuPermissions();
 
   if (loading) return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
   if (!user) return <Navigate to="/login" replace />;
 
-  // 1순위: 사용자별 개별 권한 (UserManagement에서 설정)
+  // 1순위: 사용자별 개별 권한 (UserManagement에서 설정) - 즉시 판단 가능
   if (menuPath && user.menuPermissions && menuPath in user.menuPermissions) {
     return user.menuPermissions[menuPath] ? <>{children}</> : <Navigate to="/" replace />;
+  }
+
+  // 역할별 권한 체크 전 Firestore settings/menuPermissions 로드 대기
+  if (menuPath && !menuPermsLoaded) {
+    return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
   }
 
   // 2순위: Firestore 기반 역할별 메뉴 권한 (메뉴 권한 관리에서 설정)
