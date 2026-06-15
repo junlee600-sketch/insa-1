@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { MenuPermissionsProvider, useMenuPermissions } from './contexts/MenuPermissionsContext';
 import { Layout } from './components/Layout';
 
 // Pages
@@ -34,15 +35,28 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
   menuPath?: string;
 }) {
   const { user, loading } = useAuth();
+  const menuPerms = useMenuPermissions();
 
   if (loading) return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
   if (!user) return <Navigate to="/login" replace />;
 
-  // 사용자별 개별 권한이 설정된 경우 우선 적용
+  // 1순위: 사용자별 개별 권한 (UserManagement에서 설정)
   if (menuPath && user.menuPermissions && menuPath in user.menuPermissions) {
     return user.menuPermissions[menuPath] ? <>{children}</> : <Navigate to="/" replace />;
   }
 
+  // 2순위: Firestore 기반 역할별 메뉴 권한 (메뉴 권한 관리에서 설정)
+  if (menuPath && menuPerms[menuPath]) {
+    const p = menuPerms[menuPath];
+    const role = user.role as 'admin' | 'hr' | 'user';
+    let hasAccess = p[role];
+    if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) hasAccess = true;
+    if (!hasAccess && allowPresident && user.position === '사장') hasAccess = true;
+    if (!hasAccess && allowExecutives && ['본부장', '그룹장', '사장'].includes(user.position || '')) hasAccess = true;
+    return hasAccess ? <>{children}</> : <Navigate to="/" replace />;
+  }
+
+  // 3순위: 하드코딩 역할 체크 (fallback)
   if (requiredRole) {
     let hasAccess = requiredRole.includes(user.role);
     if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) hasAccess = true;
@@ -57,6 +71,7 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
 export default function App() {
   return (
     <AuthProvider>
+      <MenuPermissionsProvider>
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -121,6 +136,7 @@ export default function App() {
           </Route>
         </Routes>
       </Router>
+      </MenuPermissionsProvider>
     </AuthProvider>
   );
 }

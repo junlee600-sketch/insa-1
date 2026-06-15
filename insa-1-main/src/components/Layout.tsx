@@ -1,28 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
-import { LayoutDashboard, ListTodo, History, Users, Settings, ClipboardList, PenBox, CheckSquare } from 'lucide-react';
-
-type RolePerms = { admin: boolean; hr: boolean; user: boolean };
-
-const DEFAULT_PERMS: Record<string, RolePerms> = {
-  "/": { admin: true, hr: true, user: true },
-  "/evaluate": { admin: true, hr: true, user: true },
-  "/evaluate-executive": { admin: true, hr: true, user: false },
-  "/history": { admin: true, hr: true, user: false },
-  "/admin/items": { admin: true, hr: true, user: false },
-  "/admin/items-executive": { admin: true, hr: true, user: false },
-  "/admin/assignments": { admin: true, hr: true, user: false },
-  "/admin/assignments-executive": { admin: true, hr: true, user: false },
-  "/admin/results": { admin: true, hr: true, user: false },
-  "/admin/results-executive": { admin: true, hr: true, user: false },
-  "/admin/users": { admin: true, hr: false, user: false },
-  "/admin/settings": { admin: true, hr: false, user: false },
-  "/admin/menu-permissions": { admin: true, hr: false, user: false },
-};
+import { useMenuPermissions } from '../contexts/MenuPermissionsContext';
 
 const ALL_NAV = [
   { to: "/", label: "대시보드", category: "기본", specialRoles: [] as string[] },
@@ -43,13 +21,7 @@ const ALL_NAV = [
 export function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [perms, setPerms] = useState<Record<string, RolePerms>>(DEFAULT_PERMS);
-
-  useEffect(() => {
-    getDoc(doc(db, 'settings', 'menuPermissions')).then(snap => {
-      if (snap.exists()) setPerms({ ...DEFAULT_PERMS, ...snap.data() as Record<string, RolePerms> });
-    });
-  }, []);
+  const perms = useMenuPermissions();
 
   const isGroupLeader = user?.position?.endsWith('그룹장');
   const isExecutive = ['본부장', '그룹장', '사장'].includes(user?.position || '');
