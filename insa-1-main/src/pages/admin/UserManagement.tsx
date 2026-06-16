@@ -58,6 +58,8 @@ export default function UserManagement() {
   const [successMsg, setSuccessMsg] = useState('');
   const [adminForcePassword, setAdminForcePassword] = useState('');
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmData, setConfirmData] = useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -364,6 +366,16 @@ export default function UserManagement() {
 
   if (loading) return <div>사용자 정보를 불러오는 중입니다...</div>;
 
+  const filteredUsers = searchQuery
+    ? users.filter(u => {
+        const q = searchQuery.toLowerCase();
+        return (u.name || '').toLowerCase().includes(q)
+          || (u.email || '').toLowerCase().includes(q)
+          || (u.department || '').toLowerCase().includes(q)
+          || (u.position || '').toLowerCase().includes(q);
+      })
+    : users;
+
   return (
     <div className="space-y-6">
       <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
@@ -557,7 +569,25 @@ export default function UserManagement() {
         </div>
       </header>
 
-      <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col mt-8">
+      <div className="flex items-center gap-3 mt-8 mb-3">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="이름, 아이디, 부서, 직급 검색..."
+          className="border border-[#CCC] px-4 py-2 text-sm w-72 focus:outline-none focus:border-[#1A1A1A] bg-transparent"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="text-[10px] uppercase tracking-widest text-[#999] hover:text-[#1A1A1A] transition-colors">
+            초기화
+          </button>
+        )}
+        <span className="text-[10px] text-[#999] ml-auto">
+          {filteredUsers.length} / {users.length}명
+        </span>
+      </div>
+
+      <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
         <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
           <div className="col-span-3">로그인 ID</div>
           <div className="col-span-2">사용자 이름</div>
@@ -566,8 +596,8 @@ export default function UserManagement() {
           <div className="col-span-1">권한</div>
           <div className="col-span-2 text-right">작업</div>
         </div>
-        <div className="flex-1 overflow-y-auto  text-sm">
-          {users.map((user) => (
+        <div className="flex-1 overflow-y-auto text-sm">
+          {filteredUsers.map((user) => (
             <div key={user.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors">
               <div className="col-span-3 text-[#777] truncate pr-2">{user.email?.includes('@') ? user.email.split('@')[0] : user.email}</div>
               <div className="col-span-2 font-bold text-lg truncate pr-2">{user.name}</div>
@@ -584,6 +614,9 @@ export default function UserManagement() {
               </div>
             </div>
           ))}
+          {filteredUsers.length === 0 && (
+            <div className="p-8 text-center text-[#999] text-sm">검색 결과가 없습니다.</div>
+          )}
         </div>
       </div>
       <ConfirmDialog 
