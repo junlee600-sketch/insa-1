@@ -201,11 +201,22 @@ export default function FinalResults() {
       { key: 'value', width: 42 },
     ];
 
-    const addRow = (label: string, value: any) => {
+    // 피평가자 블록: 연한 파랑 / 평가자 블록: 노랑→초록→핑크→보라 순환
+    const EVALUATEE_BG = 'FFDBEAFE';
+    const EVALUATOR_BGS = ['FFFEF9C3', 'FFDCFCE7', 'FFFCE7F3', 'FFEDE9FE'];
+
+    const addRow = (label: string, value: any, bgArgb: string, redValue = false) => {
       const row = worksheet.addRow([label, value ?? '']);
+
       const labelCell = row.getCell(1);
-      labelCell.font = { bold: true };
-      labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F0F0' } };
+      labelCell.font = { bold: true, color: { argb: 'FF000000' } };
+      labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+      labelCell.alignment = { horizontal: 'left', vertical: 'middle' };
+
+      const valueCell = row.getCell(2);
+      valueCell.font = redValue ? { color: { argb: 'FFFF0000' } } : { color: { argb: 'FF000000' } };
+      valueCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+      valueCell.alignment = { horizontal: 'left', vertical: 'middle' };
     };
 
     filteredEvaluatees.forEach((ev, index) => {
@@ -213,11 +224,11 @@ export default function FinalResults() {
         ? parseFloat((ev.rawScoreSum / ev.totalCompleted).toFixed(2))
         : '-';
 
-      addRow('피평가자(대상자) 이름', usersMap[ev.evaluateeId] || ev.evaluateeId);
-      addRow('직급', userPositions[ev.evaluateeId] || '-');
-      addRow('부서', userDepartments[ev.evaluateeId] || '-');
-      addRow('원점수 평균', rawAvg);
-      addRow('최종 확정 점수', ev.finalState ? ev.finalState.totalScore : '미확정');
+      addRow('피평가자(대상자) 이름', usersMap[ev.evaluateeId] || ev.evaluateeId, EVALUATEE_BG);
+      addRow('직급', userPositions[ev.evaluateeId] || '-', EVALUATEE_BG);
+      addRow('부서', userDepartments[ev.evaluateeId] || '-', EVALUATEE_BG);
+      addRow('원점수 평균', rawAvg, EVALUATEE_BG, true);
+      addRow('최종 확정 점수', ev.finalState ? ev.finalState.totalScore : '미확정', EVALUATEE_BG, true);
 
       const sorted = [...ev.assignments].sort((a: any, b: any) => {
         const order = (g: string) => { const n = groupsMap[g] || ''; return n.includes('자기') ? 0 : n.includes('하향') ? 1 : n.includes('상향') ? 2 : 3; };
@@ -226,11 +237,12 @@ export default function FinalResults() {
 
       sorted.forEach((assn: any, idx: number) => {
         const i = idx + 1;
-        addRow(`평가${i} 이름`, usersMap[assn.evaluatorId] || assn.evaluatorId);
-        addRow(`평가${i} 직급`, userPositions[assn.evaluatorId] || '-');
-        addRow(`평가${i} 대상 그룹`, groupsMap[assn.groupId] || '-');
-        addRow(`평가${i} 점수`, assn.status === 'completed' ? assn.totalScore : '-');
-        addRow(`평가${i} 정성 평가 의견`, assn.comment || '');
+        const bg = EVALUATOR_BGS[idx % EVALUATOR_BGS.length];
+        addRow(`평가${i} 이름`, usersMap[assn.evaluatorId] || assn.evaluatorId, bg);
+        addRow(`평가${i} 직급`, userPositions[assn.evaluatorId] || '-', bg);
+        addRow(`평가${i} 대상 그룹`, groupsMap[assn.groupId] || '-', bg);
+        addRow(`평가${i} 점수`, assn.status === 'completed' ? assn.totalScore : '-', bg);
+        addRow(`평가${i} 정성 평가 의견`, assn.comment || '', bg);
       });
 
       if (index < filteredEvaluatees.length - 1) {
