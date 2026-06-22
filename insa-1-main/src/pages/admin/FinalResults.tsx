@@ -214,7 +214,7 @@ export default function FinalResults() {
       labelCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
       const valueCell = row.getCell(2);
-      valueCell.font = redValue ? { color: { argb: 'FFFF0000' } } : { color: { argb: 'FF000000' } };
+      valueCell.font = redValue ? { bold: true, color: { argb: 'FFFF0000' } } : { color: { argb: 'FF000000' } };
       valueCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
       valueCell.alignment = { horizontal: 'left', vertical: 'middle' };
     };
