@@ -410,20 +410,22 @@ export default function UserManagement() {
               {successMsg && <div className="text-green-700 text-xs p-2 bg-green-50 border border-green-200">{successMsg}</div>}
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 ID</Label>
-                <Input 
-                  value={formData.email} 
-                  onChange={e => setFormData({...formData, email: e.target.value})} 
+                <Input
+                  value={formData.email}
+                  onChange={e => setFormData({...formData, email: e.target.value})}
                   disabled={isEditing}
+                  autoComplete="off"
                   className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
                 />
               </div>
               {!isEditing && (
                 <div className="space-y-2">
                   <Label className="text-[10px] uppercase tracking-widest text-[#999]">초기 비밀번호</Label>
-                  <Input 
+                  <Input
                     type="password"
-                    value={formData.password} 
-                    onChange={e => setFormData({...formData, password: e.target.value})} 
+                    value={formData.password}
+                    onChange={e => setFormData({...formData, password: e.target.value})}
+                    autoComplete="new-password"
                     className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
                     placeholder="최소 8자 이상"
                   />
@@ -433,10 +435,11 @@ export default function UserManagement() {
                 <div className="space-y-2 pt-4 border-t border-[#EEE]">
                   <Label className="text-[10px] uppercase tracking-widest text-[#red-700] text-red-700 font-bold">비밀번호 즉시 변경 (관리자)</Label>
                   <div className="flex gap-2 items-center">
-                    <Input 
+                    <Input
                       type="password"
-                      value={adminForcePassword} 
-                      onChange={e => setAdminForcePassword(e.target.value)} 
+                      value={adminForcePassword}
+                      onChange={e => setAdminForcePassword(e.target.value)}
+                      autoComplete="new-password"
                       className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
                       placeholder="새 비밀번호 (8자 이상)"
                     />
@@ -449,9 +452,10 @@ export default function UserManagement() {
               )}
               <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-[#999]">사용자 이름</Label>
-                <Input 
-                  value={formData.name} 
-                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                <Input
+                  value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  autoComplete="off"
                   className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
                 />
               </div>
@@ -575,6 +579,7 @@ export default function UserManagement() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="이름, 아이디, 부서, 직급 검색..."
+          autoComplete="off"
           className="border border-[#CCC] px-4 py-2 text-sm w-72 focus:outline-none focus:border-[#1A1A1A] bg-transparent"
         />
         {searchQuery && (
