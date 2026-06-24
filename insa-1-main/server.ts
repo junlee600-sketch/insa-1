@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -18,6 +19,8 @@ async function startServer() {
     const PORT = parseInt(process.env.PORT || "8080", 10);
 
     let adminInitialized = false;
+
+    const FIRESTORE_DB_ID = process.env.FIRESTORE_DATABASE_ID || "ai-studio-18524f69-b203-4864-b4ba-255a91501a7c";
 
     function getFirebaseAdmin() {
       if (adminInitialized) return admin;
@@ -39,6 +42,11 @@ async function startServer() {
       }
     }
 
+    // 커스텀 DB ID를 사용하는 Firestore 인스턴스 반환
+    function getAdminDb() {
+      return getFirestore(getFirebaseAdmin().app(), FIRESTORE_DB_ID);
+    }
+
     // 호출자의 Firebase ID 토큰을 검증하고 admin 역할 여부를 확인
     async function verifyAdminToken(req: express.Request, res: express.Response): Promise<string | null> {
       const authHeader = req.headers.authorization;
@@ -55,7 +63,7 @@ async function startServer() {
           res.status(403).json({ error: "인증된 이메일이 없습니다." });
           return null;
         }
-        const callerDoc = await pbAdmin.firestore().collection("users").doc(callerEmail.toLowerCase()).get();
+        const callerDoc = await getAdminDb().collection("users").doc(callerEmail.toLowerCase()).get();
         if (!callerDoc.exists || callerDoc.data()?.role !== "admin") {
           res.status(403).json({ error: "관리자 권한이 필요합니다." });
           return null;
@@ -208,7 +216,7 @@ async function startServer() {
         }
 
         const pbAdmin = getFirebaseAdmin();
-        const db = pbAdmin.firestore();
+        const db = getAdminDb();
 
         // 1. Firebase Auth 계정 삭제
         try {
