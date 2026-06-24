@@ -193,7 +193,7 @@ async function startServer() {
       }
     });
 
-    // API Route: Delete user completely
+    // API Route: Delete user + all related Firestore data (Admin SDK bypasses security rules)
     app.post("/api/admin/delete-user", adminLimiter, async (req, res) => {
       const caller = await verifyAdminToken(req, res);
       if (!caller) return;
@@ -201,27 +201,69 @@ async function startServer() {
       try {
         const { email } = req.body;
         if (!email) {
-           return res.status(400).json({ error: "Missing email" });
+          return res.status(400).json({ error: "Missing email" });
         }
         if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           return res.status(400).json({ error: "유효하지 않은 이메일 형식입니다." });
         }
 
         const pbAdmin = getFirebaseAdmin();
+        const db = pbAdmin.firestore();
 
-        // Firebase Auth 계정만 삭제. Firestore 데이터는 클라이언트 측 배치로 처리.
+        // 1. Firebase Auth 계정 삭제
         try {
           const userRecord = await pbAdmin.auth().getUserByEmail(email);
           await pbAdmin.auth().deleteUser(userRecord.uid);
         } catch (authErr: any) {
-          // Auth 계정이 없어도 성공으로 처리 (이미 삭제되었거나 없는 경우)
+          // Auth 계정이 없어도 Firestore 삭제는 계속 진행
         }
 
-        res.json({ success: true, message: "Firebase Auth 계정이 삭제되었습니다." });
+        // 2. 연관 Firestore 문서 수집
+        const queryByField = async (col: string, field: string) => {
+          const snap = await db.collection(col).where(field, "==", email).get();
+          return snap.docs;
+        };
+
+        const [
+          asEvaluator, execAsEvaluator,
+          asEvaluatee, execAsEvaluatee,
+          finalScores, execFinalScores,
+        ] = await Promise.all([
+          queryByField("assignments", "evaluatorId"),
+          queryByField("exec_assignments", "evaluatorId"),
+          queryByField("assignments", "evaluateeId"),
+          queryByField("exec_assignments", "evaluateeId"),
+          queryByField("finalScores", "evaluateeId"),
+          queryByField("exec_finalScores", "evaluateeId"),
+        ]);
+
+        // 중복 없이 삭제할 경로 수집
+        const seen = new Set<string>();
+        const refs: FirebaseFirestore.DocumentReference[] = [];
+        const add = (ref: FirebaseFirestore.DocumentReference) => {
+          if (!seen.has(ref.path)) { seen.add(ref.path); refs.push(ref); }
+        };
+
+        add(db.collection("users").doc(email));
+        for (const d of asEvaluator)     { add(db.collection("results").doc(d.id)); add(d.ref); }
+        for (const d of execAsEvaluator) { add(db.collection("exec_results").doc(d.id)); add(d.ref); }
+        for (const d of asEvaluatee)     { add(db.collection("results").doc(d.id)); add(d.ref); }
+        for (const d of execAsEvaluatee) { add(db.collection("exec_results").doc(d.id)); add(d.ref); }
+        for (const d of finalScores)     add(d.ref);
+        for (const d of execFinalScores) add(d.ref);
+
+        // 500건 단위로 배치 커밋 (Admin SDK 한도)
+        for (let i = 0; i < refs.length; i += 500) {
+          const batch = db.batch();
+          refs.slice(i, i + 500).forEach(r => batch.delete(r));
+          await batch.commit();
+        }
+
+        res.json({ success: true, message: "사용자 및 모든 관련 데이터가 삭제되었습니다." });
       } catch (error: any) {
         console.error("Error deleting user:", error);
-        if (error.message.includes("FIREBASE_SERVICE_ACCOUNT_KEY") || error.message.includes("설정이 필요합니다")) {
-           return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
+        if (error.message?.includes("FIREBASE_SERVICE_ACCOUNT_KEY") || error.message?.includes("설정이 필요합니다")) {
+          return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
         }
         res.status(500).json({ error: "사용자 삭제 중 오류가 발생했습니다." });
       }

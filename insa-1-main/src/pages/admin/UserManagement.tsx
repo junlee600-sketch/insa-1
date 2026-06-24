@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, deleteDoc, deleteField, serverTimestamp, query, where, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteField, serverTimestamp, query, where } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { db, secondaryAuth, auth } from '../../lib/firebase';
 
@@ -208,67 +208,18 @@ export default function UserManagement() {
     if (isDeleting) return;
     setIsDeleting(true);
     try {
-      let emailForPwd = email;
-      if (!emailForPwd.includes('@')) emailForPwd += '@han-guk.co.kr';
+      let emailForReq = email;
+      if (!emailForReq.includes('@')) emailForReq += '@han-guk.co.kr';
 
-      // 1. Delete Firebase Auth user via backend
-      try {
-        await adminFetch('/api/admin/delete-user', { email: emailForPwd });
-      } catch (err) {
-        logger.warn('Backend auth deletion failed, but continuing with DB deletion', err);
-      }
-
-      // 2. Query all related docs first, then batch-delete for atomicity
-      const collectDocsToDelete = async (colName: string, field: string) => {
-        const snap = await getDocs(query(collection(db, colName), where(field, '==', emailForPwd)));
-        return snap.docs;
-      };
-
-      const [
-        evalorAssignments, evalorExecAssignments,
-        evaleeAssignments, evaleeExecAssignments,
-        finalScoresDocs, execFinalScoresDocs,
-      ] = await Promise.all([
-        collectDocsToDelete('assignments', 'evaluatorId'),
-        collectDocsToDelete('exec_assignments', 'evaluatorId'),
-        collectDocsToDelete('assignments', 'evaluateeId'),
-        collectDocsToDelete('exec_assignments', 'evaluateeId'),
-        collectDocsToDelete('finalScores', 'evaluateeId'),
-        collectDocsToDelete('exec_finalScores', 'evaluateeId'),
-      ]);
-
-      const batch = writeBatch(db);
-
-      // Delete user document
-      batch.delete(doc(db, 'users', emailForPwd));
-
-      // Delete assignments and their results
-      for (const d of evalorAssignments) {
-        batch.delete(doc(db, 'results', d.id));
-        batch.delete(d.ref);
-      }
-      for (const d of evalorExecAssignments) {
-        batch.delete(doc(db, 'exec_results', d.id));
-        batch.delete(d.ref);
-      }
-      for (const d of evaleeAssignments) {
-        batch.delete(doc(db, 'results', d.id));
-        batch.delete(d.ref);
-      }
-      for (const d of evaleeExecAssignments) {
-        batch.delete(doc(db, 'exec_results', d.id));
-        batch.delete(d.ref);
-      }
-      for (const d of finalScoresDocs) batch.delete(d.ref);
-      for (const d of execFinalScoresDocs) batch.delete(d.ref);
-
-      await batch.commit();
+      const response = await adminFetch('/api/admin/delete-user', { email: emailForReq });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || '삭제 실패');
 
       alert('사용자 및 모든 관련 데이터가 성공적으로 삭제되었습니다.');
       fetchUsers();
     } catch (err: any) {
       logger.error(err);
-      alert('삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      alert(err.message || '삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setIsDeleting(false);
     }
