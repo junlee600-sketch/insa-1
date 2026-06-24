@@ -69,6 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             const data = snap.data();
+
+            // 퇴직 처리된 계정은 즉시 로그아웃
+            if (data.status === 'retired') {
+              await signOut(auth);
+              setUser(null);
+              setAuthError('퇴직 처리된 계정입니다. 접속이 차단되었습니다. 관리자에게 문의하세요.');
+              return;
+            }
+
             const appUser: AppUser = { uid: firebaseUser.uid, ...data } as AppUser;
 
             if (data.uid !== firebaseUser.uid) {

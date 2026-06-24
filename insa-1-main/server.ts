@@ -160,6 +160,39 @@ async function startServer() {
       }
     });
 
+    // API Route: Enable / disable Firebase Auth account (재직 ↔ 퇴직)
+    app.post("/api/admin/set-user-status", adminLimiter, async (req, res) => {
+      const caller = await verifyAdminToken(req, res);
+      if (!caller) return;
+
+      try {
+        const { email, disabled } = req.body;
+        if (!email || typeof disabled !== "boolean") {
+          return res.status(400).json({ error: "이메일과 disabled 값이 필요합니다." });
+        }
+        if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return res.status(400).json({ error: "유효하지 않은 이메일 형식입니다." });
+        }
+
+        const pbAdmin = getFirebaseAdmin();
+        try {
+          const userRecord = await pbAdmin.auth().getUserByEmail(email);
+          await pbAdmin.auth().updateUser(userRecord.uid, { disabled });
+        } catch (authErr: any) {
+          if (authErr.code !== "auth/user-not-found") throw authErr;
+          // Auth 계정이 없어도 Firestore 상태만 변경한 것으로 성공 처리
+        }
+
+        res.json({ success: true });
+      } catch (error: any) {
+        console.error("Error setting user status:", error);
+        if (error.message?.includes("FIREBASE_SERVICE_ACCOUNT_KEY")) {
+          return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
+        }
+        res.status(500).json({ error: "사용자 상태 변경 중 오류가 발생했습니다." });
+      }
+    });
+
     // API Route: Delete user completely
     app.post("/api/admin/delete-user", adminLimiter, async (req, res) => {
       const caller = await verifyAdminToken(req, res);
