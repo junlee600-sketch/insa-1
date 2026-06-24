@@ -54,23 +54,44 @@ async function startServer() {
         return null;
       }
       const idToken = authHeader.split("Bearer ")[1];
+
+      // Step 1: JWT 서명 검증 (Admin SDK의 verifyIdToken은 Firebase 공개키 사용 - 별도 인증 불필요)
+      let callerEmail: string;
       try {
         const pbAdmin = getFirebaseAdmin();
         const decoded = await pbAdmin.auth().verifyIdToken(idToken);
-        const callerEmail = decoded.email;
-        if (!callerEmail) {
+        if (!decoded.email) {
           res.status(403).json({ error: "인증된 이메일이 없습니다." });
           return null;
         }
-        const callerDoc = await pbAdmin.firestore().collection("users").doc(callerEmail.toLowerCase()).get();
-        if (!callerDoc.exists || callerDoc.data()?.role !== "admin") {
+        callerEmail = decoded.email.toLowerCase();
+      } catch (err: any) {
+        console.error("[verifyAdminToken] verifyIdToken 실패:", err?.code, err?.message);
+        res.status(401).json({ error: "유효하지 않은 토큰입니다." });
+        return null;
+      }
+
+      // Step 2: Firestore REST API로 admin 역할 확인 (클라이언트 토큰 사용 - Admin SDK 인증 불필요)
+      try {
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0327374539/databases/${FIRESTORE_DB_ID}/documents/users/${callerEmail}`;
+        const firestoreRes = await fetch(firestoreUrl, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (!firestoreRes.ok) {
+          console.error("[verifyAdminToken] Firestore 조회 실패:", firestoreRes.status);
+          res.status(403).json({ error: "관리자 권한이 필요합니다." });
+          return null;
+        }
+        const docData = await firestoreRes.json() as any;
+        const role = docData?.fields?.role?.stringValue;
+        if (role !== "admin") {
           res.status(403).json({ error: "관리자 권한이 필요합니다." });
           return null;
         }
         return callerEmail;
       } catch (err: any) {
-        console.error("[verifyAdminToken] 오류:", err?.code || err?.message || err);
-        res.status(401).json({ error: "유효하지 않은 토큰입니다." });
+        console.error("[verifyAdminToken] Firestore 오류:", err?.code, err?.message);
+        res.status(500).json({ error: "권한 확인 중 오류가 발생했습니다." });
         return null;
       }
     }
