@@ -82,8 +82,8 @@ export default function UserManagement() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-    if (!adminForcePassword || adminForcePassword.length < 8 || !/[A-Za-z]/.test(adminForcePassword) || !/[0-9]/.test(adminForcePassword)) {
-      setErrorMsg("비밀번호는 최소 8자 이상이며 영문자와 숫자를 포함해야 합니다.");
+    if (!adminForcePassword || adminForcePassword.length < 6 || !/^\d+$/.test(adminForcePassword)) {
+      setErrorMsg("비밀번호는 숫자만 사용하여 최소 6자 이상이어야 합니다.");
       return;
     }
     
@@ -119,8 +119,8 @@ export default function UserManagement() {
       }
 
       if (!isEditing) {
-        if (!formData.password || formData.password.length < 8 || !/[A-Za-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
-          setErrorMsg('비밀번호는 최소 8자 이상이며 영문자와 숫자를 포함해야 합니다.');
+        if (!formData.password || formData.password.length < 6 || !/^\d+$/.test(formData.password)) {
+          setErrorMsg('비밀번호는 숫자만 사용하여 최소 6자 이상이어야 합니다.');
           return;
         }
         // Force create auth account without signing current admin out
@@ -168,7 +168,7 @@ export default function UserManagement() {
       if (err.code === 'auth/invalid-email') {
         setErrorMsg('아이디에 사용할 수 없는 문자가 포함되어 있습니다.');
       } else if (err.code === 'auth/weak-password') {
-        setErrorMsg('비밀번호가 너무 약합니다. 8자 이상으로 설정해 주세요.');
+        setErrorMsg('비밀번호가 너무 약합니다. 숫자 6자 이상으로 설정해 주세요.');
       } else {
         setErrorMsg('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
@@ -351,7 +351,7 @@ export default function UserManagement() {
 
         try {
           if (!existingUser) {
-            if (!password || password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+            if (!password || password.length < 6 || !/^\d+$/.test(password)) {
               failCount++;
               continue;
             }
@@ -461,7 +461,7 @@ export default function UserManagement() {
                     onChange={e => setFormData({...formData, password: e.target.value})}
                     autoComplete="new-password"
                     className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
-                    placeholder="최소 8자 이상"
+                    placeholder="숫자만 입력, 최소 6자"
                   />
                 </div>
               )}
@@ -475,7 +475,7 @@ export default function UserManagement() {
                       onChange={e => setAdminForcePassword(e.target.value)}
                       autoComplete="new-password"
                       className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
-                      placeholder="새 비밀번호 (8자 이상)"
+                      placeholder="숫자만 입력, 최소 6자"
                     />
                     <button type="button" onClick={handleForcePasswordChange} className="px-5 py-2 whitespace-nowrap bg-[#1A1A1A] text-white text-[10px] hover:bg-[#333] transition-colors uppercase tracking-widest">
                       적용
