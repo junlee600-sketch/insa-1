@@ -82,8 +82,8 @@ export default function UserManagement() {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-    if (!adminForcePassword || adminForcePassword.length < 6 || !/^\d+$/.test(adminForcePassword)) {
-      setErrorMsg("비밀번호는 숫자만 사용하여 최소 6자 이상이어야 합니다.");
+    if (!adminForcePassword || adminForcePassword.length < 6) {
+      setErrorMsg("비밀번호는 최소 6자 이상이어야 합니다.");
       return;
     }
     
@@ -119,8 +119,8 @@ export default function UserManagement() {
       }
 
       if (!isEditing) {
-        if (!formData.password || formData.password.length < 6 || !/^\d+$/.test(formData.password)) {
-          setErrorMsg('비밀번호는 숫자만 사용하여 최소 6자 이상이어야 합니다.');
+        if (!formData.password || formData.password.length < 6) {
+          setErrorMsg('비밀번호는 최소 6자 이상이어야 합니다.');
           return;
         }
         // Force create auth account without signing current admin out
@@ -351,7 +351,7 @@ export default function UserManagement() {
 
         try {
           if (!existingUser) {
-            if (!password || password.length < 6 || !/^\d+$/.test(password)) {
+            if (!password || password.length < 6) {
               failCount++;
               continue;
             }
@@ -461,7 +461,7 @@ export default function UserManagement() {
                     onChange={e => setFormData({...formData, password: e.target.value})}
                     autoComplete="new-password"
                     className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
-                    placeholder="숫자만 입력, 최소 6자"
+                    placeholder="최소 6자 이상"
                   />
                 </div>
               )}
@@ -475,7 +475,7 @@ export default function UserManagement() {
                       onChange={e => setAdminForcePassword(e.target.value)}
                       autoComplete="new-password"
                       className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
-                      placeholder="숫자만 입력, 최소 6자"
+                      placeholder="최소 6자 이상"
                     />
                     <button type="button" onClick={handleForcePasswordChange} className="px-5 py-2 whitespace-nowrap bg-[#1A1A1A] text-white text-[10px] hover:bg-[#333] transition-colors uppercase tracking-widest">
                       적용
