@@ -50,12 +50,20 @@ export default function Dashboard() {
                 <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400">1</div>
                 <p><span className="font-semibold text-gray-900 dark:text-gray-100">내 평가 진행</span> 메뉴로 이동하여 본인에게 할당된 평가를 제출해 주시기 바랍니다.</p>
               </li>
+              <li className="flex gap-4">
+                <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400">2</div>
+                <p><span className="font-semibold text-gray-900 dark:text-gray-100">임원평가 진행</span> 메뉴 권한이 부여된 평가자는 임원평가 메뉴로 이동하여 본인에게 할당된 평가를 제출해 주시기 바랍니다.</p>
+              </li>
               {['admin', 'hr'].includes(user?.role || '') && (
                 <li className="flex gap-4">
-                  <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400">2</div>
+                  <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400">3</div>
                   <p><span className="font-semibold text-gray-900 dark:text-gray-100">내 평가 이력</span> 메뉴에서 역대 확정된 평가 결과(점수)를 조회할 수 있습니다.</p>
                 </li>
               )}
+              <li className="flex gap-4 pt-1">
+                <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-amber-50 dark:bg-amber-900/20 text-xs font-medium text-amber-600 dark:text-amber-400">!</div>
+                <p className="text-gray-500 dark:text-gray-400">메뉴는 권한에 따라 부여된 메뉴가 다릅니다.</p>
+              </li>
               {['admin', 'hr'].includes(user?.role || '') && (
                 <li className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl mt-6 border border-gray-100 dark:border-gray-800">
                   <div className="flex items-center gap-2 mb-2">
