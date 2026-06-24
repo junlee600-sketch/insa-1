@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (data.status === 'retired') {
               await signOut(auth);
               setUser(null);
-              setAuthError('퇴직 처리된 계정입니다. 접속이 차단되었습니다. 관리자에게 문의하세요.');
+              setAuthError('접속이 차단되었습니다. 관리자에게 문의하세요.');
               return;
             }
 
