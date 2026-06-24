@@ -293,7 +293,7 @@ async function startServer() {
         res.json({ success: true, message: "사용자 및 모든 관련 데이터가 삭제되었습니다." });
       } catch (error: any) {
         console.error("Error deleting user:", error);
-        res.status(500).json({ error: error?.message || error?.code || "사용자 삭제 중 오류가 발생했습니다." });
+        res.status(500).json({ error: isProd ? "사용자 삭제 중 오류가 발생했습니다." : (error?.message || error?.code || "사용자 삭제 중 오류가 발생했습니다.") });
       }
     });
 

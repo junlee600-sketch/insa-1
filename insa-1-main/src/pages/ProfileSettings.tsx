@@ -43,8 +43,8 @@ export default function ProfileSettings() {
           setLoading(false);
           return;
         }
-        if (formData.newPassword.length < 8 || !/[A-Za-z]/.test(formData.newPassword) || !/[0-9]/.test(formData.newPassword)) {
-          setErrorModalMsg('새 비밀번호는 최소 8자 이상이며 영문자와 숫자를 포함해야 합니다.');
+        if (formData.newPassword.length < 6) {
+          setErrorModalMsg('비밀번호는 최소 6자 이상이어야 합니다.');
           setErrorModalOpen(true);
           setLoading(false);
           return;
