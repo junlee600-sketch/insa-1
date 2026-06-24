@@ -24,17 +24,20 @@ async function startServer() {
     function getFirebaseAdmin() {
       if (adminInitialized) return admin;
 
-      const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-      if (!serviceAccountStr) {
-        throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY 설정이 필요합니다.");
-      }
-
       try {
-        const serviceAccount = JSON.parse(serviceAccountStr);
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
-        });
-        // 커스텀 Firestore DB ID 지정 (기본값은 (default) 데이터베이스)
+        const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (serviceAccountStr) {
+          // 서비스 계정 키가 있으면 사용 (로컬 개발 등)
+          const serviceAccount = JSON.parse(serviceAccountStr);
+          admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+        } else {
+          // Cloud Run 환경에서는 ADC(Application Default Credentials) 사용
+          const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || "gen-lang-client-0327374539";
+          admin.initializeApp({
+            credential: admin.credential.applicationDefault(),
+            projectId,
+          });
+        }
         (admin.firestore() as any).settings({ databaseId: FIRESTORE_DB_ID });
         adminInitialized = true;
         return admin;
@@ -67,11 +70,7 @@ async function startServer() {
         return callerEmail;
       } catch (err: any) {
         console.error("[verifyAdminToken] 오류:", err?.code || err?.message || err);
-        if (err?.message?.includes("FIREBASE_SERVICE_ACCOUNT_KEY") || err?.message?.includes("초기화 오류")) {
-          res.status(500).json({ error: "서버 설정 오류입니다. 관리자에게 문의하세요." });
-        } else {
-          res.status(401).json({ error: "유효하지 않은 토큰입니다." });
-        }
+        res.status(401).json({ error: "유효하지 않은 토큰입니다." });
         return null;
       }
     }
