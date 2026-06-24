@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -27,23 +28,24 @@ async function startServer() {
       try {
         const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
         if (serviceAccountStr) {
-          // 서비스 계정 키가 있으면 사용 (로컬 개발 등)
           const serviceAccount = JSON.parse(serviceAccountStr);
           admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
         } else {
-          // Cloud Run 환경에서는 ADC(Application Default Credentials) 사용
-          const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || "gen-lang-client-0327374539";
+          // Cloud Run 환경: ADC 사용, 프로젝트 ID를 Firebase 프로젝트로 고정
           admin.initializeApp({
             credential: admin.credential.applicationDefault(),
-            projectId,
+            projectId: "gen-lang-client-0327374539",
           });
         }
-        (admin.firestore() as any).settings({ databaseId: FIRESTORE_DB_ID });
         adminInitialized = true;
         return admin;
       } catch (err: any) {
         throw new Error("Firebase Admin 초기화 오류: " + err.message);
       }
+    }
+
+    function getAdminDb() {
+      return getFirestore(getFirebaseAdmin().app(), FIRESTORE_DB_ID);
     }
 
     // 호출자의 Firebase ID 토큰을 검증하고 admin 역할 여부를 확인
@@ -237,7 +239,7 @@ async function startServer() {
         }
 
         const pbAdmin = getFirebaseAdmin();
-        const db = pbAdmin.firestore();
+        const db = getAdminDb();
 
         // 1. Firebase Auth 계정 삭제
         try {
@@ -291,10 +293,7 @@ async function startServer() {
         res.json({ success: true, message: "사용자 및 모든 관련 데이터가 삭제되었습니다." });
       } catch (error: any) {
         console.error("Error deleting user:", error);
-        if (error.message?.includes("FIREBASE_SERVICE_ACCOUNT_KEY") || error.message?.includes("설정이 필요합니다")) {
-          return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
-        }
-        res.status(500).json({ error: "사용자 삭제 중 오류가 발생했습니다." });
+        res.status(500).json({ error: error?.message || error?.code || "사용자 삭제 중 오류가 발생했습니다." });
       }
     });
 

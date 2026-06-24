@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "node server.js",
-    "build": "vite build && esbuild server.ts --platform=node --format=esm --bundle --external:express --external:firebase-admin --external:cors --external:vite --external:helmet --external:express-rate-limit --outfile=server.js",
+    "build": "vite build && esbuild server.ts --platform=node --format=esm --bundle --external:express --external:firebase-admin --external:firebase-admin/firestore --external:cors --external:vite --external:helmet --external:express-rate-limit --outfile=server.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
