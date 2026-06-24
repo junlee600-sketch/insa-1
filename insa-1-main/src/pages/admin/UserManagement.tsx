@@ -168,7 +168,7 @@ export default function UserManagement() {
       if (err.code === 'auth/invalid-email') {
         setErrorMsg('아이디에 사용할 수 없는 문자가 포함되어 있습니다.');
       } else if (err.code === 'auth/weak-password') {
-        setErrorMsg('비밀번호가 너무 약합니다. 숫자 6자 이상으로 설정해 주세요.');
+        setErrorMsg('비밀번호가 너무 약합니다. 최소 6자 이상으로 설정해 주세요.');
       } else {
         setErrorMsg('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       }
