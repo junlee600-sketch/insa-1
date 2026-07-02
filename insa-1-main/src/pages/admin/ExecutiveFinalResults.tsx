@@ -30,6 +30,7 @@ export default function ExecutiveFinalResults() {
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [userDepartments, setUserDepartments] = useState<Record<string, string>>({});
+  const [userYears, setUserYears] = useState<Record<string, number | null>>({});
 
   const [selectedEvaluatee, setSelectedEvaluatee] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -108,6 +109,7 @@ export default function ExecutiveFinalResults() {
       const umap: Record<string, string> = {};
       const dmap: Record<string, string> = {};
       const pmap: Record<string, string> = {};
+      const ymap: Record<string, number | null> = {};
       const deptSet = new Set<string>();
       await Promise.all([...allUserIds].map(async (id: string) => {
         const userDoc = await getDoc(doc(db, 'users', id));
@@ -116,12 +118,14 @@ export default function ExecutiveFinalResults() {
           umap[data.email] = data.name;
           dmap[data.email] = data.department || '';
           pmap[data.email] = data.position || '';
+          ymap[data.email] = data.yearsOfService ?? null;
           if (data.department) deptSet.add(data.department);
         }
       }));
       setUsersMap(umap);
       setUserDepartments(dmap);
       setUserPositions(pmap);
+      setUserYears(ymap);
       setDepartments(Array.from(deptSet).sort());
 
       // Group exec_assignments by evaluatee
@@ -212,6 +216,7 @@ export default function ExecutiveFinalResults() {
         '피평가자(대상자) 이름': usersMap[ev.evaluateeId] || ev.evaluateeId,
         '직급': userPositions[ev.evaluateeId] || '-',
         '부서': userDepartments[ev.evaluateeId] || '-',
+        '연차': userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-',
         '할당 건수': ev.totalAssigned,
         '완료 건수': ev.totalCompleted,
         '진행률': isComplete ? '완료' : '진행중',
@@ -317,8 +322,9 @@ export default function ExecutiveFinalResults() {
         <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
           <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
-            <div className="col-span-2">직급</div>
+            <div className="col-span-1">직급</div>
             <div className="col-span-2">소속부서</div>
+            <div className="col-span-1 text-center">연차</div>
             <div className="col-span-1 text-center">진행률</div>
             <div className="col-span-1 text-center">원점수</div>
             <div className="col-span-2 text-center">최종 점수</div>
@@ -339,8 +345,9 @@ export default function ExecutiveFinalResults() {
                     <div className="col-span-2 font-bold">
                       {usersMap[ev.evaluateeId] || ev.evaluateeId}
                     </div>
-                    <div className="col-span-2 font-sans text-xs uppercase text-[#777]">{userPositions[ev.evaluateeId] || '-'}</div>
+                    <div className="col-span-1 font-sans text-xs uppercase text-[#777]">{userPositions[ev.evaluateeId] || '-'}</div>
                     <div className="col-span-2 font-sans text-xs uppercase text-[#777]">{userDepartments[ev.evaluateeId] || '-'}</div>
+                    <div className="col-span-1 font-sans text-xs text-center text-[#777]">{userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-'}</div>
                     <div className="col-span-1 font-sans text-xs uppercase text-[#777] text-center">
                       <span className={isComplete ? 'text-emerald-700' : 'text-amber-700'}>
                          {ev.totalCompleted}/{ev.totalAssigned}
@@ -382,7 +389,7 @@ export default function ExecutiveFinalResults() {
             <DialogTitle className="text-3xl font-normal leading-none text-[#1A1A1A]">
               최종 점수 확정
               <span className="block mt-2 font-sans font-bold text-lg text-[#555] tracking-tight">
-                {usersMap[selectedEvaluatee?.evaluateeId]} {userPositions[selectedEvaluatee?.evaluateeId] ? `(${userPositions[selectedEvaluatee?.evaluateeId]})` : ''}
+                {usersMap[selectedEvaluatee?.evaluateeId]} {userPositions[selectedEvaluatee?.evaluateeId] ? `(${userPositions[selectedEvaluatee?.evaluateeId]})` : ''}{userYears[selectedEvaluatee?.evaluateeId] != null ? ` · ${userYears[selectedEvaluatee?.evaluateeId]}년차` : ''}
               </span>
             </DialogTitle>
           </DialogHeader>

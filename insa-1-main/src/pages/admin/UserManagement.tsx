@@ -50,7 +50,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user' });
+  const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
   const [userMenuPerms, setUserMenuPerms] = useState<Record<string, boolean> | null>(null);
   const [showMenuPerms, setShowMenuPerms] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -143,6 +143,7 @@ export default function UserManagement() {
         department: formData.department,
         position: formData.position,
         role: formData.role,
+        yearsOfService: formData.yearsOfService !== '' ? Number(formData.yearsOfService) : null,
         updatedAt: serverTimestamp(),
       };
       if (!isEditing) {
@@ -232,7 +233,7 @@ export default function UserManagement() {
   };
 
   const openEdit = (user: any) => {
-    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role });
+    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: user.yearsOfService != null ? String(user.yearsOfService) : '' });
     setUserMenuPerms(user.menuPermissions ?? null);
     setShowMenuPerms(false);
     setAdminForcePassword('');
@@ -243,7 +244,7 @@ export default function UserManagement() {
   };
 
   const openNew = () => {
-    setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user' });
+    setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
     setUserMenuPerms(null);
     setShowMenuPerms(false);
     setAdminForcePassword('');
@@ -260,6 +261,7 @@ export default function UserManagement() {
       '사용자 이름': '홍길동',
       '소속 부서': '인사팀',
       '직급': '사원',
+      '연차': 3,
       '권한 (admin/user)': 'user'
     }], "Users", "User_Registration_Template.xlsx");
   };
@@ -283,6 +285,8 @@ export default function UserManagement() {
         const name = String(row['사용자 이름'] || '').trim();
         const department = String(row['소속 부서'] || '').trim();
         const position = String(row['직급'] || '').trim();
+        const yearsRaw = row['연차'];
+        const yearsOfService = yearsRaw != null && yearsRaw !== '' ? Number(yearsRaw) : null;
         let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
 
         if (!email || !name) {
@@ -324,6 +328,7 @@ export default function UserManagement() {
             department,
             position,
             role,
+            yearsOfService,
             createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
             uid: existingUser ? existingUser.uid : ''
           }, { merge: true });
@@ -490,6 +495,17 @@ export default function UserManagement() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-widest text-[#999]">연차</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={formData.yearsOfService}
+                  onChange={e => setFormData({...formData, yearsOfService: e.target.value})}
+                  placeholder="연차 입력"
+                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A]"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label className="text-[10px] uppercase tracking-widest text-[#999]">권한 레벨</Label>
                 <Select value={formData.role} onValueChange={(v) => setFormData({...formData, role: v ?? ''})}>
                   <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
@@ -593,8 +609,9 @@ export default function UserManagement() {
         <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
           <div className="col-span-2">로그인 ID</div>
           <div className="col-span-2">사용자 이름</div>
-          <div className="col-span-2">직급</div>
+          <div className="col-span-1">직급</div>
           <div className="col-span-2">소속 부서</div>
+          <div className="col-span-1 text-center">연차</div>
           <div className="col-span-1">권한</div>
           <div className="col-span-1">재직상태</div>
           <div className="col-span-2 text-right">작업</div>
@@ -606,8 +623,9 @@ export default function UserManagement() {
               <div key={user.id} className={`grid grid-cols-12 p-4 border-b border-[#EEE] items-center transition-colors ${isRetired ? 'bg-[#FAFAFA] opacity-70' : 'hover:bg-[#F9F9F9]'}`}>
                 <div className="col-span-2 text-[#777] truncate pr-2">{user.email?.includes('@') ? user.email.split('@')[0] : user.email}</div>
                 <div className={`col-span-2 font-bold text-lg truncate pr-2 ${isRetired ? 'line-through text-[#AAA]' : ''}`}>{user.name}</div>
-                <div className="col-span-2 font-sans text-xs text-[#555] truncate pr-2">{user.position || '-'}</div>
+                <div className="col-span-1 font-sans text-xs text-[#555] truncate pr-2">{user.position || '-'}</div>
                 <div className="col-span-2 font-sans text-xs uppercase text-[#777] truncate pr-2">{user.department}</div>
+                <div className="col-span-1 font-sans text-xs text-center text-[#555]">{user.yearsOfService != null ? `${user.yearsOfService}년` : '-'}</div>
                 <div className="col-span-1">
                   <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${user.role === 'admin' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#1A1A1A]'}`}>
                     {user.role}
