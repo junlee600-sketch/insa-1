@@ -399,8 +399,9 @@ export default function ExecutiveFinalResults() {
             <div className="border border-[#1A1A1A] flex flex-col">
               <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-3 sticky top-0">
                 <div className="col-span-2">평가자</div>
-                <div className="col-span-2">직급</div>
+                <div className="col-span-1">직급</div>
                 <div className="col-span-2">부서</div>
+                <div className="col-span-1 text-center">연차</div>
                 <div className="col-span-3">대상 그룹</div>
                 <div className="col-span-1 text-center">점수</div>
                 <div className="col-span-2 text-right">상태</div>
@@ -413,8 +414,9 @@ export default function ExecutiveFinalResults() {
                   <div key={assn.id} className="p-3 border-b border-[#EEE] hover:bg-[#F9F9F9] transition-colors">
                     <div className="grid grid-cols-12 items-center gap-2">
                       <div className="col-span-2 font-bold truncate pr-1" title={usersMap[assn.evaluatorId] || assn.evaluatorId}>{usersMap[assn.evaluatorId] || assn.evaluatorId}</div>
-                      <div className="col-span-2 text-xs text-[#555] truncate pr-1" title={userPositions[assn.evaluatorId]}>{userPositions[assn.evaluatorId] || '-'}</div>
+                      <div className="col-span-1 text-xs text-[#555] truncate pr-1" title={userPositions[assn.evaluatorId]}>{userPositions[assn.evaluatorId] || '-'}</div>
                       <div className="col-span-2 text-xs uppercase text-[#777] truncate pr-1" title={userDepartments[assn.evaluatorId]}>{userDepartments[assn.evaluatorId] || '-'}</div>
+                      <div className="col-span-1 text-xs text-center text-[#777]">{userYears[assn.evaluatorId] != null ? `${userYears[assn.evaluatorId]}년` : '-'}</div>
                       <div className="col-span-3 text-xs font-sans uppercase text-[#777] tracking-wider truncate pr-1">{groupsMap[assn.groupId]}</div>
                       <div className="col-span-1 text-center font-bold text-lg">{assn.status === 'completed' ? assn.totalScore : '-'}</div>
                       <div className="col-span-2 text-right">
