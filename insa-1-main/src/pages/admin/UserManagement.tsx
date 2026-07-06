@@ -53,7 +53,7 @@ export default function UserManagement() {
   const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
   const [userMenuPerms, setUserMenuPerms] = useState<Record<string, boolean> | null>(null);
   const [showMenuPerms, setShowMenuPerms] = useState(false);
-  const [canConfirmFinalScore, setCanConfirmFinalScore] = useState(false);
+  const [confirmDepartments, setConfirmDepartments] = useState<string[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -145,7 +145,7 @@ export default function UserManagement() {
         position: formData.position,
         role: formData.role,
         yearsOfService: formData.yearsOfService !== '' ? Number(formData.yearsOfService) : null,
-        canConfirmFinalScore,
+        confirmDepartments,
         updatedAt: serverTimestamp(),
       };
       if (!isEditing) {
@@ -238,7 +238,7 @@ export default function UserManagement() {
     setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: user.yearsOfService != null ? String(user.yearsOfService) : '' });
     setUserMenuPerms(user.menuPermissions ?? null);
     setShowMenuPerms(false);
-    setCanConfirmFinalScore(user.canConfirmFinalScore === true);
+    setConfirmDepartments(Array.isArray(user.confirmDepartments) ? user.confirmDepartments : []);
     setAdminForcePassword('');
     setIsEditing(true);
     setErrorMsg('');
@@ -250,7 +250,7 @@ export default function UserManagement() {
     setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
     setUserMenuPerms(null);
     setShowMenuPerms(false);
-    setCanConfirmFinalScore(false);
+    setConfirmDepartments([]);
     setAdminForcePassword('');
     setIsEditing(false);
     setErrorMsg('');
@@ -355,6 +355,8 @@ export default function UserManagement() {
   };
 
   if (loading) return <div>사용자 정보를 불러오는 중입니다...</div>;
+
+  const allDepartments = [...new Set(users.map(u => u.department).filter(Boolean))].sort() as string[];
 
   const filteredUsers = users.filter(u => {
     const userStatus = u.status || 'active';
@@ -523,17 +525,29 @@ export default function UserManagement() {
               {isEditing && (
                 <div className="space-y-2 pt-4 border-t border-[#EEE]">
                   <div className="py-2">
-                    <p className="text-[10px] uppercase tracking-widest text-[#555] mb-2">최종평가 점수 확정 권한</p>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={canConfirmFinalScore}
-                        onChange={e => setCanConfirmFinalScore(e.target.checked)}
-                        className="w-4 h-4 accent-[#1A1A1A]"
-                      />
-                      <span className="text-xs text-[#333]">최종평가 결과 — 소속부서 최종점수 확정 허용</span>
-                    </label>
-                    <p className="text-[9px] text-[#AAA] mt-1">체크 시 해당 사용자는 본인 소속부서의 최종 점수를 확정할 수 있습니다.</p>
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-[10px] uppercase tracking-widest text-[#555]">최종평가 점수 확정 권한</p>
+                      {confirmDepartments.length > 0 && (
+                        <button type="button" onClick={() => setConfirmDepartments([])} className="text-[9px] text-red-500 uppercase tracking-widest underline">초기화</button>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-[#AAA] mb-2">체크한 부서의 최종 점수를 확정할 수 있습니다.</p>
+                    <div className="border border-[#EEE] p-2 space-y-1.5">
+                      {allDepartments.length === 0 && <p className="text-[9px] text-[#AAA]">등록된 부서가 없습니다.</p>}
+                      {allDepartments.map(dept => (
+                        <label key={dept} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={confirmDepartments.includes(dept)}
+                            onChange={e => setConfirmDepartments(prev =>
+                              e.target.checked ? [...prev, dept] : prev.filter(d => d !== dept)
+                            )}
+                            className="w-3.5 h-3.5 accent-[#1A1A1A]"
+                          />
+                          <span className="text-xs text-[#333]">{dept}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                   <button
                     type="button"

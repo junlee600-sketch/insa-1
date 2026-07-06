@@ -32,7 +32,9 @@ export default function FinalResults() {
   const [finalScoreInput, setFinalScoreInput] = useState('');
 
   const isGroupLeader = user && user.role === 'user' && user.position?.endsWith('그룹장');
-  const canConfirmScore = user?.role === 'admin' || user?.role === 'hr' || user?.canConfirmFinalScore === true;
+  const hasConfirmPerms = !!(user?.confirmDepartments?.length);
+  const canConfirmForDept = (dept: string) =>
+    user?.role === 'admin' || user?.role === 'hr' || !!(user?.confirmDepartments?.includes(dept));
 
   useEffect(() => {
     fetchBaseData();
@@ -268,12 +270,16 @@ export default function FinalResults() {
   };
 
   const filteredEvaluatees = evaluatees.filter(ev => {
+    const evDept = userDepartments[ev.evaluateeId];
     if (isGroupLeader) {
       const dep = user.department || user.position!.replace('장', '');
-      return userDepartments[ev.evaluateeId] === dep;
+      return evDept === dep;
+    }
+    if (hasConfirmPerms && user?.role === 'user') {
+      if (!user.confirmDepartments!.includes(evDept)) return false;
     }
     if (selectedDepartment === 'all') return true;
-    return userDepartments[ev.evaluateeId] === selectedDepartment;
+    return evDept === selectedDepartment;
   });
 
   return (
@@ -299,7 +305,9 @@ export default function FinalResults() {
               </SelectTrigger>
               <SelectContent>
                 {!isGroupLeader && <SelectItem value="all">전체 부서</SelectItem>}
-                {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {departments
+                  .filter(d => user?.role === 'admin' || user?.role === 'hr' || !hasConfirmPerms || user?.confirmDepartments?.includes(d))
+                  .map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -471,7 +479,7 @@ export default function FinalResults() {
               </div>
             </div>
 
-            {canConfirmScore && (
+            {canConfirmForDept(userDepartments[selectedEvaluatee?.evaluateeId] || '') && (
               <div className="bg-[#1A1A1A] p-6 space-y-4 text-white">
                 <Label className="text-[10px] uppercase tracking-[0.2em] text-white/70 block mb-2">최종 확정 점수</Label>
                 <div className="flex gap-4">
