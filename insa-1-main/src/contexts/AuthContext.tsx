@@ -12,6 +12,7 @@ export interface AppUser {
   position?: string;
   role: 'admin' | 'hr' | 'user';
   menuPermissions?: Record<string, boolean>;
+  canConfirmFinalScore?: boolean;
 }
 
 interface AuthContextType {

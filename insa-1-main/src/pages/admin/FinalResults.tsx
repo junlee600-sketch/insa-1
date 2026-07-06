@@ -32,7 +32,7 @@ export default function FinalResults() {
   const [finalScoreInput, setFinalScoreInput] = useState('');
 
   const isGroupLeader = user && user.role === 'user' && user.position?.endsWith('그룹장');
-  const isPresidentReadOnly = user?.position === '사장' && user?.role !== 'admin' && user?.role !== 'hr';
+  const canConfirmScore = user?.role === 'admin' || user?.role === 'hr' || user?.canConfirmFinalScore === true;
 
   useEffect(() => {
     fetchBaseData();
@@ -471,7 +471,7 @@ export default function FinalResults() {
               </div>
             </div>
 
-            {!isPresidentReadOnly && (
+            {canConfirmScore && (
               <div className="bg-[#1A1A1A] p-6 space-y-4 text-white">
                 <Label className="text-[10px] uppercase tracking-[0.2em] text-white/70 block mb-2">최종 확정 점수</Label>
                 <div className="flex gap-4">

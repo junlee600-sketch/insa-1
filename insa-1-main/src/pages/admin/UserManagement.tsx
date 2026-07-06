@@ -53,6 +53,7 @@ export default function UserManagement() {
   const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
   const [userMenuPerms, setUserMenuPerms] = useState<Record<string, boolean> | null>(null);
   const [showMenuPerms, setShowMenuPerms] = useState(false);
+  const [canConfirmFinalScore, setCanConfirmFinalScore] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -144,6 +145,7 @@ export default function UserManagement() {
         position: formData.position,
         role: formData.role,
         yearsOfService: formData.yearsOfService !== '' ? Number(formData.yearsOfService) : null,
+        canConfirmFinalScore,
         updatedAt: serverTimestamp(),
       };
       if (!isEditing) {
@@ -236,6 +238,7 @@ export default function UserManagement() {
     setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: user.yearsOfService != null ? String(user.yearsOfService) : '' });
     setUserMenuPerms(user.menuPermissions ?? null);
     setShowMenuPerms(false);
+    setCanConfirmFinalScore(user.canConfirmFinalScore === true);
     setAdminForcePassword('');
     setIsEditing(true);
     setErrorMsg('');
@@ -247,6 +250,7 @@ export default function UserManagement() {
     setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
     setUserMenuPerms(null);
     setShowMenuPerms(false);
+    setCanConfirmFinalScore(false);
     setAdminForcePassword('');
     setIsEditing(false);
     setErrorMsg('');
@@ -518,6 +522,19 @@ export default function UserManagement() {
               </div>
               {isEditing && (
                 <div className="space-y-2 pt-4 border-t border-[#EEE]">
+                  <div className="py-2">
+                    <p className="text-[10px] uppercase tracking-widest text-[#555] mb-2">최종평가 점수 확정 권한</p>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={canConfirmFinalScore}
+                        onChange={e => setCanConfirmFinalScore(e.target.checked)}
+                        className="w-4 h-4 accent-[#1A1A1A]"
+                      />
+                      <span className="text-xs text-[#333]">최종평가 결과 — 소속부서 최종점수 확정 허용</span>
+                    </label>
+                    <p className="text-[9px] text-[#AAA] mt-1">체크 시 해당 사용자는 본인 소속부서의 최종 점수를 확정할 수 있습니다.</p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -526,7 +543,7 @@ export default function UserManagement() {
                         setUserMenuPerms({ ...ROLE_DEFAULT_PERMS[formData.role] });
                       }
                     }}
-                    className="w-full text-left text-[10px] uppercase tracking-widest text-[#555] flex justify-between items-center py-1"
+                    className="w-full text-left text-[10px] uppercase tracking-widest text-[#555] flex justify-between items-center py-1 border-t border-[#EEE] pt-3"
                   >
                     <span>개별 메뉴 권한 설정</span>
                     <span>{showMenuPerms ? '▲' : '▼'}</span>
