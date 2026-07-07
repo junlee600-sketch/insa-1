@@ -275,9 +275,7 @@ export default function FinalResults() {
       const dep = user.department || user.position!.replace('장', '');
       return evDept === dep;
     }
-    if (hasConfirmPerms && user?.role === 'user') {
-      if (!user.confirmDepartments!.includes(evDept)) return false;
-    }
+    if (hasConfirmPerms && !canConfirmForDept(evDept)) return false;
     if (selectedDepartment === 'all') return true;
     return evDept === selectedDepartment;
   });
@@ -306,7 +304,7 @@ export default function FinalResults() {
               <SelectContent>
                 {!isGroupLeader && <SelectItem value="all">전체 부서</SelectItem>}
                 {departments
-                  .filter(d => user?.role === 'admin' || user?.role === 'hr' || !hasConfirmPerms || user?.confirmDepartments?.includes(d))
+                  .filter(d => !hasConfirmPerms || canConfirmForDept(d))
                   .map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
             </Select>
