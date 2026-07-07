@@ -1,9 +1,17 @@
-# gcloud SDK (설치 파일)
+# gcloud SDK / 설치 파일
 google-cloud-sdk/
 *.tar.gz
+*.pkg
+
+# 의존성
+node_modules/
 
 # macOS
 .DS_Store
+
+# Google Drive 동기화 임시 폴더
+.tmp.drivedownload/
+.tmp.driveupload/
 
 # 환경 변수
 .env

@@ -30,6 +30,16 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && ('position' in getUser(request.auth.token.email)) && getUser(request.auth.token.email).position == '사장';
     }
 
+    // 최종점수 확정 권한: 대상자(evaluatee)의 소속부서가 호출자의 confirmDepartments 목록에 포함될 때만 허용
+    function canConfirmDeptOf(evaluateeId) {
+      return isSignedIn()
+        && evaluateeId is string
+        && exists(/databases/$(database)/documents/users/$(request.auth.token.email))
+        && 'confirmDepartments' in getUser(request.auth.token.email)
+        && exists(/databases/$(database)/documents/users/$(evaluateeId))
+        && getUser(evaluateeId).department in getUser(request.auth.token.email).confirmDepartments;
+    }
+
     // 사용자별 개별 메뉴 권한 체크
     function hasMenuAccess(menuPath) {
       let u = getUser(request.auth.token.email);
@@ -144,8 +154,9 @@ service cloud.firestore {
       allow list: if isHr() || isGroupLeader() || isBoss() || canAccessMenu('/admin/results') ||
         (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
          resource.data.evaluateeId == request.auth.token.email);
-      allow create, update: if isHr() || isGroupLeader() || canAccessMenu('/admin/results');
-      allow delete: if isHr() || isGroupLeader() || canAccessMenu('/admin/results');
+      // 최종점수 확정/수정: HR·admin, /admin/results 권한자, 또는 대상자 소속부서 확정권한자(confirmDepartments)
+      allow create, update: if isHr() || canAccessMenu('/admin/results') || canConfirmDeptOf(incoming().evaluateeId);
+      allow delete: if isHr() || canAccessMenu('/admin/results') || canConfirmDeptOf(existing().evaluateeId);
     }
 
     match /exec_items/{itemId} {
