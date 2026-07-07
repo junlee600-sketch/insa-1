@@ -81,7 +81,14 @@ service cloud.firestore {
 
       allow create: if isAdmin();
       allow delete: if isAdmin();
-      allow list: if isHr() || isAdmin() || canAccessMenu('/admin/users');
+      allow list: if isHr() || isAdmin() || canAccessMenu('/admin/users') || canAccessMenu('/admin/scores');
+    }
+
+    // 근태·업무일지 점수 (문서ID: {year}_{userId})
+    // 읽기: 로그인 사용자 / 쓰기: admin 또는 /admin/scores 개별 권한 보유 계정만
+    match /periodicScores/{scoreId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || canAccessMenu('/admin/scores');
     }
 
     match /settings/global {

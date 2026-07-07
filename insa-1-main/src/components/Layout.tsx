@@ -13,6 +13,7 @@ const ALL_NAV = [
   { to: "/admin/assignments-executive", label: "임원평가 배정", category: "관리 기능", specialRoles: [] },
   { to: "/admin/results", label: "최종 평가 결과", category: "관리 기능", specialRoles: ['groupLeader', 'president'] },
   { to: "/admin/results-executive", label: "임원평가 최종 결과", category: "관리 기능", specialRoles: ['president'] },
+  { to: "/admin/scores", label: "근태·업무일지 점수 관리", category: "관리 기능", specialRoles: [] },
   { to: "/admin/users", label: "사용자 관리", category: "시스템 설정", specialRoles: [] },
   { to: "/admin/settings", label: "평가 연도/그룹", category: "시스템 설정", specialRoles: [] },
   { to: "/admin/menu-permissions", label: "메뉴 권한 관리", category: "시스템 설정", specialRoles: [] },

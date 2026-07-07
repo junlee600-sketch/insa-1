@@ -26,15 +26,16 @@ const ALL_MENUS = [
   { to: "/admin/assignments-executive", label: "임원평가 배정", category: "관리 기능" },
   { to: "/admin/results", label: "최종 평가 결과", category: "관리 기능" },
   { to: "/admin/results-executive", label: "임원평가 최종 결과", category: "관리 기능" },
+  { to: "/admin/scores", label: "근태·업무일지 점수 관리", category: "관리 기능" },
   { to: "/admin/users", label: "사용자 관리", category: "시스템 설정" },
   { to: "/admin/settings", label: "평가 연도/그룹", category: "시스템 설정" },
   { to: "/admin/menu-permissions", label: "메뉴 권한 관리", category: "시스템 설정" },
 ];
 
 const ROLE_DEFAULT_PERMS: Record<string, Record<string, boolean>> = {
-  admin: { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/users": true, "/admin/settings": true, "/admin/menu-permissions": true },
-  hr:    { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
-  user:  { "/": true, "/evaluate": true, "/evaluate-executive": false, "/history": false, "/admin/items": false, "/admin/items-executive": false, "/admin/assignments": false, "/admin/assignments-executive": false, "/admin/results": false, "/admin/results-executive": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
+  admin: { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/scores": true, "/admin/users": true, "/admin/settings": true, "/admin/menu-permissions": true },
+  hr:    { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/scores": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
+  user:  { "/": true, "/evaluate": true, "/evaluate-executive": false, "/history": false, "/admin/items": false, "/admin/items-executive": false, "/admin/assignments": false, "/admin/assignments-executive": false, "/admin/results": false, "/admin/results-executive": false, "/admin/scores": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
 };
 
 import { Button } from '../../components/ui/button';

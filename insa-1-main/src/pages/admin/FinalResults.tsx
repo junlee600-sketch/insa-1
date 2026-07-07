@@ -26,10 +26,22 @@ export default function FinalResults() {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [userDepartments, setUserDepartments] = useState<Record<string, string>>({});
   const [userYears, setUserYears] = useState<Record<string, number | null>>({});
+  const [userPeriodic, setUserPeriodic] = useState<Record<string, { attendanceScore: number | null; workLogScore: number | null }>>({});
+  const [weights, setWeights] = useState<{ eval: number; attendance: number; workLog: number }>({ eval: 70, attendance: 15, workLog: 15 });
 
   const [selectedEvaluatee, setSelectedEvaluatee] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [finalScoreInput, setFinalScoreInput] = useState('');
+
+  // 가중평균 최종점수 계산: 원점수평균×평가% + 근태×근태% + 업무일지×업무일지% (미입력=0)
+  const rawAvgOf = (ev: any) => ev.totalCompleted > 0 ? ev.rawScoreSum / ev.totalCompleted : 0;
+  const weightedScoreOf = (ev: any) => {
+    const p = userPeriodic[ev.evaluateeId] || {};
+    const att = p.attendanceScore ?? 0;
+    const log = p.workLogScore ?? 0;
+    const total = (rawAvgOf(ev) * weights.eval + att * weights.attendance + log * weights.workLog) / 100;
+    return Math.round(total * 10) / 10;
+  };
 
   const isGroupLeader = user && user.role === 'user' && user.position?.endsWith('그룹장');
   const hasConfirmPerms = !!(user?.confirmDepartments?.length);
@@ -124,6 +136,32 @@ export default function FinalResults() {
       setUserYears(ymap);
       setDepartments(Array.from(deptSet).sort());
 
+      // 5. 연도 가중치 + 근태/업무일지 점수 조회
+      const yearDoc = await getDoc(doc(db, 'years', selectedYear));
+      const w = yearDoc.exists() ? yearDoc.data().weights : null;
+      setWeights({
+        eval: w?.eval ?? 70,
+        attendance: w?.attendance ?? 15,
+        workLog: w?.workLog ?? 15,
+      });
+
+      const periodicMap: Record<string, { attendanceScore: number | null; workLogScore: number | null }> = {};
+      const periodicIds = [...allUserIds].map(id => `${selectedYear}_${id}`);
+      for (let i = 0; i < periodicIds.length; i += 30) {
+        const batch = periodicIds.slice(i, i + 30);
+        if (batch.length === 0) continue;
+        const pq = query(collection(db, 'periodicScores'), where(documentId(), 'in', batch));
+        const pSnap = await getDocs(pq);
+        pSnap.docs.forEach(d => {
+          const data = d.data();
+          periodicMap[data.userId] = {
+            attendanceScore: data.attendanceScore ?? null,
+            workLogScore: data.workLogScore ?? null,
+          };
+        });
+      }
+      setUserPeriodic(periodicMap);
+
       // Group assignments by evaluatee
       const grouped: Record<string, any> = {};
 
@@ -158,15 +196,8 @@ export default function FinalResults() {
 
   const openConfirmation = (evaluatee: any) => {
     setSelectedEvaluatee(evaluatee);
-    // suggest an average score if not previously confirmed
-    let suggested = 0;
-    if (evaluatee.finalState) {
-      suggested = evaluatee.finalState.totalScore;
-    } else {
-      if (evaluatee.totalCompleted > 0) {
-        suggested = Math.round((evaluatee.rawScoreSum / evaluatee.totalCompleted) * 10) / 10;
-      }
-    }
+    // 확정 전이면 가중평균(원점수+근태+업무일지) 값을 제안, 확정된 경우 저장값 사용
+    const suggested = evaluatee.finalState ? evaluatee.finalState.totalScore : weightedScoreOf(evaluatee);
     setFinalScoreInput(suggested.toString());
     setModalOpen(true);
   };
@@ -230,11 +261,16 @@ export default function FinalResults() {
         ? parseFloat((ev.rawScoreSum / ev.totalCompleted).toFixed(2))
         : '-';
 
+      const periodic = userPeriodic[ev.evaluateeId] || {};
       addRow('피평가자(대상자) 이름', usersMap[ev.evaluateeId] || ev.evaluateeId, EVALUATEE_BG);
       addRow('직급', userPositions[ev.evaluateeId] || '-', EVALUATEE_BG);
       addRow('부서', userDepartments[ev.evaluateeId] || '-', EVALUATEE_BG);
       addRow('연차', userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-', EVALUATEE_BG);
       addRow('원점수 평균', rawAvg, EVALUATEE_BG, true);
+      addRow('근태점수', periodic.attendanceScore != null ? periodic.attendanceScore : '미입력', EVALUATEE_BG);
+      addRow('업무일지 점수', periodic.workLogScore != null ? periodic.workLogScore : '미입력', EVALUATEE_BG);
+      addRow(`가중치(평가/근태/업무일지)`, `${weights.eval}% / ${weights.attendance}% / ${weights.workLog}%`, EVALUATEE_BG);
+      addRow('가중평균 제안 점수', weightedScoreOf(ev), EVALUATEE_BG, true);
       addRow('최종 확정 점수', ev.finalState ? ev.finalState.totalScore : '미확정', EVALUATEE_BG, true);
 
       const sorted = [...ev.assignments].sort((a: any, b: any) => {
@@ -348,16 +384,18 @@ export default function FinalResults() {
 
       {selectedYear && (
         <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
+          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[13px] uppercase tracking-[0.12em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-1">직급</div>
-            <div className="col-span-2">소속부서</div>
+            <div className="col-span-1">소속부서</div>
             <div className="col-span-1 text-center">연차</div>
             <div className="col-span-1 text-center">진행률</div>
             <div className="col-span-1 text-center">원점수</div>
-            <div className="col-span-2 text-center">최종 점수</div>
+            <div className="col-span-1 text-center">근태</div>
+            <div className="col-span-1 text-center">업무일지</div>
+            <div className="col-span-1 text-center">최종</div>
             <div className="col-span-1 text-center">상태</div>
-            <div className="col-span-1 text-right">상세조회</div>
+            <div className="col-span-1 text-right">상세</div>
           </div>
           
           <div className="flex-1 overflow-y-auto  text-sm">
@@ -367,25 +405,32 @@ export default function FinalResults() {
               filteredEvaluatees.map(ev => {
                 const isComplete = ev.totalCompleted === ev.totalAssigned;
                 const rawAvg = ev.totalCompleted > 0 ? (ev.rawScoreSum / ev.totalCompleted).toFixed(2) : '-';
-                
+                const periodic = userPeriodic[ev.evaluateeId] || {};
+
                 return (
                   <div key={ev.evaluateeId} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] cursor-default group">
-                    <div className="col-span-2 font-bold">
+                    <div className="col-span-2 font-bold truncate pr-2">
                       {usersMap[ev.evaluateeId] || ev.evaluateeId}
                     </div>
-                    <div className="col-span-1 font-sans text-xs uppercase text-[#777]">{userPositions[ev.evaluateeId] || '-'}</div>
-                    <div className="col-span-2 font-sans text-xs uppercase text-[#777]">{userDepartments[ev.evaluateeId] || '-'}</div>
+                    <div className="col-span-1 font-sans text-xs uppercase text-[#777] truncate pr-1">{userPositions[ev.evaluateeId] || '-'}</div>
+                    <div className="col-span-1 font-sans text-xs uppercase text-[#777] truncate pr-1">{userDepartments[ev.evaluateeId] || '-'}</div>
                     <div className="col-span-1 font-sans text-xs text-center text-[#777]">{userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-'}</div>
                     <div className="col-span-1 font-sans text-xs uppercase text-[#777] text-center">
                       <span className={isComplete ? 'text-emerald-700' : 'text-amber-700'}>
                          {ev.totalCompleted}/{ev.totalAssigned}
                       </span>
                     </div>
-                    <div className="col-span-1 text-center font-sans text-xs bg-[#F0F0F0] py-1 mx-2">
+                    <div className="col-span-1 text-center font-sans text-xs bg-[#F0F0F0] py-1 mx-1 rounded">
                       {rawAvg}
                     </div>
-                    <div className="col-span-2 text-center text-lg">
-                      {ev.finalState ? ev.finalState.totalScore : '—'}
+                    <div className="col-span-1 text-center font-sans text-xs text-[#555]">
+                      {periodic.attendanceScore != null ? periodic.attendanceScore : <span className="text-[#BBB]">미입력</span>}
+                    </div>
+                    <div className="col-span-1 text-center font-sans text-xs text-[#555]">
+                      {periodic.workLogScore != null ? periodic.workLogScore : <span className="text-[#BBB]">미입력</span>}
+                    </div>
+                    <div className="col-span-1 text-center text-base font-bold">
+                      {ev.finalState ? ev.finalState.totalScore : <span className="text-[#AAA] text-xs font-normal">{weightedScoreOf(ev)}</span>}
                     </div>
                     <div className="col-span-1 text-center">
                       {ev.finalState ? (
@@ -395,7 +440,7 @@ export default function FinalResults() {
                       )}
                     </div>
                     <div className="col-span-1 text-right">
-                      <button 
+                      <button
                         className="text-[12px] uppercase tracking-widest text-red-500 hover:text-red-700 underline underline-offset-4 font-bold"
                         onClick={() => openConfirmation(ev)}
                       >
@@ -476,6 +521,34 @@ export default function FinalResults() {
                 ))}
               </div>
             </div>
+
+            {/* 가중평균 산출 내역 */}
+            {selectedEvaluatee && (
+              <div className="border border-[#E5E5E5] bg-[#F9F9F9] p-5">
+                <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#999] border-b border-[#EEE] pb-2 mb-3">가중평균 산출 내역</h4>
+                <div className="grid grid-cols-4 gap-3 text-center">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">원점수 평균</p>
+                    <p className="text-lg font-bold">{rawAvgOf(selectedEvaluatee).toFixed(1)}</p>
+                    <p className="text-[9px] text-[#AAA]">×{weights.eval}%</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">근태</p>
+                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[#BBB] text-sm">미입력(0)</span>}</p>
+                    <p className="text-[9px] text-[#AAA]">×{weights.attendance}%</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">업무일지</p>
+                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[#BBB] text-sm">미입력(0)</span>}</p>
+                    <p className="text-[9px] text-[#AAA]">×{weights.workLog}%</p>
+                  </div>
+                  <div className="border-l border-[#E5E5E5]">
+                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">가중평균 제안</p>
+                    <p className="text-lg font-bold text-emerald-700">{weightedScoreOf(selectedEvaluatee)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {canConfirmForDept(userDepartments[selectedEvaluatee?.evaluateeId] || '') && (
               <div className="bg-[#1A1A1A] p-6 space-y-4 text-white">

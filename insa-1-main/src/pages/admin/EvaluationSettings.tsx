@@ -22,11 +22,42 @@ export default function EvaluationSettings() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmData, setConfirmData] = useState<{type: 'year' | 'group', id: string, name: string} | null>(null);
 
+  // 연도별 최종점수 가중치 (평가 원점수 / 근태 / 업무일지, 합 100)
+  const DEFAULT_WEIGHTS = { eval: 70, attendance: 15, workLog: 15 };
+  const [weightYear, setWeightYear] = useState<string>('');
+  const [weights, setWeights] = useState<{ eval: string; attendance: string; workLog: string }>({
+    eval: String(DEFAULT_WEIGHTS.eval), attendance: String(DEFAULT_WEIGHTS.attendance), workLog: String(DEFAULT_WEIGHTS.workLog),
+  });
+
   useEffect(() => {
     fetchSettings();
     fetchYears();
     fetchGroups();
   }, []);
+
+  // 연도 목록/활성연도 로드 후 가중치 편집 연도 기본값 설정
+  useEffect(() => {
+    if (weightYear || years.length === 0) return;
+    setWeightYear(activeYear && years.some(y => y.id === activeYear) ? activeYear : years[0].id);
+  }, [years, activeYear]);
+
+  // 가중치 편집 대상 연도가 바뀌면 해당 연도 저장값(없으면 기본값) 로드
+  useEffect(() => {
+    if (!weightYear) return;
+    const y = years.find(y => y.id === weightYear);
+    const w = y?.weights || DEFAULT_WEIGHTS;
+    setWeights({ eval: String(w.eval ?? DEFAULT_WEIGHTS.eval), attendance: String(w.attendance ?? DEFAULT_WEIGHTS.attendance), workLog: String(w.workLog ?? DEFAULT_WEIGHTS.workLog) });
+  }, [weightYear, years]);
+
+  const saveWeights = async () => {
+    if (!weightYear) { alert('가중치를 적용할 연도를 선택하세요.'); return; }
+    const ev = Number(weights.eval), at = Number(weights.attendance), lg = Number(weights.workLog);
+    if ([ev, at, lg].some(n => !isFinite(n) || n < 0)) { alert('가중치는 0 이상의 숫자여야 합니다.'); return; }
+    if (Math.round(ev + at + lg) !== 100) { alert(`가중치 합계가 100이어야 합니다. (현재 ${ev + at + lg})`); return; }
+    await setDoc(doc(db, 'years', weightYear), { weights: { eval: ev, attendance: at, workLog: lg } }, { merge: true });
+    await fetchYears();
+    alert('가중치가 저장되었습니다.');
+  };
 
   const fetchSettings = async () => {
     const docSnap = await getDoc(doc(db, 'settings', 'global'));
@@ -131,6 +162,53 @@ export default function EvaluationSettings() {
         <div className="pt-4 flex justify-end">
           <button onClick={saveSettings} className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors">
             설정 저장
+          </button>
+        </div>
+      </section>
+
+      {/* 최종점수 가중치 설정 (연도별) */}
+      <section className="bg-[#F9F9F9] border border-[#E5E5E5] p-6 mb-10 space-y-6">
+        <div className="border-b border-[#EEE] pb-4">
+          <h3 className="text-2xl tracking-tighter">최종점수 가중치 설정 (연도별)</h3>
+          <p className="mt-1 text-[10px] text-[#777]">최종점수 = 평가 원점수×평가% + 근태점수×근태% + 업무일지×업무일지% · 합계 100</p>
+        </div>
+        <div className="grid grid-cols-4 gap-6 items-end">
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase tracking-widest text-[#999]">적용 연도</Label>
+            <Select value={weightYear} onValueChange={(v) => setWeightYear(v ?? '')}>
+              <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
+                <SelectValue placeholder="연도 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map(y => <SelectItem key={y.id} value={y.id}>{y.year}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase tracking-widest text-[#999]">평가 원점수 (%)</Label>
+            <Input type="number" min="0" max="100" value={weights.eval}
+              onChange={e => setWeights({ ...weights, eval: e.target.value })}
+              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] text-lg" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase tracking-widest text-[#999]">근태 (%)</Label>
+            <Input type="number" min="0" max="100" value={weights.attendance}
+              onChange={e => setWeights({ ...weights, attendance: e.target.value })}
+              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] text-lg" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase tracking-widest text-[#999]">업무일지 (%)</Label>
+            <Input type="number" min="0" max="100" value={weights.workLog}
+              onChange={e => setWeights({ ...weights, workLog: e.target.value })}
+              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] text-lg" />
+          </div>
+        </div>
+        <div className="flex justify-between items-center pt-2">
+          <span className={`text-xs ${Math.round(Number(weights.eval || 0) + Number(weights.attendance || 0) + Number(weights.workLog || 0)) === 100 ? 'text-emerald-700' : 'text-red-600'}`}>
+            현재 합계: {Number(weights.eval || 0) + Number(weights.attendance || 0) + Number(weights.workLog || 0)} / 100
+          </span>
+          <button onClick={saveWeights} className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors">
+            가중치 저장
           </button>
         </div>
       </section>

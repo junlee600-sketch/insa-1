@@ -12,6 +12,7 @@ import EvaluationSettings from './pages/admin/EvaluationSettings';
 import EvaluationItems from './pages/admin/EvaluationItems';
 import EvaluationAssignments from './pages/admin/EvaluationAssignments';
 import FinalResults from './pages/admin/FinalResults';
+import PeriodicScores from './pages/admin/PeriodicScores';
 import MyEvaluations from './pages/MyEvaluations';
 import EvaluationForm from './pages/EvaluationForm';
 import MyHistory from './pages/MyHistory';
@@ -133,6 +134,10 @@ export default function App() {
             <Route
               path="admin/results-executive"
               element={<ProtectedRoute menuPath="/admin/results-executive" requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>}
+            />
+            <Route
+              path="admin/scores"
+              element={<ProtectedRoute menuPath="/admin/scores" requiredRole={['admin']}><PeriodicScores /></ProtectedRoute>}
             />
             <Route
               path="admin/menu-permissions"
