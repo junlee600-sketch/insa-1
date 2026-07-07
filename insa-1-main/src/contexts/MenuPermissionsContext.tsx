@@ -16,6 +16,7 @@ export const DEFAULT_PERMS: Record<string, RolePerms> = {
   "/admin/assignments-executive": { admin: true, hr: true, user: false },
   "/admin/results": { admin: true, hr: true, user: false },
   "/admin/results-executive": { admin: true, hr: true, user: false },
+  "/admin/scores": { admin: true, hr: false, user: false },
   "/admin/users": { admin: true, hr: false, user: false },
   "/admin/settings": { admin: true, hr: false, user: false },
   "/admin/menu-permissions": { admin: true, hr: false, user: false },
