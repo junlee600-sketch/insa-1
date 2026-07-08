@@ -132,17 +132,11 @@ export default function MyHistory() {
                 <div className="col-span-2 text-center">
                   <span className="hrs-chip hrs-chip-good">{record.status}</span>
                 </div>
-                <div className="col-span-3 text-center">
-                  <div className="hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
-                    {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
-                  </div>
-                  <div className="text-[11px] text-[var(--hrs-slate)] mt-0.5">가중치 {record.attendanceWeight}%</div>
+                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                  {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
-                <div className="col-span-3 text-center">
-                  <div className="hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
-                    {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
-                  </div>
-                  <div className="text-[11px] text-[var(--hrs-slate)] mt-0.5">가중치 {record.workLogWeight}%</div>
+                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                  {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
                 <div className="col-span-1 text-right">
                   {canDelete && (
