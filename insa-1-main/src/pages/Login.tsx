@@ -109,8 +109,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--hrs-bg)] text-[var(--hrs-ink)] p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2.5 mb-3">
-            <span className="w-9 h-9 rounded-lg bg-[var(--hrs-accent)] text-white grid place-items-center text-base font-bold">한</span>
+          <div className="flex items-center justify-center mb-3">
             <h1 className="text-lg font-bold tracking-tight text-[var(--hrs-ink)]">한국종합건축사사무소</h1>
           </div>
           <p className="text-xs font-medium text-[var(--hrs-slate)]">인사평가 시스템</p>
