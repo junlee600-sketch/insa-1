@@ -54,8 +54,7 @@ export function Layout() {
     <div className="min-h-screen bg-[var(--hrs-bg)] text-[var(--hrs-ink)] flex overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 bg-[var(--hrs-surface)] border-r border-[var(--hrs-line)] flex flex-col pt-6 pb-6 px-3.5 shrink-0">
-        <div className="mb-8 px-2 flex items-center gap-2.5">
-          <span className="w-7 h-7 rounded-md bg-[var(--hrs-accent)] text-white grid place-items-center text-[13px] font-bold shrink-0">한</span>
+        <div className="mb-8 px-2 flex items-center">
           <Link to="/" className="hover:opacity-75 transition-opacity leading-tight">
             <span className="block text-[13px] font-semibold tracking-tight text-[var(--hrs-ink)]">한국종합건축사사무소</span>
             <span className="block text-[10.5px] text-[var(--hrs-slate)]">인사평가 시스템</span>
