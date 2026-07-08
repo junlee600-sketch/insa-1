@@ -352,7 +352,7 @@ export default function ExecutiveFinalResults() {
 
       {selectedYear && (
         <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[13px] uppercase tracking-[0.12em] p-4 sticky top-0">
+          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-1">직급</div>
             <div className="col-span-1">소속부서</div>
@@ -438,7 +438,7 @@ export default function ExecutiveFinalResults() {
             <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2">평가 내역 상세</h4>
             
             <div className="border border-[var(--hrs-line)] flex flex-col">
-              <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[10px] uppercase tracking-[0.15em] p-3 sticky top-0">
+              <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-3 sticky top-0">
                 <div className="col-span-2">평가자</div>
                 <div className="col-span-1">직급</div>
                 <div className="col-span-2">부서</div>

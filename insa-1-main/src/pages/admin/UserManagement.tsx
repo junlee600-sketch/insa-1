@@ -638,7 +638,7 @@ export default function UserManagement() {
       </div>
 
       <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-        <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+        <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
           <div className="col-span-2">로그인 ID</div>
           <div className="col-span-2">사용자 이름</div>
           <div className="col-span-1">직급</div>

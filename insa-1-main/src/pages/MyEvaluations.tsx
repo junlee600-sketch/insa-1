@@ -113,7 +113,7 @@ export default function MyEvaluations() {
 
       {activeYear && (
         <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
+          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-2">직급</div>
             <div className="col-span-2">소속부서</div>

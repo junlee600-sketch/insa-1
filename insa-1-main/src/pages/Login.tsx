@@ -106,19 +106,20 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7] dark:bg-[oklch(0.15_0_0)] text-gray-900 dark:text-gray-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--hrs-bg)] text-[var(--hrs-ink)] p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2 mb-2">
-            한국종합건축사사무소 HRS
-          </h1>
-          <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">인사평가 시스템 v1.0</p>
+          <div className="flex items-center justify-center gap-2.5 mb-3">
+            <span className="w-9 h-9 rounded-lg bg-[var(--hrs-accent)] text-white grid place-items-center text-base font-bold">한</span>
+            <h1 className="text-lg font-bold tracking-tight text-[var(--hrs-ink)]">한국종합건축사사무소</h1>
+          </div>
+          <p className="text-xs font-medium text-[var(--hrs-slate)]">인사평가 시스템</p>
         </div>
-        
-        <Card className="border-none shadow-sm shadow-gray-200/50 dark:shadow-none p-2 sm:p-4">
+
+        <Card className="p-2 sm:p-4">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-xl">로그인</CardTitle>
-            <CardDescription className="text-sm text-gray-500">
+            <CardDescription className="text-sm text-[var(--hrs-slate)]">
               시스템에 접근하려면 계정 정보를 입력하세요.
             </CardDescription>
           </CardHeader>
@@ -139,26 +140,26 @@ export default function Login() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">로그인 ID</label>
+                <label className="text-sm font-medium text-[var(--hrs-ink)]">로그인 ID</label>
                 <input
                   type="text"
                   autoComplete="off"
                   required
                   value={loginId}
                   onChange={e => setLoginId(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-[var(--hrs-line)] bg-[var(--hrs-bg)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--hrs-accent)] focus:border-[var(--hrs-accent)] transition-colors text-sm"
                   placeholder="아이디를 입력하세요"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">비밀번호</label>
+                <label className="text-sm font-medium text-[var(--hrs-ink)]">비밀번호</label>
                 <input
                   type="password"
                   autoComplete="new-password"
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-colors text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-[var(--hrs-line)] bg-[var(--hrs-bg)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--hrs-accent)] focus:border-[var(--hrs-accent)] transition-colors text-sm"
                   placeholder="비밀번호를 입력하세요"
                 />
               </div>
@@ -168,15 +169,15 @@ export default function Login() {
                   id="rememberId"
                   checked={rememberId}
                   onChange={(e) => setRememberId(e.target.checked)}
-                  className="rounded border-gray-300 text-gray-900 focus:ring-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:checked:bg-gray-100"
+                  className="w-4 h-4 rounded border-[var(--hrs-line)] accent-[var(--hrs-accent)]"
                 />
-                <label htmlFor="rememberId" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+                <label htmlFor="rememberId" className="text-sm text-[var(--hrs-slate)] cursor-pointer">
                   아이디 저장
                 </label>
               </div>
-              <button 
+              <button
                 type="submit"
-                className="w-full py-2.5 mt-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900 text-white font-medium rounded-xl transition-colors shadow-sm text-sm"
+                className="w-full py-2.5 mt-2 bg-[var(--hrs-accent)] hover:brightness-110 text-white font-semibold rounded-md transition-all text-sm"
               >
                 로그인
               </button>

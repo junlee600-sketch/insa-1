@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "IBM Plex Sans KR", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "IBM Plex Sans KR", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Pretendard", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", ui-monospace, monospace;
 }
 
 @layer base {
