@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans KR", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "IBM Plex Sans KR", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 @layer base {
   body {
-    background-color: #f5f5f7;
-    color: #1d1d1f;
+    background-color: #F3F5F9;
+    color: #17202E;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
@@ -60,76 +61,98 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── HRS 리디자인 C · 평가 분석 콘솔 디자인 토큰 ── */
 :root {
-    --background: oklch(0.98 0 0); /* #f5f5f7 */
-    --foreground: oklch(0.2 0 0); /* #1d1d1f */
-    --card: oklch(1 0 0); /* #ffffff */
-    --card-foreground: oklch(0.2 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.2 0 0);
-    --primary: oklch(0.2 0 0); /* very dark gray almost black */
-    --primary-foreground: oklch(0.98 0 0); /* off-white */
-    --secondary: oklch(0.96 0 0); /* light gray */
-    --secondary-foreground: oklch(0.2 0 0);
-    --muted: oklch(0.96 0 0);
-    --muted-foreground: oklch(0.6 0 0); /* muted gray */
-    --accent: oklch(0.96 0 0);
-    --accent-foreground: oklch(0.2 0 0);
-    --destructive: oklch(0.6 0.2 25);
-    --destructive-foreground: oklch(0.98 0 0);
-    --border: oklch(0.92 0 0);
-    --input: oklch(0.92 0 0);
-    --ring: oklch(0.8 0 0);
-    --chart-1: oklch(0.4 0.1 250);
-    --chart-2: oklch(0.6 0.1 200);
-    --chart-3: oklch(0.5 0.1 280);
-    --chart-4: oklch(0.7 0.1 300);
-    --chart-5: oklch(0.8 0.1 220);
-    /* Clean utility radius */
-    --radius: 0.75rem; 
-    --sidebar: oklch(1 0 0);
-    --sidebar-foreground: oklch(0.2 0 0);
-    --sidebar-primary: oklch(0.2 0 0);
-    --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.96 0 0);
-    --sidebar-accent-foreground: oklch(0.2 0 0);
-    --sidebar-border: oklch(0.92 0 0);
-    --sidebar-ring: oklch(0.8 0 0);
+    /* 브랜드 팔레트 */
+    --hrs-bg: #F3F5F9;
+    --hrs-surface: #FFFFFF;
+    --hrs-ink: #17202E;
+    --hrs-slate: #64707F;
+    --hrs-line: #E3E8EF;
+    --hrs-line-soft: #EDF1F6;
+    --hrs-accent: #2E5AAC;
+    --hrs-accent-soft: #E9EFF9;
+    /* 점수 밴드 (의미색) */
+    --hrs-low: #D2564B;   --hrs-low-bg: #FBEAE8;
+    --hrs-mid: #C68410;   --hrs-mid-bg: #FAF1DE;
+    --hrs-high: #2F8E63;  --hrs-high-bg: #E7F3EC;
+
+    /* shadcn 토큰을 C 팔레트로 매핑 */
+    --background: #F3F5F9;
+    --foreground: #17202E;
+    --card: #FFFFFF;
+    --card-foreground: #17202E;
+    --popover: #FFFFFF;
+    --popover-foreground: #17202E;
+    --primary: #2E5AAC;
+    --primary-foreground: #FFFFFF;
+    --secondary: #EDF1F6;
+    --secondary-foreground: #17202E;
+    --muted: #EDF1F6;
+    --muted-foreground: #64707F;
+    --accent: #E9EFF9;
+    --accent-foreground: #2E5AAC;
+    --destructive: #BE3A2B;
+    --destructive-foreground: #FFFFFF;
+    --border: #E3E8EF;
+    --input: #E3E8EF;
+    --ring: #2E5AAC;
+    --chart-1: #2E5AAC;
+    --chart-2: #2F8E63;
+    --chart-3: #C68410;
+    --chart-4: #D2564B;
+    --chart-5: #5B8DE6;
+    --radius: 0.5rem;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #17202E;
+    --sidebar-primary: #2E5AAC;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #E9EFF9;
+    --sidebar-accent-foreground: #2E5AAC;
+    --sidebar-border: #E3E8EF;
+    --sidebar-ring: #2E5AAC;
 }
 
 .dark {
-    --background: oklch(0.15 0 0);
-    --foreground: oklch(0.98 0 0);
-    --card: oklch(0.2 0 0);
-    --card-foreground: oklch(0.98 0 0);
-    --popover: oklch(0.2 0 0);
-    --popover-foreground: oklch(0.98 0 0);
-    --primary: oklch(0.98 0 0);
-    --primary-foreground: oklch(0.2 0 0);
-    --secondary: oklch(0.25 0 0);
-    --secondary-foreground: oklch(0.98 0 0);
-    --muted: oklch(0.25 0 0);
-    --muted-foreground: oklch(0.7 0 0);
-    --accent: oklch(0.25 0 0);
-    --accent-foreground: oklch(0.98 0 0);
-    --destructive: oklch(0.4 0.2 25);
-    --destructive-foreground: oklch(0.98 0 0);
-    --border: oklch(0.3 0 0);
-    --input: oklch(0.3 0 0);
-    --ring: oklch(0.5 0 0);
-    --chart-1: oklch(0.6 0.1 250);
-    --chart-2: oklch(0.7 0.1 200);
-    --chart-3: oklch(0.6 0.1 280);
-    --chart-4: oklch(0.8 0.1 300);
-    --chart-5: oklch(0.9 0.1 220);
-    --sidebar: oklch(0.18 0 0);
-    --sidebar-foreground: oklch(0.98 0 0);
-    --sidebar-primary: oklch(0.98 0 0);
-    --sidebar-primary-foreground: oklch(0.2 0 0);
-    --sidebar-accent: oklch(0.25 0 0);
-    --sidebar-accent-foreground: oklch(0.98 0 0);
-    --sidebar-border: oklch(0.3 0 0);
-    --sidebar-ring: oklch(0.5 0 0);
+    --hrs-bg: #0F141C;
+    --hrs-surface: #161D28;
+    --hrs-ink: #E6EBF2;
+    --hrs-slate: #93A0B2;
+    --hrs-line: #243040;
+    --hrs-line-soft: #1C2530;
+    --hrs-accent: #5B8DE6;
+    --hrs-accent-soft: #182740;
+    --hrs-low: #E56A5E;   --hrs-low-bg: #2C1A18;
+    --hrs-mid: #E8B457;   --hrs-mid-bg: #2A2416;
+    --hrs-high: #57BA84;  --hrs-high-bg: #152A20;
+
+    --background: #0F141C;
+    --foreground: #E6EBF2;
+    --card: #161D28;
+    --card-foreground: #E6EBF2;
+    --popover: #161D28;
+    --popover-foreground: #E6EBF2;
+    --primary: #5B8DE6;
+    --primary-foreground: #0F141C;
+    --secondary: #1C2530;
+    --secondary-foreground: #E6EBF2;
+    --muted: #1C2530;
+    --muted-foreground: #93A0B2;
+    --accent: #182740;
+    --accent-foreground: #5B8DE6;
+    --destructive: #E5705F;
+    --destructive-foreground: #0F141C;
+    --border: #243040;
+    --input: #243040;
+    --ring: #5B8DE6;
+    --sidebar: #161D28;
+    --sidebar-foreground: #E6EBF2;
+    --sidebar-primary: #5B8DE6;
+    --sidebar-primary-foreground: #0F141C;
+    --sidebar-accent: #182740;
+    --sidebar-accent-foreground: #5B8DE6;
+    --sidebar-border: #243040;
+    --sidebar-ring: #5B8DE6;
 }
 
 @layer base {
@@ -145,10 +168,39 @@
   }
 }
 
-/* Minimalist Utilities over UI elements */
+/* ── HRS 공통 컴포넌트 클래스 ── */
 @layer components {
-  /* Give shadcn cards a more clean minimalist look - subtle shadow, larger border radius */
   .card {
-    @apply bg-white dark:bg-[oklch(0.2_0_0)] rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[oklch(0.92_0_0)] dark:border-[oklch(0.3_0_0)];
+    @apply bg-white dark:bg-[#161D28] rounded-lg shadow-[0_1px_2px_rgba(16,24,40,0.05),0_2px_6px_rgba(16,24,40,0.05)] border border-[#E3E8EF] dark:border-[#243040];
   }
+  /* 숫자·데이터 정렬 */
+  .hrs-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  /* 카드 */
+  .hrs-card { background: var(--hrs-surface); border: 1px solid var(--hrs-line); border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 2px 6px rgba(16,24,40,.05); }
+
+  /* 상태 칩 */
+  .hrs-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px; }
+  .hrs-chip-good { color: var(--hrs-high); background: var(--hrs-high-bg); }
+  .hrs-chip-wait { color: var(--hrs-mid); background: var(--hrs-mid-bg); }
+  .hrs-chip-info { color: var(--hrs-accent); background: var(--hrs-accent-soft); }
+
+  /* 주요 버튼 */
+  .hrs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 14px; font-weight: 650; color: #fff; background: var(--hrs-accent); border: 0;
+    border-radius: 0.5rem; padding: 10px 16px; cursor: pointer; transition: filter .15s; }
+  .hrs-btn:hover { filter: brightness(1.08); }
+  .hrs-btn:disabled { opacity: .5; cursor: default; }
+  .hrs-btn-ghost { background: transparent; color: var(--hrs-accent); border: 1px solid var(--hrs-line); }
+  .hrs-btn-ghost:hover { background: var(--hrs-accent-soft); filter: none; }
+
+  /* 눈금 라벨 */
+  .hrs-eyebrow { font-size: 11.5px; font-weight: 650; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--hrs-accent); }
+
+  /* 점수 밴드 미니바 */
+  .hrs-track { height: 6px; border-radius: 4px; background: var(--hrs-line-soft); overflow: hidden; }
+  .hrs-track > i { display: block; height: 100%; border-radius: 4px; }
 }
