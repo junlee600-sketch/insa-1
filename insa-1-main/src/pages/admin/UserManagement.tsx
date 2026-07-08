@@ -51,7 +51,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
+  const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '', serviceMonths: '' });
   const [userMenuPerms, setUserMenuPerms] = useState<Record<string, boolean> | null>(null);
   const [showMenuPerms, setShowMenuPerms] = useState(false);
   const [confirmDepartments, setConfirmDepartments] = useState<string[]>([]);
@@ -146,6 +146,7 @@ export default function UserManagement() {
         position: formData.position,
         role: formData.role,
         yearsOfService: formData.yearsOfService !== '' ? Number(formData.yearsOfService) : null,
+        serviceMonths: formData.serviceMonths !== '' ? Number(formData.serviceMonths) : null,
         confirmDepartments,
         updatedAt: serverTimestamp(),
       };
@@ -236,7 +237,7 @@ export default function UserManagement() {
   };
 
   const openEdit = (user: any) => {
-    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: user.yearsOfService != null ? String(user.yearsOfService) : '' });
+    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: user.yearsOfService != null ? String(user.yearsOfService) : '', serviceMonths: user.serviceMonths != null ? String(user.serviceMonths) : '' });
     setUserMenuPerms(user.menuPermissions ?? null);
     setShowMenuPerms(false);
     setConfirmDepartments(Array.isArray(user.confirmDepartments) ? user.confirmDepartments : []);
@@ -248,7 +249,7 @@ export default function UserManagement() {
   };
 
   const openNew = () => {
-    setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '' });
+    setFormData({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '', serviceMonths: '' });
     setUserMenuPerms(null);
     setShowMenuPerms(false);
     setConfirmDepartments([]);
@@ -266,7 +267,8 @@ export default function UserManagement() {
       '사용자 이름': '홍길동',
       '소속 부서': '인사팀',
       '직급': '사원',
-      '연차': 3,
+      '연차(년)': 3,
+      '연차(개월)': 6,
       '권한 (admin/user)': 'user'
     }], "Users", "User_Registration_Template.xlsx");
   };
@@ -290,8 +292,10 @@ export default function UserManagement() {
         const name = String(row['사용자 이름'] || '').trim();
         const department = String(row['소속 부서'] || '').trim();
         const position = String(row['직급'] || '').trim();
-        const yearsRaw = row['연차'];
+        const yearsRaw = row['연차(년)'] ?? row['연차'];
+        const monthsRaw = row['연차(개월)'];
         const yearsOfService = yearsRaw != null && yearsRaw !== '' ? Number(yearsRaw) : null;
+        const serviceMonths = monthsRaw != null && monthsRaw !== '' ? Number(monthsRaw) : null;
         let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
 
         if (!email || !name) {
@@ -334,6 +338,7 @@ export default function UserManagement() {
             position,
             role,
             yearsOfService,
+            serviceMonths,
             createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
             uid: existingUser ? existingUser.uid : ''
           }, { merge: true });
@@ -503,14 +508,24 @@ export default function UserManagement() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">연차</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.yearsOfService}
-                  onChange={e => setFormData({...formData, yearsOfService: e.target.value})}
-                  placeholder="연차 입력"
-                  className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]"
-                />
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number" min="0"
+                    value={formData.yearsOfService}
+                    onChange={e => setFormData({...formData, yearsOfService: e.target.value})}
+                    placeholder="년"
+                    className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] flex-1"
+                  />
+                  <span className="text-sm text-[var(--hrs-slate)]">년</span>
+                  <Input
+                    type="number" min="0" max="11"
+                    value={formData.serviceMonths}
+                    onChange={e => setFormData({...formData, serviceMonths: e.target.value})}
+                    placeholder="개월"
+                    className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] flex-1"
+                  />
+                  <span className="text-sm text-[var(--hrs-slate)]">개월</span>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">권한 레벨</Label>
@@ -657,7 +672,7 @@ export default function UserManagement() {
                 <div className={`col-span-2 font-bold text-lg truncate pr-2 ${isRetired ? 'line-through text-[var(--hrs-slate)]' : ''}`}>{user.name}</div>
                 <div className="col-span-1 font-sans text-xs text-[var(--hrs-slate)] truncate pr-2">{user.position || '-'}</div>
                 <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-2">{user.department}</div>
-                <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{user.yearsOfService != null ? `${user.yearsOfService}년` : '-'}</div>
+                <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{(user.yearsOfService != null || user.serviceMonths != null) ? `${user.yearsOfService ?? 0}년${user.serviceMonths ? ` ${user.serviceMonths}개월` : ''}` : '-'}</div>
                 <div className="col-span-1">
                   <span className={`text-[12px] tracking-normal px-2 py-1 ${user.role === 'admin' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-ink)]'}`}>
                     {user.role}

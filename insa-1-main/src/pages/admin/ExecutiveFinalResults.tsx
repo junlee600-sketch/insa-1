@@ -31,6 +31,12 @@ export default function ExecutiveFinalResults() {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [userDepartments, setUserDepartments] = useState<Record<string, string>>({});
   const [userYears, setUserYears] = useState<Record<string, number | null>>({});
+  const [userMonths, setUserMonths] = useState<Record<string, number | null>>({});
+  const fmtService = (id: string) => {
+    const y = userYears[id]; const m = userMonths[id];
+    if (y == null && m == null) return '-';
+    return `${y ?? 0}년${m ? ` ${m}개월` : ''}`;
+  };
   const [userPeriodic, setUserPeriodic] = useState<Record<string, { attendanceScore: number | null; workLogScore: number | null }>>({});
   const [weights, setWeights] = useState<{ eval: number; attendance: number; workLog: number }>({ eval: 70, attendance: 15, workLog: 15 });
 
@@ -122,6 +128,7 @@ export default function ExecutiveFinalResults() {
       const dmap: Record<string, string> = {};
       const pmap: Record<string, string> = {};
       const ymap: Record<string, number | null> = {};
+      const mmap: Record<string, number | null> = {};
       const deptSet = new Set<string>();
       await Promise.all([...allUserIds].map(async (id: string) => {
         const userDoc = await getDoc(doc(db, 'users', id));
@@ -131,6 +138,7 @@ export default function ExecutiveFinalResults() {
           dmap[data.email] = data.department || '';
           pmap[data.email] = data.position || '';
           ymap[data.email] = data.yearsOfService ?? null;
+          mmap[data.email] = data.serviceMonths ?? null;
           if (data.department) deptSet.add(data.department);
         }
       }));
@@ -138,6 +146,7 @@ export default function ExecutiveFinalResults() {
       setUserDepartments(dmap);
       setUserPositions(pmap);
       setUserYears(ymap);
+      setUserMonths(mmap);
       setDepartments(Array.from(deptSet).sort());
 
       // 연도 가중치 + 근태/업무일지 점수 조회
@@ -244,7 +253,7 @@ export default function ExecutiveFinalResults() {
         '피평가자(대상자) 이름': usersMap[ev.evaluateeId] || ev.evaluateeId,
         '직급': userPositions[ev.evaluateeId] || '-',
         '부서': userDepartments[ev.evaluateeId] || '-',
-        '연차': userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-',
+        '연차': fmtService(ev.evaluateeId),
         '할당 건수': ev.totalAssigned,
         '완료 건수': ev.totalCompleted,
         '진행률': isComplete ? '완료' : '진행중',
@@ -434,7 +443,7 @@ export default function ExecutiveFinalResults() {
                     </div>
                     <div className="col-span-1 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-1">{userPositions[ev.evaluateeId] || '-'}</div>
                     <div className="col-span-1 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-1">{userDepartments[ev.evaluateeId] || '-'}</div>
-                    <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-'}</div>
+                    <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{fmtService(ev.evaluateeId)}</div>
                     <div className="col-span-1 font-sans text-xs uppercase text-[var(--hrs-slate)] text-center">
                       <span className={isComplete ? 'text-emerald-700' : 'text-amber-700'}>
                          {ev.totalCompleted}/{ev.totalAssigned}
@@ -482,7 +491,7 @@ export default function ExecutiveFinalResults() {
             <DialogTitle className="text-3xl font-normal leading-none text-[var(--hrs-ink)]">
               최종 점수 확정
               <span className="block mt-2 font-sans font-bold text-lg text-[var(--hrs-slate)] tracking-tight">
-                {usersMap[selectedEvaluatee?.evaluateeId]} {userPositions[selectedEvaluatee?.evaluateeId] ? `(${userPositions[selectedEvaluatee?.evaluateeId]})` : ''}{userYears[selectedEvaluatee?.evaluateeId] != null ? ` · ${userYears[selectedEvaluatee?.evaluateeId]}년차` : ''}
+                {usersMap[selectedEvaluatee?.evaluateeId]} {userPositions[selectedEvaluatee?.evaluateeId] ? `(${userPositions[selectedEvaluatee?.evaluateeId]})` : ''}{selectedEvaluatee && (userYears[selectedEvaluatee.evaluateeId] != null || userMonths[selectedEvaluatee.evaluateeId] != null) ? ` · ${fmtService(selectedEvaluatee.evaluateeId)}` : ''}
               </span>
             </DialogTitle>
           </DialogHeader>
@@ -509,7 +518,7 @@ export default function ExecutiveFinalResults() {
                       <div className="col-span-2 font-bold truncate pr-1" title={usersMap[assn.evaluatorId] || assn.evaluatorId}>{usersMap[assn.evaluatorId] || assn.evaluatorId}</div>
                       <div className="col-span-1 text-xs text-[var(--hrs-slate)] truncate pr-1" title={userPositions[assn.evaluatorId]}>{userPositions[assn.evaluatorId] || '-'}</div>
                       <div className="col-span-2 text-xs uppercase text-[var(--hrs-slate)] truncate pr-1" title={userDepartments[assn.evaluatorId]}>{userDepartments[assn.evaluatorId] || '-'}</div>
-                      <div className="col-span-1 text-xs text-center text-[var(--hrs-slate)]">{userYears[assn.evaluatorId] != null ? `${userYears[assn.evaluatorId]}년` : '-'}</div>
+                      <div className="col-span-1 text-xs text-center text-[var(--hrs-slate)]">{fmtService(assn.evaluatorId)}</div>
                       <div className="col-span-3 text-xs font-sans uppercase text-[var(--hrs-slate)] tracking-wider truncate pr-1">{groupsMap[assn.groupId]}</div>
                       <div className="col-span-1 text-center font-bold text-lg">{assn.status === 'completed' ? assn.totalScore : '-'}</div>
                       <div className="col-span-2 text-right">
