@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logger } from '../lib/logger';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,9 +30,28 @@ export default function MyHistory() {
       );
       const snap = await getDocs(q);
       const records = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-      
+
       // Sort descending by year
       records.sort((a, b) => b.year.localeCompare(a.year));
+
+      // 연도별 근태·업무일지 점수 조회 (periodicScores/{year}_{email})
+      await Promise.all(records.map(async (r) => {
+        try {
+          const ps = await getDoc(doc(db, 'periodicScores', `${r.year}_${user?.email}`));
+          if (ps.exists()) {
+            const d = ps.data();
+            r.attendanceScore = d.attendanceScore ?? null;
+            r.workLogScore = d.workLogScore ?? null;
+          } else {
+            r.attendanceScore = null;
+            r.workLogScore = null;
+          }
+        } catch {
+          r.attendanceScore = null;
+          r.workLogScore = null;
+        }
+      }));
+
       setHistory(records);
     } catch (err: any) {
       logger.error(err);
@@ -69,7 +88,7 @@ export default function MyHistory() {
       <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">내 평가 이력</h2>
-          <p className="mt-2 text-[var(--hrs-slate)] tracking-normal text-[15px]">과거 평가 연도의 최종 확정 점수 기록</p>
+          <p className="mt-2 text-[var(--hrs-slate)] tracking-normal text-[15px]">과거 평가 연도의 근태·업무일지 점수 기록</p>
         </div>
       </header>
 
@@ -89,11 +108,12 @@ export default function MyHistory() {
       <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
         <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
           <div className="col-span-3">평가 연도</div>
-          <div className="col-span-3 text-center">최종 상태</div>
-          <div className="col-span-4 text-right">최종 확정 점수</div>
-          <div className="col-span-2 text-right">관리</div>
+          <div className="col-span-2 text-center">최종 상태</div>
+          <div className="col-span-3 text-center">근태점수</div>
+          <div className="col-span-3 text-center">업무일지 점수</div>
+          <div className="col-span-1 text-right">관리</div>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto  text-sm">
           {history.length === 0 ? (
             <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">확정된 본인의 평가 이력이 없습니다.</div>
@@ -101,13 +121,16 @@ export default function MyHistory() {
             history.map(record => (
               <div key={record.id} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
                 <div className="col-span-3 font-bold">{record.year}</div>
-                <div className="col-span-3 text-center">
-                  <span className="text-[12px] tracking-normal px-2 py-1 bg-[var(--hrs-accent)] text-white">{record.status}</span>
+                <div className="col-span-2 text-center">
+                  <span className="hrs-chip hrs-chip-good">{record.status}</span>
                 </div>
-                <div className="col-span-4 text-right text-xl font-bold">
-                  {record.totalScore}
+                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                  {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
-                <div className="col-span-2 text-right">
+                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                  {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                </div>
+                <div className="col-span-1 text-right">
                   {canDelete && (
                     <button
                       onClick={(e) => openDeleteModal(record.id, e)}
