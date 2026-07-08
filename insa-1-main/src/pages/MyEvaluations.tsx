@@ -89,31 +89,31 @@ export default function MyEvaluations() {
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
+      <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">내 평가 대기열</h2>
-          <p className="mt-2 text-[#555] uppercase tracking-[0.2em] text-[15px]">본인에게 배정된 인사평가를 진행합니다.</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">내 평가 대기열</h2>
+          <p className="mt-2 text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[15px]">본인에게 배정된 인사평가를 진행합니다.</p>
         </div>
       </header>
 
       <section className="grid grid-cols-4 gap-8 mb-10">
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">현재 진행 연도</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">현재 진행 연도</p>
           <p className="text-2xl font-light tracking-tight">{activeYear || '설정 안됨'}</p>
         </div>
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">총 할당 대상 그룹</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">총 할당 대상 그룹</p>
           <p className="text-2xl font-light tracking-tight">{assignments.length}명</p>
         </div>
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대기 중</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">평가 대기 중</p>
           <p className="text-2xl font-light tracking-tight">{assignments.filter(a => a.status !== 'completed').length}건</p>
         </div>
       </section>
 
       {activeYear && (
-        <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
+        <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
+          <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[15px] uppercase tracking-[0.15em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-2">직급</div>
             <div className="col-span-2">소속부서</div>
@@ -124,16 +124,16 @@ export default function MyEvaluations() {
           
           <div className="flex-1 overflow-y-auto  text-sm">
             {assignments.length === 0 ? (
-              <div className="p-8 text-center text-[#777] font-sans">현재 배정된 평가 대상자가 없습니다.</div>
+              <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">현재 배정된 평가 대상자가 없습니다.</div>
             ) : (
               assignments.map(a => (
-                <div key={a.id} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] transition-colors">
+                <div key={a.id} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
                   <div className="col-span-2 font-bold">
                     {usersMap[a.evaluateeId] || a.evaluateeId}
                   </div>
-                  <div className="col-span-2 font-sans text-xs uppercase text-[#777]">{userPositions[a.evaluateeId] || '-'}</div>
-                  <div className="col-span-2 font-sans text-xs uppercase text-[#777]">{userDepartments[a.evaluateeId] || '-'}</div>
-                  <div className="col-span-2 font-sans text-xs uppercase text-[#777]">{groupsMap[a.groupId] || a.groupId}</div>
+                  <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)]">{userPositions[a.evaluateeId] || '-'}</div>
+                  <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)]">{userDepartments[a.evaluateeId] || '-'}</div>
+                  <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)]">{groupsMap[a.groupId] || a.groupId}</div>
                   <div className="col-span-2">
                     {a.status === 'completed' ? (
                       <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[#E8F5E9] text-emerald-800 border border-emerald-100">평가 완료</span>
@@ -144,14 +144,14 @@ export default function MyEvaluations() {
                   <div className="col-span-2 text-right">
                     {a.status === 'completed' ? (
                       <button 
-                        className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4"
+                        className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4"
                         onClick={() => navigate(`/evaluate/${a.id}`)}
                       >
                         상세 내역 보기
                       </button>
                     ) : (
                       <button 
-                        className="px-5 py-2 bg-[#1A1A1A] text-white text-[10px] font-sans uppercase tracking-widest hover:bg-[#333] transition-colors"
+                        className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[10px] font-sans uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors"
                         onClick={() => navigate(`/evaluate/${a.id}`)}
                       >
                         평가하기

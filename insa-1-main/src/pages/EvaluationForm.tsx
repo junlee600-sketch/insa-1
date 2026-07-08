@@ -134,29 +134,29 @@ export default function EvaluationForm() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
-      <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
+      <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <div className="flex items-center gap-4 mb-4">
              <button 
                 onClick={() => navigate('/evaluate')} 
-                className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4"
+                className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4"
              >
                 목록으로 돌아가기
              </button>
           </div>
-          <h2 className="text-5xl tracking-tighter">평가 대상: {evaluateeName}</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">평가 대상: {evaluateeName}</h2>
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">
             {scale}점 척도 다면 평가 {isCompleted && <span className="text-emerald-700 font-bold tracking-widest">(완료/제출됨)</span>}
           </p>
         </div>
       </header>
 
       <div className="space-y-12">
-        <div className="border border-[#1A1A1A] p-10 space-y-10 bg-[#FDFDFB]">
+        <div className="border border-[var(--hrs-line)] p-10 space-y-10 bg-[var(--hrs-surface)]">
           {items.map((item, index) => (
-            <div key={item.id} className="space-y-4 pb-10 border-b border-[#EEE] last:border-b-0 last:pb-0">
-              <p className=" text-lg leading-relaxed text-[#1A1A1A]">
-                <span className="text-[10px] uppercase tracking-widest text-[#999] block mb-2">{String(index + 1).padStart(2, '0')}.</span>
+            <div key={item.id} className="space-y-4 pb-10 border-b border-[var(--hrs-line-soft)] last:border-b-0 last:pb-0">
+              <p className=" text-lg leading-relaxed text-[var(--hrs-ink)]">
+                <span className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] block mb-2">{String(index + 1).padStart(2, '0')}.</span>
                 {item.question}
               </p>
               <div className="flex gap-2 flex-wrap">
@@ -167,8 +167,8 @@ export default function EvaluationForm() {
                     onClick={() => handleScoreChange(item.id, num)}
                     className={`h-12 w-12 flex items-center justify-center font-sans tracking-widest transition-colors ${
                       scores[item.id] === num 
-                        ? 'bg-[#1A1A1A] text-white border border-[#1A1A1A]'
-                        : 'bg-transparent text-[#777] border border-[#CCC] hover:border-[#1A1A1A] hover:text-[#1A1A1A] disabled:opacity-50 disabled:hover:border-[#CCC]'
+                        ? 'bg-[var(--hrs-accent)] text-white border border-[var(--hrs-line)]'
+                        : 'bg-transparent text-[var(--hrs-slate)] border border-[var(--hrs-line)] hover:border-[var(--hrs-line)] hover:text-[var(--hrs-ink)] disabled:opacity-50 disabled:hover:border-[var(--hrs-line)]'
                     }`}
                   >
                     {num}
@@ -179,7 +179,7 @@ export default function EvaluationForm() {
           ))}
 
           <div className="space-y-4 pt-10">
-            <p className="text-[10px] uppercase tracking-widest text-[#999]">정성 평가 의견 (선택사항)</p>
+            <p className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">정성 평가 의견 (선택사항)</p>
             <textarea
               placeholder="평가 대상자에 대한 추가적인 의견이나 맥락을 작성해주세요..."
               rows={5}
@@ -187,7 +187,7 @@ export default function EvaluationForm() {
               value={comment}
               onChange={e => setComment(e.target.value)}
               disabled={isCompleted}
-              className="w-full bg-[#F9F9F9] border border-[#E5E5E5] p-4 text-sm outline-none focus:border-[#1A1A1A] placeholder-[#AAA] resize-none"
+              className="w-full bg-[var(--hrs-bg)] border border-[var(--hrs-line)] p-4 text-sm outline-none focus:border-[var(--hrs-line)] placeholder-[var(--hrs-slate)] resize-none"
             />
           </div>
 
@@ -195,7 +195,7 @@ export default function EvaluationForm() {
             <div className="flex justify-end pt-10">
               <button 
                 onClick={handleSubmitClick} 
-                className="px-8 py-3 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-[0.2em] hover:bg-[#333] transition-colors"
+                className="px-8 py-3 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--hrs-ink)] transition-colors"
                 type="button"
               >
                 최종 제출하기
@@ -207,25 +207,25 @@ export default function EvaluationForm() {
 
       {/* Confirmation Dialog */}
       <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
-        <DialogContent className="max-w-md border-[#1A1A1A] rounded-none bg-[#FDFDFB] p-0">
-          <DialogHeader className="p-6 border-b border-[#E5E5E5] bg-[#F9F9F9]">
-            <DialogTitle className="text-xl font-normal leading-none text-[#1A1A1A]">
+        <DialogContent className="max-w-md border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+          <DialogHeader className="p-6 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
+            <DialogTitle className="text-xl font-normal leading-none text-[var(--hrs-ink)]">
               평가 제출 확인
             </DialogTitle>
           </DialogHeader>
-          <div className="p-6 text-sm text-[#333] leading-relaxed">
+          <div className="p-6 text-sm text-[var(--hrs-ink)] leading-relaxed">
             한번 평가하면 규칙상 수정할 수 없습니다. 신중하게 평가하세요.<br/>
             이대로 제출하시겠습니까?
           </div>
-          <div className="flex justify-end gap-3 p-6 bg-[#F9F9F9] border-t border-[#E5E5E5]">
+          <div className="flex justify-end gap-3 p-6 bg-[var(--hrs-bg)] border-t border-[var(--hrs-line)]">
             <button 
-              className="px-5 py-2 border border-[#CCC] text-[11px] uppercase tracking-widest hover:border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors"
+              className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:border-[var(--hrs-line)] hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
               onClick={() => setConfirmModalOpen(false)}
             >
               취소
             </button>
             <button
-              className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={executeSubmit}
               disabled={isSubmitting}
             >
@@ -237,18 +237,18 @@ export default function EvaluationForm() {
 
       {/* Alert Dialog */}
       <Dialog open={alertModalOpen} onOpenChange={setAlertModalOpen}>
-        <DialogContent className="max-w-md border-[#1A1A1A] rounded-none bg-[#FDFDFB] p-0">
-          <DialogHeader className="p-6 border-b border-[#E5E5E5] bg-[#F9F9F9]">
-            <DialogTitle className="text-xl font-normal leading-none text-[#1A1A1A]">
+        <DialogContent className="max-w-md border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+          <DialogHeader className="p-6 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
+            <DialogTitle className="text-xl font-normal leading-none text-[var(--hrs-ink)]">
               알림
             </DialogTitle>
           </DialogHeader>
-          <div className="p-6 text-sm text-[#333] leading-relaxed whitespace-pre-wrap">
+          <div className="p-6 text-sm text-[var(--hrs-ink)] leading-relaxed whitespace-pre-wrap">
             {alertMessage}
           </div>
-          <div className="flex justify-end p-6 bg-[#F9F9F9] border-t border-[#E5E5E5]">
+          <div className="flex justify-end p-6 bg-[var(--hrs-bg)] border-t border-[var(--hrs-line)]">
             <button 
-              className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors"
+              className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors"
               onClick={() => setAlertModalOpen(false)}
             >
               확인

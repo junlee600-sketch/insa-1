@@ -78,14 +78,14 @@ export default function ProfileSettings() {
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
+      <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">내 비밀번호 변경</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">계정 비밀번호 변경</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">내 비밀번호 변경</h2>
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">계정 비밀번호 변경</p>
         </div>
       </header>
       
-      <div className="max-w-xl mx-auto bg-[#F9F9F9] border border-[#E5E5E5] p-8">
+      <div className="max-w-xl mx-auto bg-[var(--hrs-bg)] border border-[var(--hrs-line)] p-8">
         {msg.text && (
           <div className={`text-xs p-3 mb-6 border ${msg.type === 'error' ? 'text-red-700 bg-red-50 border-red-200' : 'text-green-700 bg-green-50 border-green-200'}`}>
             {msg.text}
@@ -93,64 +93,64 @@ export default function ProfileSettings() {
         )}
         <form onSubmit={handleSave} className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[#999]">ID</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">ID</Label>
             <Input 
               value={user?.email?.includes('@') ? user.email.split('@')[0] : user?.email || ''} 
               disabled
-              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
+              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[#999]">사용자 이름</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">사용자 이름</Label>
             <Input 
               value={formData.name} 
               disabled
-              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
+              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[#999]">직급</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">직급</Label>
             <Input 
               value={formData.position || ''} 
               disabled
-              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
+              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[#999]">소속 부서</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">소속 부서</Label>
             <Input 
               value={formData.department} 
               disabled
-              className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
+              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent opacity-50 px-0"
             />
           </div>
 
-          <div className="pt-6 border-t border-[#EEE]">
+          <div className="pt-6 border-t border-[var(--hrs-line-soft)]">
             <h3 className="text-sm font-bold mb-4">비밀번호 변경</h3>
-            <p className="text-[10px] text-[#777] mb-6">비밀번호를 변경하지 않으려면 비워두세요.</p>
+            <p className="text-[10px] text-[var(--hrs-slate)] mb-6">비밀번호를 변경하지 않으려면 비워두세요.</p>
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">새 비밀번호</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">새 비밀번호</Label>
                 <Input 
                   type="password"
                   value={formData.newPassword} 
                   onChange={e => setFormData({...formData, newPassword: e.target.value})} 
                   placeholder="최소 6자 이상"
-                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] px-0"
+                  className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] px-0"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">새 비밀번호 확인</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">새 비밀번호 확인</Label>
                 <Input 
                   type="password"
                   value={formData.confirmPassword} 
                   onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
                   placeholder="비밀번호 다시 입력"
-                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] px-0"
+                  className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] px-0"
                 />
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function ProfileSettings() {
             <button 
               type="submit" 
               disabled={loading}
-              className="px-8 py-3 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors disabled:opacity-50"
+              className="px-8 py-3 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors disabled:opacity-50"
             >
               {loading ? '저장 중...' : '변경 내용 저장'}
             </button>
@@ -177,7 +177,7 @@ export default function ProfileSettings() {
             {errorModalMsg}
           </div>
           <DialogFooter>
-            <Button onClick={() => setErrorModalOpen(false)} className="bg-[#1A1A1A] hover:bg-[#333] text-white">확인</Button>
+            <Button onClick={() => setErrorModalOpen(false)} className="bg-[var(--hrs-accent)] hover:bg-[var(--hrs-ink)] text-white">확인</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

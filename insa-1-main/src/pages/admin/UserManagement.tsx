@@ -375,30 +375,30 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
+      <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">사용자 관리</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">계정 추가 수정 및 권한 부여 관리</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">사용자 관리</h2>
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">계정 추가 수정 및 권한 부여 관리</p>
         </div>
         
         <div className="flex gap-4 items-center">
           <button 
             onClick={downloadTemplate}
-            className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors"
+            className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
           >
             등록양식 다운로드
           </button>
           
           <div className="relative">
             <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-            <button className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors pointer-events-none">
+            <button className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors pointer-events-none">
               일괄 사용자 등록
             </button>
           </div>
 
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger render={<Button onClick={openNew} className="rounded-none bg-[#1A1A1A] hover:bg-[#333] px-5 py-2 text-[11px] uppercase tracking-widest h-auto">개별 사용자 등록</Button>} />
-            <DialogContent className="border-[#1A1A1A] rounded-none bg-[#FDFDFB]">
+            <DialogTrigger render={<Button onClick={openNew} className="rounded-none bg-[var(--hrs-accent)] hover:bg-[var(--hrs-ink)] px-5 py-2 text-[11px] uppercase tracking-widest h-auto">개별 사용자 등록</Button>} />
+            <DialogContent className="border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)]">
             <DialogHeader>
               <DialogTitle className="text-2xl">{isEditing ? '사용자 정보 수정' : '신규 사용자 등록'}</DialogTitle>
             </DialogHeader>
@@ -406,30 +406,30 @@ export default function UserManagement() {
               {errorMsg && <div className="text-red-700 text-xs p-2 bg-red-50 border border-red-200">{errorMsg}</div>}
               {successMsg && <div className="text-green-700 text-xs p-2 bg-green-50 border border-green-200">{successMsg}</div>}
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">로그인 ID</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">로그인 ID</Label>
                 <Input
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                   disabled={isEditing}
                   autoComplete="off"
-                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                  className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] "
                 />
               </div>
               {!isEditing && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest text-[#999]">초기 비밀번호</Label>
+                  <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">초기 비밀번호</Label>
                   <Input
                     type="password"
                     value={formData.password}
                     onChange={e => setFormData({...formData, password: e.target.value})}
                     autoComplete="new-password"
-                    className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                    className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] "
                     placeholder="최소 6자 이상"
                   />
                 </div>
               )}
               {isEditing && (
-                <div className="space-y-2 pt-4 border-t border-[#EEE]">
+                <div className="space-y-2 pt-4 border-t border-[var(--hrs-line-soft)]">
                   <Label className="text-[10px] uppercase tracking-widest text-[#red-700] text-red-700 font-bold">비밀번호 즉시 변경 (관리자)</Label>
                   <div className="flex gap-2 items-center">
                     <Input
@@ -437,30 +437,30 @@ export default function UserManagement() {
                       value={adminForcePassword}
                       onChange={e => setAdminForcePassword(e.target.value)}
                       autoComplete="new-password"
-                      className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                      className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] "
                       placeholder="최소 6자 이상"
                     />
-                    <button type="button" onClick={handleForcePasswordChange} className="px-5 py-2 whitespace-nowrap bg-[#1A1A1A] text-white text-[10px] hover:bg-[#333] transition-colors uppercase tracking-widest">
+                    <button type="button" onClick={handleForcePasswordChange} className="px-5 py-2 whitespace-nowrap bg-[var(--hrs-accent)] text-white text-[10px] hover:bg-[var(--hrs-ink)] transition-colors uppercase tracking-widest">
                       적용
                     </button>
                   </div>
-                  <p className="text-[10px] text-[#777] mt-1">이메일 인증 없이 계정의 비밀번호를 즉시 새로운 값으로 덮어씁니다.</p>
+                  <p className="text-[10px] text-[var(--hrs-slate)] mt-1">이메일 인증 없이 계정의 비밀번호를 즉시 새로운 값으로 덮어씁니다.</p>
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">사용자 이름</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">사용자 이름</Label>
                 <Input
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   autoComplete="off"
-                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] "
+                  className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] "
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">소속 부서</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">소속 부서</Label>
                 <div className="flex gap-2">
                   <Select value={formData.department} onValueChange={(v) => setFormData({...formData, department: v ?? ''})}>
-                    <SelectTrigger className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
+                    <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
                       <SelectValue placeholder="부서 선택 혹은 직접 입력" />
                     </SelectTrigger>
                     <SelectContent>
@@ -474,15 +474,15 @@ export default function UserManagement() {
                     placeholder="직접 입력"
                     value={formData.department} 
                     onChange={e => setFormData({...formData, department: e.target.value})} 
-                    className="w-1/3 border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] uppercase tracking-wider text-xs"
+                    className="w-1/3 border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] uppercase tracking-wider text-xs"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">직급/직책</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">직급/직책</Label>
                 <div className="flex gap-2">
                   <Select value={formData.position} onValueChange={(v) => setFormData({...formData, position: v ?? ''})}>
-                    <SelectTrigger className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
+                    <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0 uppercase tracking-wider text-xs flex-1">
                       <SelectValue placeholder="직급 선택 혹은 직접 입력" />
                     </SelectTrigger>
                     <SelectContent>
@@ -497,25 +497,25 @@ export default function UserManagement() {
                     placeholder="직접 입력"
                     value={formData.position} 
                     onChange={e => setFormData({...formData, position: e.target.value})} 
-                    className="w-1/3 border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A] uppercase tracking-wider text-xs"
+                    className="w-1/3 border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] uppercase tracking-wider text-xs"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">연차</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">연차</Label>
                 <Input
                   type="number"
                   min="0"
                   value={formData.yearsOfService}
                   onChange={e => setFormData({...formData, yearsOfService: e.target.value})}
                   placeholder="연차 입력"
-                  className="border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A]"
+                  className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-widest text-[#999]">권한 레벨</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">권한 레벨</Label>
                 <Select value={formData.role} onValueChange={(v) => setFormData({...formData, role: v ?? ''})}>
-                  <SelectTrigger className="border-b border-[#1A1A1A] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">사용자</SelectItem>
                     <SelectItem value="hr">인사담당자</SelectItem>
@@ -524,17 +524,17 @@ export default function UserManagement() {
                 </Select>
               </div>
               {isEditing && (
-                <div className="space-y-2 pt-4 border-t border-[#EEE]">
+                <div className="space-y-2 pt-4 border-t border-[var(--hrs-line-soft)]">
                   <div className="py-2">
                     <div className="flex justify-between items-center mb-2">
-                      <p className="text-[10px] uppercase tracking-widest text-[#555]">최종평가 점수 확정 권한</p>
+                      <p className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">최종평가 점수 확정 권한</p>
                       {confirmDepartments.length > 0 && (
                         <button type="button" onClick={() => setConfirmDepartments([])} className="text-[9px] text-red-500 uppercase tracking-widest underline">초기화</button>
                       )}
                     </div>
-                    <p className="text-[9px] text-[#AAA] mb-2">체크한 부서의 최종 점수를 확정할 수 있습니다.</p>
-                    <div className="border border-[#EEE] p-2 space-y-1.5">
-                      {allDepartments.length === 0 && <p className="text-[9px] text-[#AAA]">등록된 부서가 없습니다.</p>}
+                    <p className="text-[9px] text-[var(--hrs-slate)] mb-2">체크한 부서의 최종 점수를 확정할 수 있습니다.</p>
+                    <div className="border border-[var(--hrs-line-soft)] p-2 space-y-1.5">
+                      {allDepartments.length === 0 && <p className="text-[9px] text-[var(--hrs-slate)]">등록된 부서가 없습니다.</p>}
                       {allDepartments.map(dept => (
                         <label key={dept} className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -543,9 +543,9 @@ export default function UserManagement() {
                             onChange={e => setConfirmDepartments(prev =>
                               e.target.checked ? [...prev, dept] : prev.filter(d => d !== dept)
                             )}
-                            className="w-3.5 h-3.5 accent-[#1A1A1A]"
+                            className="w-3.5 h-3.5 accent-[var(--hrs-ink)]"
                           />
-                          <span className="text-xs text-[#333]">{dept}</span>
+                          <span className="text-xs text-[var(--hrs-ink)]">{dept}</span>
                         </label>
                       ))}
                     </div>
@@ -558,15 +558,15 @@ export default function UserManagement() {
                         setUserMenuPerms({ ...ROLE_DEFAULT_PERMS[formData.role] });
                       }
                     }}
-                    className="w-full text-left text-[10px] uppercase tracking-widest text-[#555] flex justify-between items-center py-1 border-t border-[#EEE] pt-3"
+                    className="w-full text-left text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] flex justify-between items-center py-1 border-t border-[var(--hrs-line-soft)] pt-3"
                   >
                     <span>개별 메뉴 권한 설정</span>
                     <span>{showMenuPerms ? '▲' : '▼'}</span>
                   </button>
                   {showMenuPerms && userMenuPerms !== null && (
-                    <div className="border border-[#EEE] p-3 space-y-3 max-h-60 overflow-y-auto">
+                    <div className="border border-[var(--hrs-line-soft)] p-3 space-y-3 max-h-60 overflow-y-auto">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] text-[#999] uppercase tracking-widest">역할 기반 기본값 재정의</span>
+                        <span className="text-[9px] text-[var(--hrs-slate)] uppercase tracking-widest">역할 기반 기본값 재정의</span>
                         <button
                           type="button"
                           onClick={() => { setUserMenuPerms(null); setShowMenuPerms(false); }}
@@ -579,16 +579,16 @@ export default function UserManagement() {
                         ALL_MENUS.reduce((acc, m) => { if (!acc[m.category]) acc[m.category] = []; acc[m.category].push(m); return acc; }, {} as Record<string, typeof ALL_MENUS>)
                       ).map(([cat, items]) => (
                         <div key={cat}>
-                          <p className="text-[9px] uppercase tracking-widest text-[#AAA] mb-1">{cat}</p>
+                          <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">{cat}</p>
                           {items.map(m => (
                             <label key={m.to} className="flex items-center gap-2 py-1 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={userMenuPerms[m.to] ?? false}
                                 onChange={e => setUserMenuPerms(prev => ({ ...prev!, [m.to]: e.target.checked }))}
-                                className="w-3.5 h-3.5 accent-[#1A1A1A]"
+                                className="w-3.5 h-3.5 accent-[var(--hrs-ink)]"
                               />
-                              <span className="text-xs text-[#333]">{m.label}</span>
+                              <span className="text-xs text-[var(--hrs-ink)]">{m.label}</span>
                             </label>
                           ))}
                         </div>
@@ -598,7 +598,7 @@ export default function UserManagement() {
                 </div>
               )}
               <div className="pt-4 flex justify-end">
-                <button onClick={handleSave} className="px-5 py-2 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors w-full">저장하기</button>
+                <button onClick={handleSave} className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors w-full">저장하기</button>
               </div>
             </div>
           </DialogContent>
@@ -606,12 +606,12 @@ export default function UserManagement() {
         </div>
       </header>
 
-      <div className="flex items-center gap-0 mt-8 mb-0 border-b border-[#EEE]">
+      <div className="flex items-center gap-0 mt-8 mb-0 border-b border-[var(--hrs-line-soft)]">
         {([['active', `재직 (${activeCount})`], ['retired', `퇴직 (${retiredCount})`], ['all', `전체 (${users.length})`]] as const).map(([val, label]) => (
           <button
             key={val}
             onClick={() => setStatusFilter(val)}
-            className={`px-5 py-2 text-[10px] uppercase tracking-widest border-b-2 transition-colors ${statusFilter === val ? 'border-[#1A1A1A] text-[#1A1A1A] font-bold' : 'border-transparent text-[#999] hover:text-[#555]'}`}
+            className={`px-5 py-2 text-[10px] uppercase tracking-widest border-b-2 transition-colors ${statusFilter === val ? 'border-[var(--hrs-line)] text-[var(--hrs-ink)] font-bold' : 'border-transparent text-[var(--hrs-slate)] hover:text-[var(--hrs-slate)]'}`}
           >
             {label}
           </button>
@@ -625,20 +625,20 @@ export default function UserManagement() {
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="이름, 아이디, 부서, 직급 검색..."
           autoComplete="off"
-          className="border border-[#CCC] px-4 py-2 text-sm w-72 focus:outline-none focus:border-[#1A1A1A] bg-transparent"
+          className="border border-[var(--hrs-line)] px-4 py-2 text-sm w-72 focus:outline-none focus:border-[var(--hrs-line)] bg-transparent"
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="text-[10px] uppercase tracking-widest text-[#999] hover:text-[#1A1A1A] transition-colors">
+          <button onClick={() => setSearchQuery('')} className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] transition-colors">
             초기화
           </button>
         )}
-        <span className="text-[10px] text-[#999] ml-auto">
+        <span className="text-[10px] text-[var(--hrs-slate)] ml-auto">
           {filteredUsers.length}명
         </span>
       </div>
 
-      <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-        <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+      <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
+        <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
           <div className="col-span-2">로그인 ID</div>
           <div className="col-span-2">사용자 이름</div>
           <div className="col-span-1">직급</div>
@@ -652,14 +652,14 @@ export default function UserManagement() {
           {filteredUsers.map((user) => {
             const isRetired = user.status === 'retired';
             return (
-              <div key={user.id} className={`grid grid-cols-12 p-4 border-b border-[#EEE] items-center transition-colors ${isRetired ? 'bg-[#FAFAFA] opacity-70' : 'hover:bg-[#F9F9F9]'}`}>
-                <div className="col-span-2 text-[#777] truncate pr-2">{user.email?.includes('@') ? user.email.split('@')[0] : user.email}</div>
-                <div className={`col-span-2 font-bold text-lg truncate pr-2 ${isRetired ? 'line-through text-[#AAA]' : ''}`}>{user.name}</div>
-                <div className="col-span-1 font-sans text-xs text-[#555] truncate pr-2">{user.position || '-'}</div>
-                <div className="col-span-2 font-sans text-xs uppercase text-[#777] truncate pr-2">{user.department}</div>
-                <div className="col-span-1 font-sans text-xs text-center text-[#555]">{user.yearsOfService != null ? `${user.yearsOfService}년` : '-'}</div>
+              <div key={user.id} className={`grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center transition-colors ${isRetired ? 'bg-[#FAFAFA] opacity-70' : 'hover:bg-[var(--hrs-bg)]'}`}>
+                <div className="col-span-2 text-[var(--hrs-slate)] truncate pr-2">{user.email?.includes('@') ? user.email.split('@')[0] : user.email}</div>
+                <div className={`col-span-2 font-bold text-lg truncate pr-2 ${isRetired ? 'line-through text-[var(--hrs-slate)]' : ''}`}>{user.name}</div>
+                <div className="col-span-1 font-sans text-xs text-[var(--hrs-slate)] truncate pr-2">{user.position || '-'}</div>
+                <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-2">{user.department}</div>
+                <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{user.yearsOfService != null ? `${user.yearsOfService}년` : '-'}</div>
                 <div className="col-span-1">
-                  <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${user.role === 'admin' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#1A1A1A]'}`}>
+                  <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${user.role === 'admin' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-ink)]'}`}>
                     {user.role}
                   </span>
                 </div>
@@ -669,20 +669,20 @@ export default function UserManagement() {
                   </span>
                 </div>
                 <div className="col-span-2 text-right flex justify-end gap-2 flex-wrap">
-                  <button onClick={() => openEdit(user)} className="text-[10px] uppercase tracking-widest text-[#777] hover:text-[#1A1A1A] underline underline-offset-4">수정</button>
+                  <button onClick={() => openEdit(user)} className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4">수정</button>
                   <button
                     onClick={() => handleToggleStatus(user)}
-                    className={`text-[10px] uppercase tracking-widest underline underline-offset-4 border-l border-[#CCC] pl-2 ${isRetired ? 'text-emerald-600 hover:text-emerald-800' : 'text-amber-600 hover:text-amber-800'}`}
+                    className={`text-[10px] uppercase tracking-widest underline underline-offset-4 border-l border-[var(--hrs-line)] pl-2 ${isRetired ? 'text-emerald-600 hover:text-emerald-800' : 'text-amber-600 hover:text-amber-800'}`}
                   >
                     {isRetired ? '재직복구' : '퇴직처리'}
                   </button>
-                  <button onClick={() => { setConfirmData({ id: user.id, name: user.name }); setConfirmOpen(true); }} className="text-[10px] uppercase tracking-widest text-[#777] hover:text-red-700 underline underline-offset-4 border-l border-[#CCC] pl-2">삭제</button>
+                  <button onClick={() => { setConfirmData({ id: user.id, name: user.name }); setConfirmOpen(true); }} className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4 border-l border-[var(--hrs-line)] pl-2">삭제</button>
                 </div>
               </div>
             );
           })}
           {filteredUsers.length === 0 && (
-            <div className="p-8 text-center text-[#999] text-sm">검색 결과가 없습니다.</div>
+            <div className="p-8 text-center text-[var(--hrs-slate)] text-sm">검색 결과가 없습니다.</div>
           )}
         </div>
       </div>

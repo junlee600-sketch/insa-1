@@ -209,28 +209,28 @@ export default function PeriodicScores() {
       || (u.department || '').toLowerCase().includes(q);
   });
 
-  if (loading) return <div className="p-8 text-center text-[#777]">데이터를 불러오는 중입니다...</div>;
+  if (loading) return <div className="p-8 text-center text-[var(--hrs-slate)]">데이터를 불러오는 중입니다...</div>;
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-end mb-8 border-b border-[#1A1A1A] pb-6">
+      <header className="flex justify-between items-end mb-8 border-b border-[var(--hrs-line)] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">근태·업무일지 점수 관리</h2>
-          <p className="mt-2 text-sm text-[#555] uppercase tracking-[0.2em] text-[10px]">연도별 근태·업무일지 점수를 일괄 부여합니다 (0~100)</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">근태·업무일지 점수 관리</h2>
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">연도별 근태·업무일지 점수를 일괄 부여합니다 (0~100)</p>
         </div>
         <div className="flex gap-3 items-center">
-          <button onClick={downloadTemplate} className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors">
+          <button onClick={downloadTemplate} className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors">
             엑셀 양식/현황 다운로드
           </button>
           <div className="relative">
             <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-            <button className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors pointer-events-none">
+            <button className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors pointer-events-none">
               엑셀 일괄 불러오기
             </button>
           </div>
           <div className="w-40">
             <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
-              <SelectTrigger className="border-[#1A1A1A] rounded-none bg-transparent">
+              <SelectTrigger className="border-[var(--hrs-line)] rounded-none bg-transparent">
                 <SelectValue placeholder="평가 연도 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -244,7 +244,7 @@ export default function PeriodicScores() {
       <div className="flex gap-4 items-center">
         <div className="w-48">
           <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? 'all')}>
-            <SelectTrigger className="border-[#1A1A1A] rounded-none bg-transparent">
+            <SelectTrigger className="border-[var(--hrs-line)] rounded-none bg-transparent">
               <SelectValue placeholder="소속 부서" />
             </SelectTrigger>
             <SelectContent>
@@ -257,17 +257,17 @@ export default function PeriodicScores() {
           placeholder="이름/ID/부서 검색"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="max-w-xs border-b border-[#CCC] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[#1A1A1A]"
+          className="max-w-xs border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]"
         />
         <div className="flex-1" />
-        <span className="text-xs text-[#777]">{filteredUsers.length}명</span>
+        <span className="text-xs text-[var(--hrs-slate)]">{filteredUsers.length}명</span>
       </div>
 
       {!selectedYear ? (
-        <div className="p-8 text-center text-[#777] border border-[#EEE]">평가 연도를 먼저 등록/선택해 주세요.</div>
+        <div className="p-8 text-center text-[var(--hrs-slate)] border border-[var(--hrs-line-soft)]">평가 연도를 먼저 등록/선택해 주세요.</div>
       ) : (
-        <div className="border border-[#1A1A1A] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
+        <div className="border border-[var(--hrs-line)] overflow-hidden flex flex-col">
+          <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[10px] uppercase tracking-[0.15em] p-4 sticky top-0">
             <div className="col-span-3">로그인 ID</div>
             <div className="col-span-2">이름</div>
             <div className="col-span-3">소속 부서</div>
@@ -276,19 +276,19 @@ export default function PeriodicScores() {
           </div>
           <div className="max-h-[60vh] overflow-y-auto text-sm">
             {filteredUsers.length === 0 ? (
-              <div className="p-8 text-center text-[#777]">표시할 사용자가 없습니다.</div>
+              <div className="p-8 text-center text-[var(--hrs-slate)]">표시할 사용자가 없습니다.</div>
             ) : (
               filteredUsers.map((u: any) => (
-                <div key={u.id} className="grid grid-cols-12 p-3 border-b border-[#EEE] items-center hover:bg-[#F9F9F9]">
-                  <div className="col-span-3 text-[#777] truncate pr-2">{u.email?.includes('@') ? u.email.split('@')[0] : u.email}</div>
+                <div key={u.id} className="grid grid-cols-12 p-3 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)]">
+                  <div className="col-span-3 text-[var(--hrs-slate)] truncate pr-2">{u.email?.includes('@') ? u.email.split('@')[0] : u.email}</div>
                   <div className="col-span-2 font-bold truncate pr-2">{u.name}</div>
-                  <div className="col-span-3 font-sans text-xs uppercase text-[#777] truncate pr-2">{u.department || '-'}</div>
+                  <div className="col-span-3 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-2">{u.department || '-'}</div>
                   <div className="col-span-2 px-2">
                     <Input
                       type="number" min="0" max="100" step="0.1"
                       value={scores[u.id]?.attendanceScore ?? ''}
                       onChange={e => setScore(u.id, 'attendanceScore', e.target.value)}
-                      className="text-center border border-[#CCC] rounded-none bg-white focus-visible:ring-0 focus-visible:border-[#1A1A1A] h-9"
+                      className="text-center border border-[var(--hrs-line)] rounded-none bg-white focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] h-9"
                     />
                   </div>
                   <div className="col-span-2 px-2">
@@ -296,7 +296,7 @@ export default function PeriodicScores() {
                       type="number" min="0" max="100" step="0.1"
                       value={scores[u.id]?.workLogScore ?? ''}
                       onChange={e => setScore(u.id, 'workLogScore', e.target.value)}
-                      className="text-center border border-[#CCC] rounded-none bg-white focus-visible:ring-0 focus-visible:border-[#1A1A1A] h-9"
+                      className="text-center border border-[var(--hrs-line)] rounded-none bg-white focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] h-9"
                     />
                   </div>
                 </div>
@@ -310,7 +310,7 @@ export default function PeriodicScores() {
         <button
           onClick={handleSaveAll}
           disabled={saving || !selectedYear}
-          className="px-8 py-3 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-widest hover:bg-[#333] transition-colors disabled:opacity-50"
+          className="px-8 py-3 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors disabled:opacity-50"
         >
           {saving ? '저장 중...' : '일괄 저장'}
         </button>

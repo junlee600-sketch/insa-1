@@ -288,23 +288,23 @@ export default function ExecutiveFinalResults() {
 
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-end mb-12 border-b border-[#1A1A1A] pb-6">
+      <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
-          <h2 className="text-5xl tracking-tighter">임원평가 최종 결과</h2>
-          <p className="mt-2 text-[#555] uppercase tracking-[0.2em] text-[15px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">임원평가 최종 결과</h2>
+          <p className="mt-2 text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[15px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
         </div>
         <div className="flex gap-3">
           {selectedYear && evaluatees.length > 0 && (
             <button 
               onClick={downloadExcel}
-              className="px-5 py-2 border border-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-colors"
+              className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
             >
               엑셀 다운로드
             </button>
           )}
           <div className="w-48">
             <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')} disabled={!!isGroupLeader}>
-              <SelectTrigger className="border-[#1A1A1A] rounded-none bg-transparent">
+              <SelectTrigger className="border-[var(--hrs-line)] rounded-none bg-transparent">
                 <SelectValue placeholder="소속 부서 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -315,7 +315,7 @@ export default function ExecutiveFinalResults() {
           </div>
           <div className="w-48">
             <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
-              <SelectTrigger className="border-[#1A1A1A] rounded-none bg-transparent">
+              <SelectTrigger className="border-[var(--hrs-line)] rounded-none bg-transparent">
                 <SelectValue placeholder="조회할 평가 연도 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -328,31 +328,31 @@ export default function ExecutiveFinalResults() {
 
       {/* Quick Stats / Controls */}
       <section className="grid grid-cols-4 gap-8 mb-10">
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">진행 연도</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">진행 연도</p>
           <p className="text-2xl font-light tracking-tight">{selectedYear || '선택 안됨'}</p>
         </div>
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">평가 대상자 수 (필터됨)</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">평가 대상자 수 (필터됨)</p>
           <p className="text-2xl font-light tracking-tight">{filteredEvaluatees.length}명</p>
         </div>
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">전체 평가율 (필터됨)</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">전체 평가율 (필터됨)</p>
           <p className="text-2xl font-light tracking-tight">
              {filteredEvaluatees.length > 0 
                ? `${Math.round((filteredEvaluatees.reduce((sum, e) => sum + e.totalCompleted, 0) / filteredEvaluatees.reduce((sum, e) => sum + e.totalAssigned, 0)) * 100)}%` 
                : '0%'}
           </p>
         </div>
-        <div className="border-b border-[#EEE] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[#999] mb-1">현재 상태</p>
+        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
+          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">현재 상태</p>
           <p className="text-2xl font-light tracking-tight text-emerald-700 underline underline-offset-4">평가 진행/검토 중</p>
         </div>
       </section>
 
       {selectedYear && (
-        <div className="flex-1 border border-[#1A1A1A] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[13px] uppercase tracking-[0.12em] p-4 sticky top-0">
+        <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
+          <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[13px] uppercase tracking-[0.12em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-1">직급</div>
             <div className="col-span-1">소속부서</div>
@@ -368,7 +368,7 @@ export default function ExecutiveFinalResults() {
 
           <div className="flex-1 overflow-y-auto  text-sm">
             {filteredEvaluatees.length === 0 ? (
-               <div className="p-8 text-center text-[#777] font-sans">진행된 평가 내역이 없습니다.</div>
+               <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">진행된 평가 내역이 없습니다.</div>
             ) : (
               filteredEvaluatees.map(ev => {
                 const isComplete = ev.totalCompleted === ev.totalAssigned;
@@ -376,33 +376,33 @@ export default function ExecutiveFinalResults() {
                 const periodic = userPeriodic[ev.evaluateeId] || {};
 
                 return (
-                  <div key={ev.evaluateeId} className="grid grid-cols-12 p-4 border-b border-[#EEE] items-center hover:bg-[#F9F9F9] cursor-default group">
+                  <div key={ev.evaluateeId} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] cursor-default group">
                     <div className="col-span-2 font-bold truncate pr-2">
                       {usersMap[ev.evaluateeId] || ev.evaluateeId}
                     </div>
-                    <div className="col-span-1 font-sans text-xs uppercase text-[#777] truncate pr-1">{userPositions[ev.evaluateeId] || '-'}</div>
-                    <div className="col-span-1 font-sans text-xs uppercase text-[#777] truncate pr-1">{userDepartments[ev.evaluateeId] || '-'}</div>
-                    <div className="col-span-1 font-sans text-xs text-center text-[#777]">{userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-'}</div>
-                    <div className="col-span-1 font-sans text-xs uppercase text-[#777] text-center">
+                    <div className="col-span-1 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-1">{userPositions[ev.evaluateeId] || '-'}</div>
+                    <div className="col-span-1 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-1">{userDepartments[ev.evaluateeId] || '-'}</div>
+                    <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{userYears[ev.evaluateeId] != null ? `${userYears[ev.evaluateeId]}년` : '-'}</div>
+                    <div className="col-span-1 font-sans text-xs uppercase text-[var(--hrs-slate)] text-center">
                       <span className={isComplete ? 'text-emerald-700' : 'text-amber-700'}>
                          {ev.totalCompleted}/{ev.totalAssigned}
                       </span>
                     </div>
-                    <div className="col-span-1 text-center font-sans text-xs bg-[#F0F0F0] py-1 mx-1 rounded">
+                    <div className="col-span-1 text-center font-sans text-xs bg-[var(--hrs-line-soft)] py-1 mx-1 rounded">
                       {rawAvg}
                     </div>
-                    <div className="col-span-1 text-center font-sans text-xs text-[#555]">
-                      {periodic.attendanceScore != null ? periodic.attendanceScore : <span className="text-[#BBB]">미입력</span>}
+                    <div className="col-span-1 text-center font-sans text-xs text-[var(--hrs-slate)]">
+                      {periodic.attendanceScore != null ? periodic.attendanceScore : <span className="text-[var(--hrs-slate)]">미입력</span>}
                     </div>
-                    <div className="col-span-1 text-center font-sans text-xs text-[#555]">
-                      {periodic.workLogScore != null ? periodic.workLogScore : <span className="text-[#BBB]">미입력</span>}
+                    <div className="col-span-1 text-center font-sans text-xs text-[var(--hrs-slate)]">
+                      {periodic.workLogScore != null ? periodic.workLogScore : <span className="text-[var(--hrs-slate)]">미입력</span>}
                     </div>
                     <div className="col-span-1 text-center text-base font-bold">
-                      {ev.finalState ? ev.finalState.totalScore : <span className="text-[#AAA] text-xs font-normal">{weightedScoreOf(ev)}</span>}
+                      {ev.finalState ? ev.finalState.totalScore : <span className="text-[var(--hrs-slate)] text-xs font-normal">{weightedScoreOf(ev)}</span>}
                     </div>
                     <div className="col-span-1 text-center">
                       {ev.finalState ? (
-                        <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[#1A1A1A] text-white">확정</span>
+                        <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[var(--hrs-accent)] text-white">확정</span>
                       ) : (
                         <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[#E8F5E9] text-emerald-800 border border-emerald-100">대기</span>
                       )}
@@ -425,20 +425,20 @@ export default function ExecutiveFinalResults() {
 
       {/* Review Dialog */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[#1A1A1A] rounded-none bg-[#FDFDFB] p-0">
-          <DialogHeader className="p-8 border-b border-[#E5E5E5] bg-[#F9F9F9]">
-            <DialogTitle className="text-3xl font-normal leading-none text-[#1A1A1A]">
+        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+          <DialogHeader className="p-8 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
+            <DialogTitle className="text-3xl font-normal leading-none text-[var(--hrs-ink)]">
               최종 점수 확정
-              <span className="block mt-2 font-sans font-bold text-lg text-[#555] tracking-tight">
+              <span className="block mt-2 font-sans font-bold text-lg text-[var(--hrs-slate)] tracking-tight">
                 {usersMap[selectedEvaluatee?.evaluateeId]} {userPositions[selectedEvaluatee?.evaluateeId] ? `(${userPositions[selectedEvaluatee?.evaluateeId]})` : ''}{userYears[selectedEvaluatee?.evaluateeId] != null ? ` · ${userYears[selectedEvaluatee?.evaluateeId]}년차` : ''}
               </span>
             </DialogTitle>
           </DialogHeader>
           <div className="p-8 space-y-8 pb-12">
-            <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#999] border-b border-[#EEE] pb-2">평가 내역 상세</h4>
+            <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2">평가 내역 상세</h4>
             
-            <div className="border border-[#1A1A1A] flex flex-col">
-              <div className="grid grid-cols-12 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.15em] p-3 sticky top-0">
+            <div className="border border-[var(--hrs-line)] flex flex-col">
+              <div className="grid grid-cols-12 bg-[var(--hrs-accent)] text-white text-[10px] uppercase tracking-[0.15em] p-3 sticky top-0">
                 <div className="col-span-2">평가자</div>
                 <div className="col-span-1">직급</div>
                 <div className="col-span-2">부서</div>
@@ -452,34 +452,34 @@ export default function ExecutiveFinalResults() {
                   const order = (g: string) => { const n = groupsMap[g] || ''; return n.includes('자기') ? 0 : n.includes('하향') ? 1 : n.includes('상향') ? 2 : 3; };
                   return order(a.groupId) - order(b.groupId) || (groupsMap[a.groupId] || '').localeCompare(groupsMap[b.groupId] || '');
                 }).map((assn: any) => (
-                  <div key={assn.id} className="p-3 border-b border-[#EEE] hover:bg-[#F9F9F9] transition-colors">
+                  <div key={assn.id} className="p-3 border-b border-[var(--hrs-line-soft)] hover:bg-[var(--hrs-bg)] transition-colors">
                     <div className="grid grid-cols-12 items-center gap-2">
                       <div className="col-span-2 font-bold truncate pr-1" title={usersMap[assn.evaluatorId] || assn.evaluatorId}>{usersMap[assn.evaluatorId] || assn.evaluatorId}</div>
-                      <div className="col-span-1 text-xs text-[#555] truncate pr-1" title={userPositions[assn.evaluatorId]}>{userPositions[assn.evaluatorId] || '-'}</div>
-                      <div className="col-span-2 text-xs uppercase text-[#777] truncate pr-1" title={userDepartments[assn.evaluatorId]}>{userDepartments[assn.evaluatorId] || '-'}</div>
-                      <div className="col-span-1 text-xs text-center text-[#777]">{userYears[assn.evaluatorId] != null ? `${userYears[assn.evaluatorId]}년` : '-'}</div>
-                      <div className="col-span-3 text-xs font-sans uppercase text-[#777] tracking-wider truncate pr-1">{groupsMap[assn.groupId]}</div>
+                      <div className="col-span-1 text-xs text-[var(--hrs-slate)] truncate pr-1" title={userPositions[assn.evaluatorId]}>{userPositions[assn.evaluatorId] || '-'}</div>
+                      <div className="col-span-2 text-xs uppercase text-[var(--hrs-slate)] truncate pr-1" title={userDepartments[assn.evaluatorId]}>{userDepartments[assn.evaluatorId] || '-'}</div>
+                      <div className="col-span-1 text-xs text-center text-[var(--hrs-slate)]">{userYears[assn.evaluatorId] != null ? `${userYears[assn.evaluatorId]}년` : '-'}</div>
+                      <div className="col-span-3 text-xs font-sans uppercase text-[var(--hrs-slate)] tracking-wider truncate pr-1">{groupsMap[assn.groupId]}</div>
                       <div className="col-span-1 text-center font-bold text-lg">{assn.status === 'completed' ? assn.totalScore : '-'}</div>
                       <div className="col-span-2 text-right">
-                         <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assn.status === 'completed' ? 'bg-[#1A1A1A] text-white' : 'bg-[#E5E5E5] text-[#777]'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
+                         <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assn.status === 'completed' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-slate)]'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
                       </div>
                     </div>
                     {(assn.comment || (assn.scores && Object.keys(assn.scores).length > 0)) && (
-                      <div className="mt-4 p-4 bg-[#F5F5F5] text-xs text-[#555] rounded whitespace-pre-wrap leading-relaxed">
+                      <div className="mt-4 p-4 bg-[var(--hrs-line-soft)] text-xs text-[var(--hrs-slate)] rounded whitespace-pre-wrap leading-relaxed">
                         {assn.scores && Object.keys(assn.scores).length > 0 && (
                           <div className="mb-4 space-y-2">
-                             <span className="font-bold text-[#333] block mb-2 text-[10px] uppercase tracking-widest border-b border-[#E5E5E5] pb-1">점수 평가 내역</span>
+                             <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[10px] uppercase tracking-widest border-b border-[var(--hrs-line)] pb-1">점수 평가 내역</span>
                              {Object.entries(assn.scores).map(([itemId, score], idx) => (
-                               <div key={itemId} className="flex justify-between border-b border-[#E5E5E5] pb-1 last:border-0 last:pb-0 gap-4">
-                                 <span className="text-[#333] flex-1 truncate">{itemsMap[itemId] || `문항 ${idx + 1}`}</span>
-                                 <span className="font-bold text-[#1A1A1A] whitespace-nowrap">{String(score)}점</span>
+                               <div key={itemId} className="flex justify-between border-b border-[var(--hrs-line)] pb-1 last:border-0 last:pb-0 gap-4">
+                                 <span className="text-[var(--hrs-ink)] flex-1 truncate">{itemsMap[itemId] || `문항 ${idx + 1}`}</span>
+                                 <span className="font-bold text-[var(--hrs-ink)] whitespace-nowrap">{String(score)}점</span>
                                </div>
                              ))}
                           </div>
                         )}
                         {assn.comment && (
                           <div>
-                            <span className="font-bold text-[#333] block mb-2 text-[10px] uppercase tracking-widest border-b border-[#E5E5E5] pb-1">정성 평가 의견</span>
+                            <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[10px] uppercase tracking-widest border-b border-[var(--hrs-line)] pb-1">정성 평가 의견</span>
                             {assn.comment}
                           </div>
                         )}
@@ -492,26 +492,26 @@ export default function ExecutiveFinalResults() {
 
             {/* 가중평균 산출 내역 */}
             {selectedEvaluatee && (
-              <div className="border border-[#E5E5E5] bg-[#F9F9F9] p-5">
-                <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#999] border-b border-[#EEE] pb-2 mb-3">가중평균 산출 내역</h4>
+              <div className="border border-[var(--hrs-line)] bg-[var(--hrs-bg)] p-5">
+                <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2 mb-3">가중평균 산출 내역</h4>
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">원점수 평균</p>
+                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">원점수 평균</p>
                     <p className="text-lg font-bold">{rawAvgOf(selectedEvaluatee).toFixed(1)}</p>
-                    <p className="text-[9px] text-[#AAA]">×{weights.eval}%</p>
+                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.eval}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">근태</p>
-                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[#BBB] text-sm">미입력(0)</span>}</p>
-                    <p className="text-[9px] text-[#AAA]">×{weights.attendance}%</p>
+                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">근태</p>
+                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
+                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.attendance}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">업무일지</p>
-                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[#BBB] text-sm">미입력(0)</span>}</p>
-                    <p className="text-[9px] text-[#AAA]">×{weights.workLog}%</p>
+                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">업무일지</p>
+                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
+                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.workLog}%</p>
                   </div>
-                  <div className="border-l border-[#E5E5E5]">
-                    <p className="text-[9px] uppercase tracking-widest text-[#999] mb-1">가중평균 제안</p>
+                  <div className="border-l border-[var(--hrs-line)]">
+                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">가중평균 제안</p>
                     <p className="text-lg font-bold text-emerald-700">{weightedScoreOf(selectedEvaluatee)}</p>
                   </div>
                 </div>
@@ -519,7 +519,7 @@ export default function ExecutiveFinalResults() {
             )}
 
             {!isPresidentReadOnly && (
-              <div className="bg-[#1A1A1A] p-6 space-y-4 text-white">
+              <div className="bg-[var(--hrs-accent)] p-6 space-y-4 text-white">
                 <Label className="text-[10px] uppercase tracking-[0.2em] text-white/70 block mb-2">최종 확정 점수</Label>
                 <div className="flex gap-4">
                   <Input 
@@ -530,13 +530,13 @@ export default function ExecutiveFinalResults() {
                     onChange={e => setFinalScoreInput(e.target.value)} 
                   />
                   <button 
-                    className="flex-1 bg-white text-[#1A1A1A] text-[11px] uppercase tracking-widest hover:bg-[#E5E5E5] transition-colors" 
+                    className="flex-1 bg-white text-[var(--hrs-ink)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-line)] transition-colors" 
                     onClick={confirmScore}
                   >
                     최종 점수 확정 및 저장
                   </button>
                 </div>
-                <p className="text-[9px] uppercase tracking-widest text-[#777] ">원점수 평균을 바탕으로 HR 담당자 및 관리자가 최종 점수를 조정하여 확정할 수 있습니다.</p>
+                <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] ">원점수 평균을 바탕으로 HR 담당자 및 관리자가 최종 점수를 조정하여 확정할 수 있습니다.</p>
               </div>
             )}
           </div>
