@@ -34,10 +34,13 @@ export default function MyHistory() {
       // Sort descending by year
       records.sort((a, b) => b.year.localeCompare(a.year));
 
-      // 연도별 근태·업무일지 점수 조회 (periodicScores/{year}_{email})
+      // 연도별 근태·업무일지 점수 + 가중치 조회
       await Promise.all(records.map(async (r) => {
         try {
-          const ps = await getDoc(doc(db, 'periodicScores', `${r.year}_${user?.email}`));
+          const [ps, yd] = await Promise.all([
+            getDoc(doc(db, 'periodicScores', `${r.year}_${user?.email}`)),
+            getDoc(doc(db, 'years', r.year)),
+          ]);
           if (ps.exists()) {
             const d = ps.data();
             r.attendanceScore = d.attendanceScore ?? null;
@@ -46,9 +49,14 @@ export default function MyHistory() {
             r.attendanceScore = null;
             r.workLogScore = null;
           }
+          const w = yd.exists() ? yd.data().weights : null;
+          r.attendanceWeight = w?.attendance ?? 15;
+          r.workLogWeight = w?.workLog ?? 15;
         } catch {
           r.attendanceScore = null;
           r.workLogScore = null;
+          r.attendanceWeight = 15;
+          r.workLogWeight = 15;
         }
       }));
 
@@ -124,11 +132,17 @@ export default function MyHistory() {
                 <div className="col-span-2 text-center">
                   <span className="hrs-chip hrs-chip-good">{record.status}</span>
                 </div>
-                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
-                  {record.attendanceScore != null ? <>{record.attendanceScore}<span className="text-sm text-[var(--hrs-slate)] font-medium ml-0.5">%</span></> : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                <div className="col-span-3 text-center">
+                  <div className="hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                    {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                  </div>
+                  <div className="text-[11px] text-[var(--hrs-slate)] mt-0.5">가중치 {record.attendanceWeight}%</div>
                 </div>
-                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
-                  {record.workLogScore != null ? <>{record.workLogScore}<span className="text-sm text-[var(--hrs-slate)] font-medium ml-0.5">%</span></> : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                <div className="col-span-3 text-center">
+                  <div className="hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                    {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                  </div>
+                  <div className="text-[11px] text-[var(--hrs-slate)] mt-0.5">가중치 {record.workLogWeight}%</div>
                 </div>
                 <div className="col-span-1 text-right">
                   {canDelete && (
