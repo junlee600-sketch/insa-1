@@ -286,12 +286,39 @@ export default function ExecutiveFinalResults() {
     return userDepartments[ev.evaluateeId] === selectedDepartment;
   });
 
+  // 분석 지표 (최종결과와 동일)
+  const displayFinal = (ev: any) => ev.finalState ? ev.finalState.totalScore : weightedScoreOf(ev);
+  const bandColor = (s: number) => s >= 90 ? 'var(--hrs-accent)' : s >= 80 ? 'var(--hrs-high)' : s >= 70 ? 'var(--hrs-mid)' : 'var(--hrs-low)';
+  const totAssigned = filteredEvaluatees.reduce((s, e) => s + e.totalAssigned, 0);
+  const totCompleted = filteredEvaluatees.reduce((s, e) => s + e.totalCompleted, 0);
+  const completionRate = totAssigned > 0 ? Math.round((totCompleted / totAssigned) * 100) : 0;
+  const confirmedCount = filteredEvaluatees.filter(e => e.finalState).length;
+  const finals = filteredEvaluatees.map(displayFinal);
+  const avgFinal = finals.length ? (finals.reduce((s, n) => s + n, 0) / finals.length) : 0;
+  const bands = [
+    { label: '60–69', min: 0, max: 69.999, color: 'var(--hrs-low)' },
+    { label: '70–79', min: 70, max: 79.999, color: 'var(--hrs-mid)' },
+    { label: '80–89', min: 80, max: 89.999, color: 'var(--hrs-high)' },
+    { label: '90–100', min: 90, max: 999, color: 'var(--hrs-accent)' },
+  ].map(b => ({ ...b, count: finals.filter(s => s >= b.min && s <= b.max).length }));
+  const bandMax = Math.max(1, ...bands.map(b => b.count));
+  const deptAgg: Record<string, { sum: number; n: number }> = {};
+  filteredEvaluatees.forEach(e => {
+    const d = userDepartments[e.evaluateeId] || '기타';
+    if (!deptAgg[d]) deptAgg[d] = { sum: 0, n: 0 };
+    deptAgg[d].sum += displayFinal(e); deptAgg[d].n += 1;
+  });
+  const deptAverages = Object.entries(deptAgg)
+    .map(([name, { sum, n }]) => ({ name, avg: n ? sum / n : 0 }))
+    .sort((a, b) => b.avg - a.avg);
+
   return (
     <div className="space-y-6">
-      <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
+      <header className="flex justify-between items-end mb-8 border-b border-[var(--hrs-line)] pb-5">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">임원평가 최종 결과</h2>
-          <p className="mt-2 text-[var(--hrs-slate)] tracking-normal text-[15px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
+          <p className="hrs-eyebrow mb-1.5">임원평가 최종 결과{selectedYear ? ` · ${years.find(y => y.id === selectedYear)?.year || ''}` : ''}</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">임원평가 분석</h2>
+          <p className="mt-1.5 text-[var(--hrs-slate)] text-sm">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
         </div>
         <div className="flex gap-3">
           {selectedYear && evaluatees.length > 0 && (
@@ -326,29 +353,54 @@ export default function ExecutiveFinalResults() {
         </div>
       </header>
 
-      {/* Quick Stats / Controls */}
-      <section className="grid grid-cols-4 gap-8 mb-10">
-        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">진행 연도</p>
-          <p className="text-2xl font-light tracking-tight">{selectedYear || '선택 안됨'}</p>
-        </div>
-        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">평가 대상자 수 (필터됨)</p>
-          <p className="text-2xl font-light tracking-tight">{filteredEvaluatees.length}명</p>
-        </div>
-        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">전체 평가율 (필터됨)</p>
-          <p className="text-2xl font-light tracking-tight">
-             {filteredEvaluatees.length > 0 
-               ? `${Math.round((filteredEvaluatees.reduce((sum, e) => sum + e.totalCompleted, 0) / filteredEvaluatees.reduce((sum, e) => sum + e.totalAssigned, 0)) * 100)}%` 
-               : '0%'}
-          </p>
-        </div>
-        <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">현재 상태</p>
-          <p className="text-2xl font-light tracking-tight text-emerald-700 underline underline-offset-4">평가 진행/검토 중</p>
-        </div>
+      {/* KPI 밴드 */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-3.5">
+        {[
+          { label: '평가 대상자', val: `${filteredEvaluatees.length}`, unit: '명' },
+          { label: '평가 완료율', val: `${completionRate}`, unit: '%', mono: true },
+          { label: '전체 평균', val: avgFinal ? avgFinal.toFixed(1) : '—', mono: true },
+          { label: '확정 완료', val: `${confirmedCount}`, unit: `/ ${filteredEvaluatees.length}`, mono: true },
+        ].map(k => (
+          <div key={k.label} className="hrs-card p-4">
+            <p className="text-xs text-[var(--hrs-slate)] mb-2">{k.label}</p>
+            <p className={`text-[28px] font-bold leading-none tracking-tight text-[var(--hrs-ink)] ${k.mono ? 'hrs-mono' : ''}`}>
+              {k.val}{k.unit && <span className="text-sm font-medium text-[var(--hrs-slate)] ml-1">{k.unit}</span>}
+            </p>
+          </div>
+        ))}
       </section>
+
+      {/* 분석: 점수 분포 + 부서별 평균 */}
+      {selectedYear && filteredEvaluatees.length > 0 && (
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-6">
+          <div className="hrs-card p-5">
+            <h3 className="text-[12.5px] font-semibold text-[var(--hrs-ink)] mb-0.5">점수 분포</h3>
+            <p className="text-[11px] text-[var(--hrs-slate)] mb-4">최종 점수 구간별 인원</p>
+            <div className="flex items-end gap-2.5 h-[104px] pt-1.5">
+              {bands.map(b => (
+                <div key={b.label} className="flex-1 flex flex-col items-center gap-1.5 justify-end h-full">
+                  <span className="hrs-mono text-[11px] font-semibold text-[var(--hrs-ink)]">{b.count}</span>
+                  <div className="w-full rounded-t-[5px]" style={{ height: `${Math.max(4, (b.count / bandMax) * 72)}px`, background: b.color }}></div>
+                  <span className="text-[10px] text-[var(--hrs-slate)]">{b.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="hrs-card p-5">
+            <h3 className="text-[12.5px] font-semibold text-[var(--hrs-ink)] mb-0.5">부서별 평균</h3>
+            <p className="text-[11px] text-[var(--hrs-slate)] mb-4">그룹별 최종 평균 점수</p>
+            <div className="flex flex-col gap-2.5">
+              {deptAverages.slice(0, 5).map(d => (
+                <div key={d.name} className="grid grid-cols-[84px_1fr_42px] items-center gap-2.5">
+                  <span className="text-[12.5px] text-[var(--hrs-ink)] truncate">{d.name}</span>
+                  <span className="hrs-track"><i style={{ width: `${Math.min(100, d.avg)}%`, background: bandColor(d.avg) }}></i></span>
+                  <span className="hrs-mono text-[12.5px] font-semibold text-right text-[var(--hrs-ink)]">{d.avg.toFixed(1)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {selectedYear && (
         <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
