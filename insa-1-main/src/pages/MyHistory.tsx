@@ -125,10 +125,10 @@ export default function MyHistory() {
                   <span className="hrs-chip hrs-chip-good">{record.status}</span>
                 </div>
                 <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
-                  {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                  {record.attendanceScore != null ? <>{record.attendanceScore}<span className="text-sm text-[var(--hrs-slate)] font-medium ml-0.5">%</span></> : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
                 <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
-                  {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
+                  {record.workLogScore != null ? <>{record.workLogScore}<span className="text-sm text-[var(--hrs-slate)] font-medium ml-0.5">%</span></> : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
                 <div className="col-span-1 text-right">
                   {canDelete && (
