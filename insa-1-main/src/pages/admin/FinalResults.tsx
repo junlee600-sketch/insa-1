@@ -512,7 +512,7 @@ export default function FinalResults() {
 
       {/* Review Dialog */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)] p-0">
+        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] max-h-[80vh] overflow-y-auto border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)] p-0">
           <DialogHeader className="p-8 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
             <DialogTitle className="text-3xl font-normal leading-none text-[var(--hrs-ink)]">
               최종 점수 확정
