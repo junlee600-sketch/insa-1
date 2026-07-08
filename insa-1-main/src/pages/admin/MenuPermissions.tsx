@@ -98,7 +98,7 @@ export default function MenuPermissions() {
       {Object.entries(grouped).map(([category, items]) => (
         <Card key={category}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{category}</CardTitle>
+            <CardTitle className="text-sm font-semibold text-gray-500 tracking-normal">{category}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">

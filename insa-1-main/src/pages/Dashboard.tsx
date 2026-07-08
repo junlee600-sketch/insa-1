@@ -22,7 +22,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 사용자 프로필 */}
         <section className="hrs-card p-6">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--hrs-slate)] mb-5">사용자 프로필</h3>
+          <h3 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--hrs-slate)] mb-5">사용자 프로필</h3>
           <div className="text-sm">
             {profileRows.map((r, i) => (
               <div key={r.k} className={`flex justify-between items-center py-3 ${i < profileRows.length - 1 ? 'border-b border-[var(--hrs-line-soft)]' : ''}`}>
@@ -39,7 +39,7 @@ export default function Dashboard() {
 
         {/* 빠른 안내 */}
         <section className="hrs-card p-6">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--hrs-slate)] mb-5">빠른 안내</h3>
+          <h3 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--hrs-slate)] mb-5">빠른 안내</h3>
           <ul className="space-y-4 text-sm text-[var(--hrs-ink)]">
             <li className="flex gap-3.5">
               <span className="flex-shrink-0 w-6 h-6 rounded-md bg-[var(--hrs-accent-soft)] text-[var(--hrs-accent)] grid place-items-center text-xs font-semibold hrs-mono">1</span>

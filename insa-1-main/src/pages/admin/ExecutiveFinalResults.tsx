@@ -291,20 +291,20 @@ export default function ExecutiveFinalResults() {
       <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">임원평가 최종 결과</h2>
-          <p className="mt-2 text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[15px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
+          <p className="mt-2 text-[var(--hrs-slate)] tracking-normal text-[15px]">평가 대상자별 종합 점수를 검토하고 최종 확정합니다.</p>
         </div>
         <div className="flex gap-3">
           {selectedYear && evaluatees.length > 0 && (
             <button 
               onClick={downloadExcel}
-              className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
+              className="px-5 py-2 border border-[var(--hrs-line)] text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
             >
               엑셀 다운로드
             </button>
           )}
           <div className="w-48">
             <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')} disabled={!!isGroupLeader}>
-              <SelectTrigger className="border-[var(--hrs-line)] rounded-none bg-transparent">
+              <SelectTrigger className="border-[var(--hrs-line)] rounded-md bg-white">
                 <SelectValue placeholder="소속 부서 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -315,7 +315,7 @@ export default function ExecutiveFinalResults() {
           </div>
           <div className="w-48">
             <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
-              <SelectTrigger className="border-[var(--hrs-line)] rounded-none bg-transparent">
+              <SelectTrigger className="border-[var(--hrs-line)] rounded-md bg-white">
                 <SelectValue placeholder="조회할 평가 연도 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -329,15 +329,15 @@ export default function ExecutiveFinalResults() {
       {/* Quick Stats / Controls */}
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">진행 연도</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">진행 연도</p>
           <p className="text-2xl font-light tracking-tight">{selectedYear || '선택 안됨'}</p>
         </div>
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">평가 대상자 수 (필터됨)</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">평가 대상자 수 (필터됨)</p>
           <p className="text-2xl font-light tracking-tight">{filteredEvaluatees.length}명</p>
         </div>
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">전체 평가율 (필터됨)</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">전체 평가율 (필터됨)</p>
           <p className="text-2xl font-light tracking-tight">
              {filteredEvaluatees.length > 0 
                ? `${Math.round((filteredEvaluatees.reduce((sum, e) => sum + e.totalCompleted, 0) / filteredEvaluatees.reduce((sum, e) => sum + e.totalAssigned, 0)) * 100)}%` 
@@ -345,14 +345,14 @@ export default function ExecutiveFinalResults() {
           </p>
         </div>
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">현재 상태</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">현재 상태</p>
           <p className="text-2xl font-light tracking-tight text-emerald-700 underline underline-offset-4">평가 진행/검토 중</p>
         </div>
       </section>
 
       {selectedYear && (
-        <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
+        <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
+          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-1">직급</div>
             <div className="col-span-1">소속부서</div>
@@ -402,14 +402,14 @@ export default function ExecutiveFinalResults() {
                     </div>
                     <div className="col-span-1 text-center">
                       {ev.finalState ? (
-                        <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[var(--hrs-accent)] text-white">확정</span>
+                        <span className="hrs-chip hrs-chip-good">확정</span>
                       ) : (
-                        <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[#E8F5E9] text-emerald-800 border border-emerald-100">대기</span>
+                        <span className="hrs-chip hrs-chip-wait">대기</span>
                       )}
                     </div>
                     <div className="col-span-1 text-right">
                       <button
-                        className="text-[12px] uppercase tracking-widest text-red-500 hover:text-red-700 underline underline-offset-4 font-bold"
+                        className="text-[12px] tracking-normal text-red-500 hover:text-red-700 underline underline-offset-4 font-bold"
                         onClick={() => openConfirmation(ev)}
                       >
                         검토
@@ -425,7 +425,7 @@ export default function ExecutiveFinalResults() {
 
       {/* Review Dialog */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)] p-0">
           <DialogHeader className="p-8 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
             <DialogTitle className="text-3xl font-normal leading-none text-[var(--hrs-ink)]">
               최종 점수 확정
@@ -435,10 +435,10 @@ export default function ExecutiveFinalResults() {
             </DialogTitle>
           </DialogHeader>
           <div className="p-8 space-y-8 pb-12">
-            <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2">평가 내역 상세</h4>
+            <h4 className="text-[12px] tracking-normal text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2">평가 내역 상세</h4>
             
             <div className="border border-[var(--hrs-line)] flex flex-col">
-              <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-3 sticky top-0">
+              <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-3 sticky top-0">
                 <div className="col-span-2">평가자</div>
                 <div className="col-span-1">직급</div>
                 <div className="col-span-2">부서</div>
@@ -461,14 +461,14 @@ export default function ExecutiveFinalResults() {
                       <div className="col-span-3 text-xs font-sans uppercase text-[var(--hrs-slate)] tracking-wider truncate pr-1">{groupsMap[assn.groupId]}</div>
                       <div className="col-span-1 text-center font-bold text-lg">{assn.status === 'completed' ? assn.totalScore : '-'}</div>
                       <div className="col-span-2 text-right">
-                         <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assn.status === 'completed' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-slate)]'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
+                         <span className={`hrs-chip ${assn.status === 'completed' ? 'hrs-chip-good' : 'hrs-chip-wait'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
                       </div>
                     </div>
                     {(assn.comment || (assn.scores && Object.keys(assn.scores).length > 0)) && (
                       <div className="mt-4 p-4 bg-[var(--hrs-line-soft)] text-xs text-[var(--hrs-slate)] rounded whitespace-pre-wrap leading-relaxed">
                         {assn.scores && Object.keys(assn.scores).length > 0 && (
                           <div className="mb-4 space-y-2">
-                             <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[10px] uppercase tracking-widest border-b border-[var(--hrs-line)] pb-1">점수 평가 내역</span>
+                             <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[12px] tracking-normal border-b border-[var(--hrs-line)] pb-1">점수 평가 내역</span>
                              {Object.entries(assn.scores).map(([itemId, score], idx) => (
                                <div key={itemId} className="flex justify-between border-b border-[var(--hrs-line)] pb-1 last:border-0 last:pb-0 gap-4">
                                  <span className="text-[var(--hrs-ink)] flex-1 truncate">{itemsMap[itemId] || `문항 ${idx + 1}`}</span>
@@ -479,7 +479,7 @@ export default function ExecutiveFinalResults() {
                         )}
                         {assn.comment && (
                           <div>
-                            <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[10px] uppercase tracking-widest border-b border-[var(--hrs-line)] pb-1">정성 평가 의견</span>
+                            <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[12px] tracking-normal border-b border-[var(--hrs-line)] pb-1">정성 평가 의견</span>
                             {assn.comment}
                           </div>
                         )}
@@ -493,25 +493,25 @@ export default function ExecutiveFinalResults() {
             {/* 가중평균 산출 내역 */}
             {selectedEvaluatee && (
               <div className="border border-[var(--hrs-line)] bg-[var(--hrs-bg)] p-5">
-                <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2 mb-3">가중평균 산출 내역</h4>
+                <h4 className="text-[12px] tracking-normal text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2 mb-3">가중평균 산출 내역</h4>
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">원점수 평균</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">원점수 평균</p>
                     <p className="text-lg font-bold">{rawAvgOf(selectedEvaluatee).toFixed(1)}</p>
-                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.eval}%</p>
+                    <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.eval}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">근태</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">근태</p>
                     <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
-                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.attendance}%</p>
+                    <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.attendance}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">업무일지</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">업무일지</p>
                     <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
-                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.workLog}%</p>
+                    <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.workLog}%</p>
                   </div>
                   <div className="border-l border-[var(--hrs-line)]">
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">가중평균 제안</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">가중평균 제안</p>
                     <p className="text-lg font-bold text-emerald-700">{weightedScoreOf(selectedEvaluatee)}</p>
                   </div>
                 </div>
@@ -520,23 +520,23 @@ export default function ExecutiveFinalResults() {
 
             {!isPresidentReadOnly && (
               <div className="bg-[var(--hrs-accent)] p-6 space-y-4 text-white">
-                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/70 block mb-2">최종 확정 점수</Label>
+                <Label className="text-[12px] tracking-normal text-white/70 block mb-2">최종 확정 점수</Label>
                 <div className="flex gap-4">
                   <Input 
                     type="number" 
                     step="0.1" 
-                    className="w-1/3 text-2xl bg-transparent border-b border-white/20 border-t-0 border-l-0 border-r-0 rounded-none focus-visible:ring-0 focus-visible:border-white text-center" 
+                    className="w-1/3 text-2xl bg-transparent border-b border-white/20 border-t-0 border-l-0 border-r-0 rounded-md focus-visible:ring-0 focus-visible:border-white text-center" 
                     value={finalScoreInput}
                     onChange={e => setFinalScoreInput(e.target.value)} 
                   />
                   <button 
-                    className="flex-1 bg-white text-[var(--hrs-ink)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-line)] transition-colors" 
+                    className="flex-1 bg-white text-[var(--hrs-ink)] text-[12px] tracking-normal hover:bg-[var(--hrs-line)] transition-colors" 
                     onClick={confirmScore}
                   >
                     최종 점수 확정 및 저장
                   </button>
                 </div>
-                <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] ">원점수 평균을 바탕으로 HR 담당자 및 관리자가 최종 점수를 조정하여 확정할 수 있습니다.</p>
+                <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] ">원점수 평균을 바탕으로 HR 담당자 및 관리자가 최종 점수를 조정하여 확정할 수 있습니다.</p>
               </div>
             )}
           </div>

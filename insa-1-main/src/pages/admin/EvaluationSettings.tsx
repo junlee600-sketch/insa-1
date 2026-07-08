@@ -126,7 +126,7 @@ export default function EvaluationSettings() {
       <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">평가 환경 설정</h2>
-          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">평가 점수 척도 및 전체 활성 평가 연도 관리</p>
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] tracking-normal text-[12px]">평가 점수 척도 및 전체 활성 평가 연도 관리</p>
         </div>
       </header>
 
@@ -135,9 +135,9 @@ export default function EvaluationSettings() {
         <h3 className="text-2xl tracking-tighter border-b border-[var(--hrs-line-soft)] pb-4">글로벌 시스템 설정 (Global Configuration)</h3>
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">현재 활성화된 항목 연도</Label>
+            <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">현재 활성화된 항목 연도</Label>
             <Select value={activeYear} onValueChange={(v) => setActiveYear(v ?? '')}>
-              <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
+              <SelectTrigger className="border border-[var(--hrs-line)] rounded-md bg-white px-3">
                 <SelectValue placeholder="연도 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -148,9 +148,9 @@ export default function EvaluationSettings() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">점수 평가 척도</Label>
+            <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">점수 평가 척도</Label>
             <Select value={scale} onValueChange={(v) => setScale(v ?? '')}>
-              <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="border border-[var(--hrs-line)] rounded-md bg-white px-3"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="5">5점 척도</SelectItem>
                 <SelectItem value="7">7점 척도</SelectItem>
@@ -160,7 +160,7 @@ export default function EvaluationSettings() {
           </div>
         </div>
         <div className="pt-4 flex justify-end">
-          <button onClick={saveSettings} className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors">
+          <button onClick={saveSettings} className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[12px] tracking-normal hover:bg-[var(--hrs-ink)] transition-colors">
             설정 저장
           </button>
         </div>
@@ -170,13 +170,13 @@ export default function EvaluationSettings() {
       <section className="bg-[var(--hrs-bg)] border border-[var(--hrs-line)] p-6 mb-10 space-y-6">
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
           <h3 className="text-2xl tracking-tighter">최종점수 가중치 설정 (연도별)</h3>
-          <p className="mt-1 text-[10px] text-[var(--hrs-slate)]">최종점수 = 평가 원점수×평가% + 근태점수×근태% + 업무일지×업무일지% · 합계 100</p>
+          <p className="mt-1 text-[12px] text-[var(--hrs-slate)]">최종점수 = 평가 원점수×평가% + 근태점수×근태% + 업무일지×업무일지% · 합계 100</p>
         </div>
         <div className="grid grid-cols-4 gap-6 items-end">
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">적용 연도</Label>
+            <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">적용 연도</Label>
             <Select value={weightYear} onValueChange={(v) => setWeightYear(v ?? '')}>
-              <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0">
+              <SelectTrigger className="border border-[var(--hrs-line)] rounded-md bg-white px-3">
                 <SelectValue placeholder="연도 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -185,29 +185,29 @@ export default function EvaluationSettings() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">평가 원점수 (%)</Label>
+            <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">평가 원점수 (%)</Label>
             <Input type="number" min="0" max="100" value={weights.eval}
               onChange={e => setWeights({ ...weights, eval: e.target.value })}
-              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] text-lg" />
+              className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] text-lg" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">근태 (%)</Label>
+            <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">근태 (%)</Label>
             <Input type="number" min="0" max="100" value={weights.attendance}
               onChange={e => setWeights({ ...weights, attendance: e.target.value })}
-              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] text-lg" />
+              className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] text-lg" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">업무일지 (%)</Label>
+            <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">업무일지 (%)</Label>
             <Input type="number" min="0" max="100" value={weights.workLog}
               onChange={e => setWeights({ ...weights, workLog: e.target.value })}
-              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] text-lg" />
+              className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] text-lg" />
           </div>
         </div>
         <div className="flex justify-between items-center pt-2">
           <span className={`text-xs ${Math.round(Number(weights.eval || 0) + Number(weights.attendance || 0) + Number(weights.workLog || 0)) === 100 ? 'text-emerald-700' : 'text-red-600'}`}>
             현재 합계: {Number(weights.eval || 0) + Number(weights.attendance || 0) + Number(weights.workLog || 0)} / 100
           </span>
-          <button onClick={saveWeights} className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors">
+          <button onClick={saveWeights} className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[12px] tracking-normal hover:bg-[var(--hrs-ink)] transition-colors">
             가중치 저장
           </button>
         </div>
@@ -222,9 +222,9 @@ export default function EvaluationSettings() {
               placeholder="예: 2026" 
               value={newYear} 
               onChange={e => setNewYear(e.target.value)} 
-              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]  text-lg"
+              className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]  text-lg"
             />
-            <button onClick={addYear} className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors">
+            <button onClick={addYear} className="px-5 py-2 border border-[var(--hrs-line)] text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors">
               추가
             </button>
           </div>
@@ -234,7 +234,7 @@ export default function EvaluationSettings() {
                 <span className="text-lg">{y.year}</span>
                 <button 
                   onClick={() => { setConfirmData({ type: 'year', id: y.id, name: y.year }); setConfirmOpen(true); }}
-                  className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4"
+                  className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4"
                 >
                   삭제
                 </button>
@@ -251,9 +251,9 @@ export default function EvaluationSettings() {
               placeholder="새 그룹 이름" 
               value={newGroupName} 
               onChange={e => setNewGroupName(e.target.value)} 
-              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]  text-lg"
+              className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]  text-lg"
             />
-            <button onClick={addGroup} className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-accent)] hover:text-white transition-colors">
+            <button onClick={addGroup} className="px-5 py-2 border border-[var(--hrs-line)] text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors">
               추가
             </button>
           </div>
@@ -263,7 +263,7 @@ export default function EvaluationSettings() {
                 <span className="font-bold">{g.name}</span>
                 <button 
                   onClick={() => { setConfirmData({ type: 'group', id: g.id, name: g.name }); setConfirmOpen(true); }}
-                  className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4"
+                  className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4"
                 >
                   삭제
                 </button>

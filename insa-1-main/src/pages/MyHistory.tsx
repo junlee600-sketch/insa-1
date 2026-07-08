@@ -69,7 +69,7 @@ export default function MyHistory() {
       <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">내 평가 이력</h2>
-          <p className="mt-2 text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[15px]">과거 평가 연도의 최종 확정 점수 기록</p>
+          <p className="mt-2 text-[var(--hrs-slate)] tracking-normal text-[15px]">과거 평가 연도의 최종 확정 점수 기록</p>
         </div>
       </header>
 
@@ -81,13 +81,13 @@ export default function MyHistory() {
 
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">총 완료된 평가 연도</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">총 완료된 평가 연도</p>
           <p className="text-2xl font-light tracking-tight">{history.length}</p>
         </div>
       </section>
 
-      <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-        <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
+      <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
+        <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
           <div className="col-span-3">평가 연도</div>
           <div className="col-span-3 text-center">최종 상태</div>
           <div className="col-span-4 text-right">최종 확정 점수</div>
@@ -102,7 +102,7 @@ export default function MyHistory() {
               <div key={record.id} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
                 <div className="col-span-3 font-bold">{record.year}</div>
                 <div className="col-span-3 text-center">
-                  <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[var(--hrs-accent)] text-white">{record.status}</span>
+                  <span className="text-[12px] tracking-normal px-2 py-1 bg-[var(--hrs-accent)] text-white">{record.status}</span>
                 </div>
                 <div className="col-span-4 text-right text-xl font-bold">
                   {record.totalScore}
@@ -111,7 +111,7 @@ export default function MyHistory() {
                   {canDelete && (
                     <button
                       onClick={(e) => openDeleteModal(record.id, e)}
-                      className="text-[12px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-red-600 underline underline-offset-4"
+                      className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-red-600 underline underline-offset-4"
                     >
                       삭제
                     </button>
@@ -124,7 +124,7 @@ export default function MyHistory() {
       </div>
 
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-none border-[var(--hrs-line)]">
+        <DialogContent className="sm:max-w-[425px] rounded-md border-[var(--hrs-line)]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-normal tracking-tight">이력 삭제</DialogTitle>
             <DialogDescription className="text-[var(--hrs-slate)] mt-4">
@@ -134,14 +134,14 @@ export default function MyHistory() {
           <DialogFooter className="mt-8 flex gap-2 sm:justify-end">
             <Button
               variant="outline"
-              className="rounded-none border-[var(--hrs-line)] text-[var(--hrs-slate)] hover:bg-[var(--hrs-line-soft)] hover:text-[var(--hrs-ink)]"
+              className="rounded-md border-[var(--hrs-line)] text-[var(--hrs-slate)] hover:bg-[var(--hrs-line-soft)] hover:text-[var(--hrs-ink)]"
               onClick={() => setDeleteModalOpen(false)}
             >
               취소
             </Button>
             <Button
               variant="destructive"
-              className="rounded-none bg-red-600 hover:bg-red-700 text-white"
+              className="rounded-md bg-red-600 hover:bg-red-700 text-white"
               onClick={confirmDelete}
             >
               삭제

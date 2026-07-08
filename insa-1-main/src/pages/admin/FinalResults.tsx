@@ -412,20 +412,20 @@ export default function FinalResults() {
         <section className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-6">
           <div className="hrs-card p-5">
             <h3 className="text-[12.5px] font-semibold text-[var(--hrs-ink)] mb-0.5">점수 분포</h3>
-            <p className="text-[11px] text-[var(--hrs-slate)] mb-4">최종 점수 구간별 인원</p>
+            <p className="text-[12px] text-[var(--hrs-slate)] mb-4">최종 점수 구간별 인원</p>
             <div className="flex items-end gap-2.5 h-[104px] pt-1.5">
               {bands.map(b => (
                 <div key={b.label} className="flex-1 flex flex-col items-center gap-1.5 justify-end h-full">
-                  <span className="hrs-mono text-[11px] font-semibold text-[var(--hrs-ink)]">{b.count}</span>
+                  <span className="hrs-mono text-[12px] font-semibold text-[var(--hrs-ink)]">{b.count}</span>
                   <div className="w-full rounded-t-[5px]" style={{ height: `${Math.max(4, (b.count / bandMax) * 72)}px`, background: b.color }}></div>
-                  <span className="text-[10px] text-[var(--hrs-slate)]">{b.label}</span>
+                  <span className="text-[12px] text-[var(--hrs-slate)]">{b.label}</span>
                 </div>
               ))}
             </div>
           </div>
           <div className="hrs-card p-5">
             <h3 className="text-[12.5px] font-semibold text-[var(--hrs-ink)] mb-0.5">부서별 평균</h3>
-            <p className="text-[11px] text-[var(--hrs-slate)] mb-4">그룹별 최종 평균 점수</p>
+            <p className="text-[12px] text-[var(--hrs-slate)] mb-4">그룹별 최종 평균 점수</p>
             <div className="flex flex-col gap-2.5">
               {deptAverages.slice(0, 5).map(d => (
                 <div key={d.name} className="grid grid-cols-[84px_1fr_42px] items-center gap-2.5">
@@ -445,7 +445,7 @@ export default function FinalResults() {
             <h2 className="text-sm font-semibold text-[var(--hrs-ink)]">평가 대상자</h2>
             <span className="text-xs text-[var(--hrs-slate)]">{filteredEvaluatees.length}명 · 확정 {confirmedCount} · 대기 {filteredEvaluatees.length - confirmedCount}</span>
           </div>
-          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] text-[11px] font-semibold uppercase tracking-[0.03em] px-4 py-3 border-b border-[var(--hrs-line)] sticky top-0">
+          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] text-[12px] font-semibold uppercase tracking-[0.03em] px-4 py-3 border-b border-[var(--hrs-line)] sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-1">직급</div>
             <div className="col-span-1">부서</div>
@@ -512,7 +512,7 @@ export default function FinalResults() {
 
       {/* Review Dialog */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+        <DialogContent className="sm:max-w-[50vw] max-w-[50vw] w-[50vw] border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)] p-0">
           <DialogHeader className="p-8 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
             <DialogTitle className="text-3xl font-normal leading-none text-[var(--hrs-ink)]">
               최종 점수 확정
@@ -522,10 +522,10 @@ export default function FinalResults() {
             </DialogTitle>
           </DialogHeader>
           <div className="p-8 space-y-8 pb-12">
-            <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2">평가 내역 상세</h4>
+            <h4 className="text-[12px] tracking-normal text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2">평가 내역 상세</h4>
             
             <div className="border border-[var(--hrs-line)] flex flex-col">
-              <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-3 sticky top-0">
+              <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-3 sticky top-0">
                 <div className="col-span-2">평가자</div>
                 <div className="col-span-1">직급</div>
                 <div className="col-span-2">부서</div>
@@ -548,14 +548,14 @@ export default function FinalResults() {
                       <div className="col-span-3 text-xs font-sans uppercase text-[var(--hrs-slate)] tracking-wider truncate pr-1">{groupsMap[assn.groupId]}</div>
                       <div className="col-span-1 text-center font-bold text-lg">{assn.status === 'completed' ? assn.totalScore : '-'}</div>
                       <div className="col-span-2 text-right">
-                         <span className={`text-[9px] uppercase tracking-widest px-2 py-1 ${assn.status === 'completed' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-slate)]'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
+                         <span className={`hrs-chip ${assn.status === 'completed' ? 'hrs-chip-good' : 'hrs-chip-wait'}`}>{assn.status === 'completed' ? '완료' : '대기'}</span>
                       </div>
                     </div>
                     {(assn.comment || (assn.scores && Object.keys(assn.scores).length > 0)) && (
                       <div className="mt-4 p-4 bg-[var(--hrs-line-soft)] text-xs text-[var(--hrs-slate)] rounded whitespace-pre-wrap leading-relaxed">
                         {assn.scores && Object.keys(assn.scores).length > 0 && (
                           <div className="mb-4 space-y-2">
-                             <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[10px] uppercase tracking-widest border-b border-[var(--hrs-line)] pb-1">점수 평가 내역</span>
+                             <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[12px] tracking-normal border-b border-[var(--hrs-line)] pb-1">점수 평가 내역</span>
                              {Object.entries(assn.scores).map(([itemId, score], idx) => (
                                <div key={itemId} className="flex justify-between border-b border-[var(--hrs-line)] pb-1 last:border-0 last:pb-0 gap-4">
                                  <span className="text-[var(--hrs-ink)] flex-1 truncate">{itemsMap[itemId] || `문항 ${idx + 1}`}</span>
@@ -566,7 +566,7 @@ export default function FinalResults() {
                         )}
                         {assn.comment && (
                           <div>
-                            <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[10px] uppercase tracking-widest border-b border-[var(--hrs-line)] pb-1">정성 평가 의견</span>
+                            <span className="font-bold text-[var(--hrs-ink)] block mb-2 text-[12px] tracking-normal border-b border-[var(--hrs-line)] pb-1">정성 평가 의견</span>
                             {assn.comment}
                           </div>
                         )}
@@ -580,25 +580,25 @@ export default function FinalResults() {
             {/* 가중평균 산출 내역 */}
             {selectedEvaluatee && (
               <div className="border border-[var(--hrs-line)] bg-[var(--hrs-bg)] p-5">
-                <h4 className="text-[10px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2 mb-3">가중평균 산출 내역</h4>
+                <h4 className="text-[12px] tracking-normal text-[var(--hrs-slate)] border-b border-[var(--hrs-line-soft)] pb-2 mb-3">가중평균 산출 내역</h4>
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">원점수 평균</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">원점수 평균</p>
                     <p className="text-lg font-bold">{rawAvgOf(selectedEvaluatee).toFixed(1)}</p>
-                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.eval}%</p>
+                    <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.eval}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">근태</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">근태</p>
                     <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
-                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.attendance}%</p>
+                    <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.attendance}%</p>
                   </div>
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">업무일지</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">업무일지</p>
                     <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
-                    <p className="text-[9px] text-[var(--hrs-slate)]">×{weights.workLog}%</p>
+                    <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.workLog}%</p>
                   </div>
                   <div className="border-l border-[var(--hrs-line)]">
-                    <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] mb-1">가중평균 제안</p>
+                    <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">가중평균 제안</p>
                     <p className="text-lg font-bold text-emerald-700">{weightedScoreOf(selectedEvaluatee)}</p>
                   </div>
                 </div>
@@ -607,23 +607,23 @@ export default function FinalResults() {
 
             {canConfirmForDept(userDepartments[selectedEvaluatee?.evaluateeId] || '') && (
               <div className="bg-[var(--hrs-accent)] p-6 space-y-4 text-white">
-                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/70 block mb-2">최종 확정 점수</Label>
+                <Label className="text-[12px] tracking-normal text-white/70 block mb-2">최종 확정 점수</Label>
                 <div className="flex gap-4">
                   <Input 
                     type="number" 
                     step="0.1" 
-                    className="w-1/3 text-2xl bg-transparent border-b border-white/20 border-t-0 border-l-0 border-r-0 rounded-none focus-visible:ring-0 focus-visible:border-white text-center" 
+                    className="w-1/3 text-2xl bg-transparent border-b border-white/20 border-t-0 border-l-0 border-r-0 rounded-md focus-visible:ring-0 focus-visible:border-white text-center" 
                     value={finalScoreInput}
                     onChange={e => setFinalScoreInput(e.target.value)} 
                   />
                   <button 
-                    className="flex-1 bg-white text-[var(--hrs-ink)] text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-line)] transition-colors" 
+                    className="flex-1 bg-white text-[var(--hrs-ink)] text-[12px] tracking-normal hover:bg-[var(--hrs-line)] transition-colors" 
                     onClick={confirmScore}
                   >
                     최종 점수 확정 및 저장
                   </button>
                 </div>
-                <p className="text-[9px] uppercase tracking-widest text-[var(--hrs-slate)] ">원점수 평균을 바탕으로 HR 담당자 및 관리자가 최종 점수를 조정하여 확정할 수 있습니다.</p>
+                <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] ">원점수 평균을 바탕으로 HR 담당자 및 관리자가 최종 점수를 조정하여 확정할 수 있습니다.</p>
               </div>
             )}
           </div>

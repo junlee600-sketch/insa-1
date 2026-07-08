@@ -94,24 +94,24 @@ export default function ExecutiveEvaluationItems() {
       <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">임원평가 항목 관리</h2>
-          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">연도 및 평가 그룹별 문항을 자유롭게 생성하고 삭제합니다.</p>
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] tracking-normal text-[12px]">연도 및 평가 그룹별 문항을 자유롭게 생성하고 삭제합니다.</p>
         </div>
       </header>
 
       <section className="bg-[var(--hrs-bg)] border border-[var(--hrs-line)] p-6 mb-10 flex gap-8 items-end">
         <div className="space-y-2 flex-1">
-          <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">평가 연도 주기</Label>
+          <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">평가 연도 주기</Label>
           <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v ?? '')}>
-            <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="연도 선택" /></SelectTrigger>
+            <SelectTrigger className="border border-[var(--hrs-line)] rounded-md bg-white px-3"><SelectValue placeholder="연도 선택" /></SelectTrigger>
             <SelectContent>
               {years.map(y => <SelectItem key={y.id} value={y.id}>{y.year}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2 flex-1">
-          <Label className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">평가 그룹 (대상 형태)</Label>
+          <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">평가 그룹 (대상 형태)</Label>
           <Select value={selectedGroup} onValueChange={(v) => setSelectedGroup(v ?? '')}>
-            <SelectTrigger className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent px-0"><SelectValue placeholder="그룹 선택" /></SelectTrigger>
+            <SelectTrigger className="border border-[var(--hrs-line)] rounded-md bg-white px-3"><SelectValue placeholder="그룹 선택" /></SelectTrigger>
             <SelectContent>
               {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
             </SelectContent>
@@ -126,13 +126,13 @@ export default function ExecutiveEvaluationItems() {
               placeholder="새로운 평가 문항을 입력하세요..." 
               value={newItemQuestion} 
               onChange={e => setNewItemQuestion(e.target.value)} 
-              className="border-b border-[var(--hrs-line)] border-t-0 border-r-0 border-l-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]  text-sm"
+              className="border border-[var(--hrs-line)] rounded-md bg-white px-3 focus-visible:ring-0 focus-visible:border-[var(--hrs-line)]  text-sm"
             />
-            <Button onClick={addItem} className="uppercase tracking-widest text-xs px-6 py-2 rounded-none bg-[var(--hrs-accent)] text-white">항목 추가</Button>
+            <Button onClick={addItem} className="tracking-normal text-xs px-6 py-2 rounded-md bg-[var(--hrs-accent)] text-white">항목 추가</Button>
           </div>
 
-          <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-            <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
+          <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
+            <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
               <div className="col-span-1">번호</div>
               <div className="col-span-9">평가 항목 내용</div>
               <div className="col-span-2 text-right">작업</div>
@@ -144,11 +144,11 @@ export default function ExecutiveEvaluationItems() {
               ) : (
                 exec_items.map((item, index) => (
                   <div key={item.id} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
-                    <div className="col-span-1 text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">{String(index + 1).padStart(2, '0')}</div>
+                    <div className="col-span-1 text-[12px] tracking-normal text-[var(--hrs-slate)]">{String(index + 1).padStart(2, '0')}</div>
                     <div className="col-span-9 leading-relaxed">{item.question}</div>
                     <div className="col-span-2 text-right">
                       <button 
-                        className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4"
+                        className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-red-700 underline underline-offset-4"
                         onClick={() => { setConfirmData({ id: item.id, question: item.question }); setConfirmOpen(true); }}
                       >
                         삭제

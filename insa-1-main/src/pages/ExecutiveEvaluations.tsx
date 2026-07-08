@@ -92,28 +92,28 @@ export default function ExecutiveEvaluations() {
       <header className="flex justify-between items-end mb-12 border-b border-[var(--hrs-line)] pb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">내 임원평가 대기열</h2>
-          <p className="mt-2 text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[15px]">본인에게 배정된 임원평가를 진행합니다.</p>
+          <p className="mt-2 text-[var(--hrs-slate)] tracking-normal text-[15px]">본인에게 배정된 임원평가를 진행합니다.</p>
         </div>
       </header>
 
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">현재 진행 연도</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">현재 진행 연도</p>
           <p className="text-2xl font-light tracking-tight">{activeYear || '설정 안됨'}</p>
         </div>
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">총 할당 대상 그룹</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">총 할당 대상 그룹</p>
           <p className="text-2xl font-light tracking-tight">{exec_assignments.length}명</p>
         </div>
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] uppercase tracking-[0.2em] text-[var(--hrs-slate)] mb-1">평가 대기 중</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">평가 대기 중</p>
           <p className="text-2xl font-light tracking-tight">{exec_assignments.filter(a => a.status !== 'completed').length}건</p>
         </div>
       </section>
 
       {activeYear && (
-        <div className="flex-1 border border-[var(--hrs-line)] overflow-hidden flex flex-col">
-          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[11px] uppercase tracking-[0.04em] p-4 sticky top-0">
+        <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
+          <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
             <div className="col-span-2">이름</div>
             <div className="col-span-2">직급</div>
             <div className="col-span-2">소속부서</div>
@@ -136,22 +136,22 @@ export default function ExecutiveEvaluations() {
                   <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)]">{groupsMap[a.groupId] || a.groupId}</div>
                   <div className="col-span-2">
                     {a.status === 'completed' ? (
-                      <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-[#E8F5E9] text-emerald-800 border border-emerald-100">평가 완료</span>
+                      <span className="hrs-chip hrs-chip-good">평가 완료</span>
                     ) : (
-                      <span className="text-[9px] uppercase tracking-widest px-2 py-1 bg-amber-50 text-amber-800 border border-amber-100">대기 중</span>
+                      <span className="text-[12px] tracking-normal px-2 py-1 bg-amber-50 text-amber-800 border border-amber-100">대기 중</span>
                     )}
                   </div>
                   <div className="col-span-2 text-right">
                     {a.status === 'completed' ? (
                       <button 
-                        className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4"
+                        className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4"
                         onClick={() => navigate(`/evaluate-executive/${a.id}`)}
                       >
                         상세 내역 보기
                       </button>
                     ) : (
                       <button 
-                        className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[10px] font-sans uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors"
+                        className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[12px] font-sans tracking-normal hover:bg-[var(--hrs-ink)] transition-colors"
                         onClick={() => navigate(`/evaluate-executive/${a.id}`)}
                       >
                         평가하기

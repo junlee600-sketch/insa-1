@@ -139,13 +139,13 @@ export default function EvaluationForm() {
           <div className="flex items-center gap-4 mb-4">
              <button 
                 onClick={() => navigate('/evaluate')} 
-                className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4"
+                className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4"
              >
                 목록으로 돌아가기
              </button>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">평가 대상: {evaluateeName}</h2>
-          <p className="mt-2 text-sm text-[var(--hrs-slate)] uppercase tracking-[0.2em] text-[10px]">
+          <p className="mt-2 text-sm text-[var(--hrs-slate)] tracking-normal text-[12px]">
             {scale}점 척도 다면 평가 {isCompleted && <span className="text-emerald-700 font-bold tracking-widest">(완료/제출됨)</span>}
           </p>
         </div>
@@ -156,7 +156,7 @@ export default function EvaluationForm() {
           {items.map((item, index) => (
             <div key={item.id} className="space-y-4 pb-10 border-b border-[var(--hrs-line-soft)] last:border-b-0 last:pb-0">
               <p className=" text-lg leading-relaxed text-[var(--hrs-ink)]">
-                <span className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)] block mb-2">{String(index + 1).padStart(2, '0')}.</span>
+                <span className="text-[12px] tracking-normal text-[var(--hrs-slate)] block mb-2">{String(index + 1).padStart(2, '0')}.</span>
                 {item.question}
               </p>
               <div className="flex gap-2 flex-wrap">
@@ -179,7 +179,7 @@ export default function EvaluationForm() {
           ))}
 
           <div className="space-y-4 pt-10">
-            <p className="text-[10px] uppercase tracking-widest text-[var(--hrs-slate)]">정성 평가 의견 (선택사항)</p>
+            <p className="text-[12px] tracking-normal text-[var(--hrs-slate)]">정성 평가 의견 (선택사항)</p>
             <textarea
               placeholder="평가 대상자에 대한 추가적인 의견이나 맥락을 작성해주세요..."
               rows={5}
@@ -195,7 +195,7 @@ export default function EvaluationForm() {
             <div className="flex justify-end pt-10">
               <button 
                 onClick={handleSubmitClick} 
-                className="px-8 py-3 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--hrs-ink)] transition-colors"
+                className="px-8 py-3 bg-[var(--hrs-accent)] text-white text-[12px] tracking-normal hover:bg-[var(--hrs-ink)] transition-colors"
                 type="button"
               >
                 최종 제출하기
@@ -207,7 +207,7 @@ export default function EvaluationForm() {
 
       {/* Confirmation Dialog */}
       <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
-        <DialogContent className="max-w-md border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+        <DialogContent className="max-w-md border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)] p-0">
           <DialogHeader className="p-6 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
             <DialogTitle className="text-xl font-normal leading-none text-[var(--hrs-ink)]">
               평가 제출 확인
@@ -219,13 +219,13 @@ export default function EvaluationForm() {
           </div>
           <div className="flex justify-end gap-3 p-6 bg-[var(--hrs-bg)] border-t border-[var(--hrs-line)]">
             <button 
-              className="px-5 py-2 border border-[var(--hrs-line)] text-[11px] uppercase tracking-widest hover:border-[var(--hrs-line)] hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
+              className="px-5 py-2 border border-[var(--hrs-line)] text-[12px] tracking-normal hover:border-[var(--hrs-line)] hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
               onClick={() => setConfirmModalOpen(false)}
             >
               취소
             </button>
             <button
-              className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[12px] tracking-normal hover:bg-[var(--hrs-ink)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={executeSubmit}
               disabled={isSubmitting}
             >
@@ -237,7 +237,7 @@ export default function EvaluationForm() {
 
       {/* Alert Dialog */}
       <Dialog open={alertModalOpen} onOpenChange={setAlertModalOpen}>
-        <DialogContent className="max-w-md border-[var(--hrs-line)] rounded-none bg-[var(--hrs-surface)] p-0">
+        <DialogContent className="max-w-md border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)] p-0">
           <DialogHeader className="p-6 border-b border-[var(--hrs-line)] bg-[var(--hrs-bg)]">
             <DialogTitle className="text-xl font-normal leading-none text-[var(--hrs-ink)]">
               알림
@@ -248,7 +248,7 @@ export default function EvaluationForm() {
           </div>
           <div className="flex justify-end p-6 bg-[var(--hrs-bg)] border-t border-[var(--hrs-line)]">
             <button 
-              className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[11px] uppercase tracking-widest hover:bg-[var(--hrs-ink)] transition-colors"
+              className="px-5 py-2 bg-[var(--hrs-accent)] text-white text-[12px] tracking-normal hover:bg-[var(--hrs-ink)] transition-colors"
               onClick={() => setAlertModalOpen(false)}
             >
               확인
