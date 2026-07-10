@@ -58,6 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const email = firebaseUser.email.toLowerCase();
+
+        // 새 인증 사용자로 바뀌면 문서를 받기 전까지 이전 사용자 상태를 신뢰하지 않는다.
+        // (이 구간을 열어두면 이전 계정 기준으로 라우트 가드가 통과해
+        //  mustChangePassword 강제 변경 화면을 건너뛸 수 있다.)
+        setUser(prev => (prev && prev.email === email ? prev : null));
+        setLoading(true);
+
         const userDocRef = doc(db, 'users', email);
 
         // 실시간 리스너로 사용자 문서 구독 (권한 변경 즉시 반영)

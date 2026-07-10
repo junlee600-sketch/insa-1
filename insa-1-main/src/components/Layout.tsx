@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMenuPermissions } from '../contexts/MenuPermissionsContext';
 
@@ -23,6 +23,9 @@ export function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const { perms } = useMenuPermissions();
+
+  // 2차 방어: 어떤 경로로 진입했든 비밀번호 강제 변경이 남아 있으면 본 화면을 렌더링하지 않는다.
+  if (user?.mustChangePassword) return <Navigate to="/change-password" replace />;
 
   const isGroupLeader = user?.position?.endsWith('그룹장');
   const isExecutive = ['본부장', '그룹장', '사장'].includes(user?.position || '');

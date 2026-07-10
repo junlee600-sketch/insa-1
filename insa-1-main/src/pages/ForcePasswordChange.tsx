@@ -37,12 +37,30 @@ export default function ForcePasswordChange() {
     }
 
     setSaving(true);
+    let passwordChanged = false;
+    const clearFlag = () => setDoc(doc(db, 'users', user.email), { mustChangePassword: false }, { merge: true });
+
     try {
       await updatePassword(auth.currentUser, newPassword);
-      // 강제 변경 플래그 해제 (해제 시 AuthContext 리스너가 즉시 반영 → 대시보드로 이동)
-      await setDoc(doc(db, 'users', user.email), { mustChangePassword: false }, { merge: true });
+      passwordChanged = true;
+      // 플래그 해제 시 AuthContext 리스너가 반영 → 대시보드로 이동
+      await clearFlag();
     } catch (err: any) {
       logger.error(err);
+
+      if (passwordChanged) {
+        // 비밀번호는 이미 바뀌었고 플래그 해제만 실패한 경우 → 1회 재시도
+        try {
+          await clearFlag();
+          return;
+        } catch (retryErr) {
+          logger.error(retryErr);
+          setError('비밀번호는 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요.');
+          setSaving(false);
+          return;
+        }
+      }
+
       if (err.code === 'auth/requires-recent-login') {
         setError('보안을 위해 다시 로그인한 뒤 변경해 주세요.');
       } else if (err.code === 'auth/weak-password') {
