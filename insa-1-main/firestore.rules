@@ -74,8 +74,11 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && (
           isAdmin() ||
-          // 본인은 name, department, updatedAt, uid 만 수정 가능 (role, position, menuPermissions 자가수정 불가)
-          (request.auth.token.email == userId && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'updatedAt', 'uid']))
+          // 본인은 name, department, updatedAt, uid, mustChangePassword 만 수정 가능
+          // (role, position, menuPermissions 자가수정 불가 / mustChangePassword 는 false 로만 변경 가능)
+          (request.auth.token.email == userId
+            && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'updatedAt', 'uid', 'mustChangePassword'])
+            && (!incoming().diff(existing()).affectedKeys().hasAny(['mustChangePassword']) || incoming().mustChangePassword == false))
         )
       );
 

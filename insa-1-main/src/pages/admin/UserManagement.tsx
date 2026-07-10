@@ -103,7 +103,10 @@ export default function UserManagement() {
         throw new Error(data.error || '알 수 없는 오류');
       }
       
-      setSuccessMsg(`[${formData.email}] 계정의 비밀번호가 성공적으로 즉시 변경되었습니다.`);
+      // 관리자가 임시 비밀번호로 재설정했으므로, 해당 사용자는 다음 로그인 시 강제 변경
+      await setDoc(doc(db, 'users', emailForPwd), { mustChangePassword: true }, { merge: true });
+
+      setSuccessMsg(`[${formData.email}] 계정의 비밀번호가 변경되었습니다. 해당 사용자는 다음 로그인 시 비밀번호를 새로 설정해야 합니다.`);
       setAdminForcePassword('');
     } catch (err: any) {
       logger.error(err);
@@ -156,6 +159,8 @@ export default function UserManagement() {
       if (!isEditing) {
         saveData.createdAt = serverTimestamp();
         saveData.uid = '';
+        // 최초 로그인 시 비밀번호 강제 변경
+        saveData.mustChangePassword = true;
       }
       if (userMenuPerms !== null) {
         saveData.menuPermissions = userMenuPerms;
@@ -263,6 +268,24 @@ export default function UserManagement() {
     setIsOpen(true);
   };
 
+  // 현재 목록(필터/검색 적용)을 엑셀로 내려받기 — 비밀번호는 포함하지 않음
+  const downloadUsers = async () => {
+    if (filteredUsers.length === 0) { alert('내려받을 사용자가 없습니다.'); return; }
+    const rows = filteredUsers.map(u => ({
+      '로그인 ID': u.email?.includes('@') ? u.email.split('@')[0] : u.email,
+      '이메일': u.email || '',
+      '사용자 이름': u.name || '',
+      '소속 부서': u.department || '',
+      '직급': u.position || '',
+      '연차(년)': u.yearsOfService ?? '',
+      '연차(개월)': u.serviceMonths ?? '',
+      '권한': u.role || '',
+      '재직상태': (u.status || 'active') === 'retired' ? '퇴직' : '재직',
+    }));
+    const stamp = new Date().toISOString().slice(0, 10);
+    await downloadExcelFile(rows, 'Users', `User_List_${stamp}.xlsx`);
+  };
+
   const downloadTemplate = async () => {
     await downloadExcelFile([{
       '로그인 ID': 'user01',
@@ -365,7 +388,7 @@ export default function UserManagement() {
           }
 
           const userRef = doc(db, 'users', email);
-          await setDoc(userRef, {
+          const importData: any = {
             email,
             name,
             department,
@@ -375,7 +398,10 @@ export default function UserManagement() {
             serviceMonths,
             createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
             uid: existingUser ? existingUser.uid : ''
-          }, { merge: true });
+          };
+          // 신규 계정은 최초 로그인 시 비밀번호 강제 변경
+          if (!existingUser) importData.mustChangePassword = true;
+          await setDoc(userRef, importData, { merge: true });
 
           successCount++;
         } catch (err: any) {
@@ -426,11 +452,18 @@ export default function UserManagement() {
         <div className="flex gap-4 items-center">
           <button 
             onClick={downloadTemplate}
-            className="px-5 py-2 border border-[var(--hrs-line)] text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
+            className="px-5 py-2 border border-[var(--hrs-line)] rounded-md text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
           >
             등록양식 다운로드
           </button>
-          
+
+          <button
+            onClick={downloadUsers}
+            className="px-5 py-2 border border-[var(--hrs-line)] rounded-md text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors"
+          >
+            사용자 목록 다운로드
+          </button>
+
           <div className="relative">
             <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
             <button className="px-5 py-2 border border-[var(--hrs-line)] text-[12px] tracking-normal hover:bg-[var(--hrs-accent)] hover:text-white transition-colors pointer-events-none">

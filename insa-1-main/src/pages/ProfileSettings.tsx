@@ -51,6 +51,7 @@ export default function ProfileSettings() {
         }
         try {
           await updatePassword(auth.currentUser, formData.newPassword);
+          await updateDoc(doc(db, 'users', user.email), { mustChangePassword: false });
           setFormData(prev => ({ ...prev, password: '', newPassword: '', confirmPassword: '' }));
         } catch (pwErr: any) {
           logger.error(pwErr);

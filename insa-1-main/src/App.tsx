@@ -7,6 +7,7 @@ import { Layout } from './components/Layout';
 // Pages
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import ForcePasswordChange from './pages/ForcePasswordChange';
 import UserManagement from './pages/admin/UserManagement';
 import EvaluationSettings from './pages/admin/EvaluationSettings';
 import EvaluationItems from './pages/admin/EvaluationItems';
@@ -40,6 +41,8 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
 
   if (loading) return <div className="p-8 text-center text-gray-500">로딩 중...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  // 최초 로그인 사용자는 비밀번호를 변경할 때까지 다른 페이지 접근 차단
+  if (user.mustChangePassword) return <Navigate to="/change-password" replace />;
 
   // 1순위: 사용자별 개별 권한 (UserManagement에서 설정) - 즉시 판단 가능
   if (menuPath && user.menuPermissions && menuPath in user.menuPermissions) {
@@ -81,6 +84,7 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/change-password" element={<ForcePasswordChange />} />
           
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />

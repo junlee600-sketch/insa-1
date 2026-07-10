@@ -13,6 +13,7 @@ export interface AppUser {
   role: 'admin' | 'hr' | 'user';
   menuPermissions?: Record<string, boolean>;
   confirmDepartments?: string[];
+  mustChangePassword?: boolean;
 }
 
 interface AuthContextType {
