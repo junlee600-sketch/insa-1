@@ -67,6 +67,9 @@ export default function UserManagement() {
   const [confirmData, setConfirmData] = useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // 일괄등록 결과 (실패 행과 사유를 화면에 표시)
+  const [importResult, setImportResult] = useState<{ success: number; failures: { row: number; id: string; reason: string }[] } | null>(null);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -269,7 +272,7 @@ export default function UserManagement() {
       '직급': '사원',
       '연차(년)': 3,
       '연차(개월)': 6,
-      '권한 (admin/user)': 'user'
+      '권한 (admin/user)': 'user'   // admin / hr / user
     }], "Users", "User_Registration_Template.xlsx");
   };
 
@@ -280,13 +283,27 @@ export default function UserManagement() {
     const validationError = validateExcelFile(file);
     if (validationError) { alert(validationError); e.target.value = ''; return; }
 
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+    const describeError = (err: any): string => {
+      const code = err?.code || '';
+      if (code === 'auth/invalid-email') return '로그인 ID 형식이 올바르지 않습니다 (공백·한글·특수문자 확인)';
+      if (code === 'auth/weak-password') return '비밀번호가 너무 약합니다 (6자 이상)';
+      if (code === 'auth/too-many-requests') return 'Firebase 요청 제한에 걸렸습니다. 잠시 후 나머지만 다시 등록해 주세요';
+      if (code === 'auth/network-request-failed') return '네트워크 오류입니다. 연결을 확인해 주세요';
+      if (code === 'permission-denied') return 'Firestore 저장 권한이 없습니다 (관리자 계정으로 로그인했는지 확인)';
+      return code || err?.message || '알 수 없는 오류';
+    };
+
     try {
       const data = await readExcelRows(file);
       let successCount = 0;
-      let failCount = 0;
+      const failures: { row: number; id: string; reason: string }[] = [];
       setLoading(true);
+      setImportResult(null);
 
-      for (const row of data) {
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const rowNo = i + 2; // 엑셀 기준 (1행은 헤더)
         let email = String(row['로그인 ID'] || row['로그인 아이디 (이메일)'] || '').trim().toLowerCase();
         const password = String(row['초기 비밀번호'] || '').trim();
         const name = String(row['사용자 이름'] || '').trim();
@@ -298,8 +315,10 @@ export default function UserManagement() {
         const serviceMonths = monthsRaw != null && monthsRaw !== '' ? Number(monthsRaw) : null;
         let role = String(row['권한 (admin/user)'] || '').trim().toLowerCase();
 
+        const label = email || name || '(빈 행)';
+
         if (!email || !name) {
-          failCount++;
+          failures.push({ row: rowNo, id: label, reason: !email ? '로그인 ID가 비어 있습니다 (컬럼명이 "로그인 ID"인지 확인)' : '사용자 이름이 비어 있습니다' });
           continue;
         }
 
@@ -307,7 +326,8 @@ export default function UserManagement() {
           email += '@han-guk.co.kr';
         }
 
-        if (role !== 'admin' && role !== 'user') {
+        // admin / hr / user 모두 허용 (그 외에는 user)
+        if (role !== 'admin' && role !== 'hr' && role !== 'user') {
           role = 'user';
         }
 
@@ -316,18 +336,32 @@ export default function UserManagement() {
         try {
           if (!existingUser) {
             if (!password || password.length < 6) {
-              failCount++;
+              failures.push({ row: rowNo, id: email, reason: '초기 비밀번호가 없거나 6자 미만입니다' });
               continue;
             }
             try {
               await createUserWithEmailAndPassword(secondaryAuth, email, password);
               await signOut(secondaryAuth);
             } catch (authErr: any) {
-              if (authErr.code !== 'auth/email-already-in-use') {
-                failCount++;
+              if (authErr.code === 'auth/too-many-requests') {
+                // 레이트리밋: 잠시 대기 후 1회 재시도
+                await sleep(5000);
+                try {
+                  await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                  await signOut(secondaryAuth);
+                } catch (retryErr: any) {
+                  if (retryErr.code !== 'auth/email-already-in-use') {
+                    failures.push({ row: rowNo, id: email, reason: describeError(retryErr) });
+                    continue;
+                  }
+                }
+              } else if (authErr.code !== 'auth/email-already-in-use') {
+                failures.push({ row: rowNo, id: email, reason: describeError(authErr) });
                 continue;
               }
             }
+            // 연속 계정 생성 시 레이트리밋 방지
+            await sleep(300);
           }
 
           const userRef = doc(db, 'users', email);
@@ -344,14 +378,17 @@ export default function UserManagement() {
           }, { merge: true });
 
           successCount++;
-        } catch (err) {
+        } catch (err: any) {
           logger.error(err);
-          failCount++;
+          failures.push({ row: rowNo, id: email, reason: describeError(err) });
         }
       }
 
+      setImportResult({ success: successCount, failures });
       fetchUsers();
-      alert(`일괄 처리가 완료되었습니다.\n성공: ${successCount}건\n실패: ${failCount}건`);
+      if (failures.length === 0) {
+        alert(`일괄 처리가 완료되었습니다.\n성공: ${successCount}건`);
+      }
     } catch (err) {
       logger.error(err);
       alert('파일 처리 중 오류가 발생했습니다.');
@@ -620,6 +657,39 @@ export default function UserManagement() {
         </Dialog>
         </div>
       </header>
+
+      {/* 일괄등록 결과: 실패한 행과 사유 표시 */}
+      {importResult && (
+        <div className="hrs-card p-5 mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-[var(--hrs-ink)]">
+              일괄등록 결과 — 성공 {importResult.success}건
+              {importResult.failures.length > 0 && <span className="text-[var(--hrs-low)]"> · 실패 {importResult.failures.length}건</span>}
+            </h3>
+            <button onClick={() => setImportResult(null)} className="text-xs text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)]">닫기</button>
+          </div>
+          {importResult.failures.length === 0 ? (
+            <p className="text-sm text-[var(--hrs-high)]">모든 사용자가 정상 등록되었습니다.</p>
+          ) : (
+            <div className="border border-[var(--hrs-line)] rounded-md overflow-hidden">
+              <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] text-[12px] font-semibold px-3 py-2 border-b border-[var(--hrs-line)]">
+                <div className="col-span-2">엑셀 행</div>
+                <div className="col-span-4">로그인 ID</div>
+                <div className="col-span-6">실패 사유</div>
+              </div>
+              <div className="max-h-56 overflow-y-auto text-sm">
+                {importResult.failures.map((f, i) => (
+                  <div key={i} className="grid grid-cols-12 px-3 py-2 border-b border-[var(--hrs-line-soft)] last:border-0">
+                    <div className="col-span-2 hrs-mono text-[var(--hrs-slate)]">{f.row}행</div>
+                    <div className="col-span-4 truncate pr-2">{f.id}</div>
+                    <div className="col-span-6 text-[var(--hrs-low)]">{f.reason}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-0 mt-8 mb-0 border-b border-[var(--hrs-line-soft)]">
         {([['active', `재직 (${activeCount})`], ['retired', `퇴직 (${retiredCount})`], ['all', `전체 (${users.length})`]] as const).map(([val, label]) => (
