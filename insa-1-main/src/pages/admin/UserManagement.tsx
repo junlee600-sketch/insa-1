@@ -473,7 +473,7 @@ export default function UserManagement() {
 
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger render={<Button onClick={openNew} className="rounded-md bg-[var(--hrs-accent)] hover:bg-[var(--hrs-ink)] px-5 py-2 text-[12px] tracking-normal h-auto">개별 사용자 등록</Button>} />
-            <DialogContent className="sm:max-w-[90vw] max-w-[90vw] w-[90vw] max-h-[90vh] overflow-y-auto border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)]">
+            <DialogContent className="sm:max-w-[30vw] max-w-[30vw] w-[30vw] max-h-[90vh] overflow-y-auto border-[var(--hrs-line)] rounded-md bg-[var(--hrs-surface)]">
             <DialogHeader>
               <DialogTitle className="text-2xl">{isEditing ? '사용자 정보 수정' : '신규 사용자 등록'}</DialogTitle>
             </DialogHeader>
