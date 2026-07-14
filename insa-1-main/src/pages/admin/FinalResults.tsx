@@ -10,6 +10,7 @@ import { Label } from '../../components/ui/label';
 import { useAuth } from '../../contexts/AuthContext';
 import ExcelJS from 'exceljs';
 import { logger } from '../../lib/logger';
+import { userService } from '../../lib/service';
 
 export default function FinalResults() {
   const { user } = useAuth();
@@ -136,8 +137,7 @@ export default function FinalResults() {
           umap[data.email] = data.name;
           dmap[data.email] = data.department || '';
           pmap[data.email] = data.position || '';
-          ymap[data.email] = data.yearsOfService ?? null;
-          mmap[data.email] = data.serviceMonths ?? null;
+          { const svc = userService(data); ymap[data.email] = svc.years; mmap[data.email] = svc.months; }
           if (data.department) deptSet.add(data.department);
         }
       }));

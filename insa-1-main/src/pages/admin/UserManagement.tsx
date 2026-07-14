@@ -46,6 +46,7 @@ import { Label } from '../../components/ui/label';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { readExcelRows, downloadExcelFile, validateExcelFile } from '../../lib/excel';
 import { logger } from '../../lib/logger';
+import { anchorFromService, userService, formatService } from '../../lib/service';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
@@ -153,6 +154,10 @@ export default function UserManagement() {
         role: formData.role,
         yearsOfService: formData.yearsOfService !== '' ? Number(formData.yearsOfService) : null,
         serviceMonths: formData.serviceMonths !== '' ? Number(formData.serviceMonths) : null,
+        // 입력한 연차를 기준앵커로 저장 → 이후 매월 1일 자동 증가 (둘 다 비면 앵커 제거)
+        serviceAnchor: (formData.yearsOfService !== '' || formData.serviceMonths !== '')
+          ? anchorFromService(Number(formData.yearsOfService) || 0, Number(formData.serviceMonths) || 0)
+          : null,
         confirmDepartments,
         updatedAt: serverTimestamp(),
       };
@@ -245,7 +250,8 @@ export default function UserManagement() {
   };
 
   const openEdit = (user: any) => {
-    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: user.yearsOfService != null ? String(user.yearsOfService) : '', serviceMonths: user.serviceMonths != null ? String(user.serviceMonths) : '' });
+    const svc = userService(user); // 앵커 있으면 현재 연차 자동계산, 없으면 수동값
+    setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: svc.years != null ? String(svc.years) : '', serviceMonths: svc.months != null ? String(svc.months) : '' });
     setUserMenuPerms(user.menuPermissions ?? null);
     setShowMenuPerms(false);
     setConfirmDepartments(Array.isArray(user.confirmDepartments) ? user.confirmDepartments : []);
@@ -277,8 +283,8 @@ export default function UserManagement() {
       '사용자 이름': u.name || '',
       '소속 부서': u.department || '',
       '직급': u.position || '',
-      '연차(년)': u.yearsOfService ?? '',
-      '연차(개월)': u.serviceMonths ?? '',
+      '연차(년)': userService(u).years ?? '',
+      '연차(개월)': userService(u).months ?? '',
       '권한': u.role || '',
       '재직상태': (u.status || 'active') === 'retired' ? '퇴직' : '재직',
     }));
@@ -396,6 +402,10 @@ export default function UserManagement() {
             role,
             yearsOfService,
             serviceMonths,
+            // 엑셀의 연차를 기준앵커로 저장 → 매월 1일 자동 증가
+            serviceAnchor: (yearsOfService != null || serviceMonths != null)
+              ? anchorFromService(yearsOfService || 0, serviceMonths || 0)
+              : null,
             createdAt: existingUser ? existingUser.createdAt : serverTimestamp(),
             uid: existingUser ? existingUser.uid : ''
           };
@@ -775,7 +785,7 @@ export default function UserManagement() {
                 <div className={`col-span-2 font-bold text-lg truncate pr-2 ${isRetired ? 'line-through text-[var(--hrs-slate)]' : ''}`}>{user.name}</div>
                 <div className="col-span-1 font-sans text-xs text-[var(--hrs-slate)] truncate pr-2">{user.position || '-'}</div>
                 <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-2">{user.department}</div>
-                <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{(user.yearsOfService != null || user.serviceMonths != null) ? `${user.yearsOfService ?? 0}년${user.serviceMonths ? ` ${user.serviceMonths}개월` : ''}` : '-'}</div>
+                <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{formatService(userService(user).years, userService(user).months)}</div>
                 <div className="col-span-1">
                   <span className={`text-[12px] tracking-normal px-2 py-1 ${user.role === 'admin' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-ink)]'}`}>
                     {user.role}
