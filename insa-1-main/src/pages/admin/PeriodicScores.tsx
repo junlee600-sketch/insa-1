@@ -291,17 +291,19 @@ export default function PeriodicScores() {
                   <div className="col-span-3 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-2">{u.department || '-'}</div>
                   <div className="col-span-2 px-2">
                     <Input
-                      type="number" min="0" max="100" step="0.1"
+                      type="text" inputMode="decimal"
+                      placeholder="미입력"
                       value={scores[u.id]?.attendanceScore ?? ''}
-                      onChange={e => setScore(u.id, 'attendanceScore', e.target.value)}
+                      onChange={e => setScore(u.id, 'attendanceScore', e.target.value.replace(/[^0-9.]/g, ''))}
                       className="text-center border border-[var(--hrs-line)] rounded-md bg-white focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] h-9"
                     />
                   </div>
                   <div className="col-span-2 px-2">
                     <Input
-                      type="number" min="0" max="100" step="0.1"
+                      type="text" inputMode="decimal"
+                      placeholder="미입력"
                       value={scores[u.id]?.workLogScore ?? ''}
-                      onChange={e => setScore(u.id, 'workLogScore', e.target.value)}
+                      onChange={e => setScore(u.id, 'workLogScore', e.target.value.replace(/[^0-9.]/g, ''))}
                       className="text-center border border-[var(--hrs-line)] rounded-md bg-white focus-visible:ring-0 focus-visible:border-[var(--hrs-line)] h-9"
                     />
                   </div>
