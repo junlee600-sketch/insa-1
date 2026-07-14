@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { updatePassword } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -72,6 +72,34 @@ export default function ForcePasswordChange() {
     }
 
     setSaving(true);
+
+    // 새 비밀번호가 현재(초기) 비밀번호와 동일한지 검사:
+    // 후보 비밀번호로 재인증을 시도해 성공하면 = 기존과 동일 → 차단
+    try {
+      const cred = EmailAuthProvider.credential(user.email, newPassword);
+      await reauthenticateWithCredential(auth.currentUser, cred);
+      // 재인증 성공 = 새 비밀번호가 현재 비밀번호와 같음
+      setError('기존(초기) 비밀번호와 다른 비밀번호로 설정해 주세요.');
+      setSaving(false);
+      return;
+    } catch (reauthErr: any) {
+      const code = reauthErr?.code || '';
+      if (code !== 'auth/wrong-password' && code !== 'auth/invalid-credential') {
+        // 비밀번호 불일치(=다름) 외의 오류는 별도 처리
+        logger.error(reauthErr);
+        if (code === 'auth/too-many-requests') {
+          setError('시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.');
+        } else if (code === 'auth/requires-recent-login') {
+          setError('보안을 위해 다시 로그인한 뒤 변경해 주세요.');
+        } else {
+          setError('비밀번호 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+        setSaving(false);
+        return;
+      }
+      // wrong-password / invalid-credential = 기존과 다른 비밀번호 → 계속 진행
+    }
+
     let passwordChanged = false;
     const clearFlag = () => setDoc(doc(db, 'users', user.email), { mustChangePassword: false }, { merge: true });
 
@@ -185,6 +213,7 @@ export default function ForcePasswordChange() {
                 <Check ok={lenOk} label="6자 이상" />
                 <Check ok={matchOk} label="비밀번호 일치" />
               </div>
+              <p className="text-[11px] text-[var(--hrs-slate)] -mt-1">초기(현재) 비밀번호와 다른 비밀번호로 설정해야 합니다.</p>
 
               <button
                 type="submit"
