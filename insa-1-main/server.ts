@@ -259,6 +259,7 @@ async function startServer() {
           asEvaluator, execAsEvaluator,
           asEvaluatee, execAsEvaluatee,
           finalScores, execFinalScores,
+          periodicScores,
         ] = await Promise.all([
           queryByField("assignments", "evaluatorId"),
           queryByField("exec_assignments", "evaluatorId"),
@@ -266,6 +267,7 @@ async function startServer() {
           queryByField("exec_assignments", "evaluateeId"),
           queryByField("finalScores", "evaluateeId"),
           queryByField("exec_finalScores", "evaluateeId"),
+          queryByField("periodicScores", "userId"),
         ]);
 
         // 중복 없이 삭제할 경로 수집
@@ -282,6 +284,7 @@ async function startServer() {
         for (const d of execAsEvaluatee) { add(db.collection("exec_results").doc(d.id)); add(d.ref); }
         for (const d of finalScores)     add(d.ref);
         for (const d of execFinalScores) add(d.ref);
+        for (const d of periodicScores)  add(d.ref);
 
         // 500건 단위로 배치 커밋 (Admin SDK 한도)
         for (let i = 0; i < refs.length; i += 500) {
