@@ -16,6 +16,8 @@ export default function PeriodicScores() {
   const [selectedYear, setSelectedYear] = useState('');
   const [users, setUsers] = useState<any[]>([]);
   const [scores, setScores] = useState<Record<string, ScoreRow>>({});
+  // 저장 시 '변경된 행'만 판별하기 위한 최초 로드값
+  const [initialScores, setInitialScores] = useState<Record<string, ScoreRow>>({});
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,6 +86,7 @@ export default function PeriodicScores() {
         });
       }
       setScores(scoreMap);
+      setInitialScores(JSON.parse(JSON.stringify(scoreMap)));
     } catch (e) {
       logger.error('PeriodicScores fetchScores error', e);
     }
@@ -120,19 +123,22 @@ export default function PeriodicScores() {
       let batch = writeBatch(db);
       let ops = 0;
       let saved = 0;
+      const empty: ScoreRow = { attendanceScore: '', workLogScore: '' };
       for (const u of users) {
-        const row = scores[u.id];
-        if (!row) continue;
-        const att = validScore(row.attendanceScore);
-        const log = validScore(row.workLogScore);
-        // 둘 다 비어있으면 저장 생략
-        if (att === null && log === null) continue;
+        const cur = scores[u.id] || empty;
+        const base = initialScores[u.id] || empty;
+        // 최초 로드값과 다른 '변경된 행'만 저장 (0·빈 값 초기화 모두 반영)
+        const dirty = cur.attendanceScore !== base.attendanceScore || cur.workLogScore !== base.workLogScore;
+        if (!dirty) continue;
+
+        const att = validScore(cur.attendanceScore);
+        const log = validScore(cur.workLogScore);
 
         const ref = doc(db, 'periodicScores', `${selectedYear}_${u.id}`);
         batch.set(ref, {
           year: selectedYear,
           userId: u.id,
-          attendanceScore: att === null ? null : att,
+          attendanceScore: att === null ? null : att,   // 0 은 그대로 0, 빈 값은 null(초기화)
           workLogScore: log === null ? null : log,
           updatedAt: serverTimestamp(),
           updatedBy: user?.email || '',
@@ -146,7 +152,7 @@ export default function PeriodicScores() {
         }
       }
       if (ops > 0) await batch.commit();
-      alert(`저장 완료: ${saved}명의 점수가 저장되었습니다.`);
+      alert(saved > 0 ? `저장 완료: ${saved}명의 점수가 저장되었습니다.` : '변경된 내용이 없습니다.');
       fetchScores();
     } catch (e: any) {
       logger.error('PeriodicScores save error', e);
