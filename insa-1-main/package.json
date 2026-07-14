@@ -22,7 +22,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.4.0",
     "firebase": "^12.12.1",
-    "firebase-admin": "^13.8.0",
+    "firebase-admin": "^13.10.0",
     "helmet": "^8.2.0",
     "lucide-react": "^0.546.0",
     "react": "^19.0.0",
@@ -48,5 +48,8 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "overrides": {
+    "uuid": "$uuid"
   }
 }

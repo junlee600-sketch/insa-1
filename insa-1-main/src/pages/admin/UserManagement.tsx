@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, setDoc, deleteField, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, setDoc, deleteField, serverTimestamp, query, where } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { db, secondaryAuth, auth } from '../../lib/firebase';
 
@@ -158,7 +158,6 @@ export default function UserManagement() {
         serviceAnchor: (formData.yearsOfService !== '' || formData.serviceMonths !== '')
           ? anchorFromService(Number(formData.yearsOfService) || 0, Number(formData.serviceMonths) || 0)
           : null,
-        confirmDepartments,
         updatedAt: serverTimestamp(),
       };
       if (!isEditing) {
@@ -167,13 +166,17 @@ export default function UserManagement() {
         // 최초 로그인 시 비밀번호 강제 변경
         saveData.mustChangePassword = true;
       }
-      if (userMenuPerms !== null) {
-        saveData.menuPermissions = userMenuPerms;
-      } else if (isEditing) {
-        // 초기화 시 개별 권한 필드 완전 삭제
-        saveData.menuPermissions = deleteField();
-      }
       await setDoc(userRef, saveData, { merge: true });
+
+      // 민감 권한(menuPermissions·confirmDepartments)은 userAccess 문서에 분리 저장 (타인 열람 차단)
+      const accessRef = doc(db, 'userAccess', finalEmail);
+      const accessData: any = { email: finalEmail, confirmDepartments, updatedAt: serverTimestamp() };
+      if (userMenuPerms !== null) {
+        accessData.menuPermissions = userMenuPerms;
+      } else if (isEditing) {
+        accessData.menuPermissions = deleteField();
+      }
+      await setDoc(accessRef, accessData, { merge: true });
       
       setIsOpen(false);
       fetchUsers();
@@ -249,17 +252,26 @@ export default function UserManagement() {
     }
   };
 
-  const openEdit = (user: any) => {
+  const openEdit = async (user: any) => {
     const svc = userService(user); // 앵커 있으면 현재 연차 자동계산, 없으면 수동값
     setFormData({ email: user.email?.includes('@') ? user.email.split('@')[0] : user.email, password: '', name: user.name, department: user.department, position: user.position || '', role: user.role, yearsOfService: svc.years != null ? String(svc.years) : '', serviceMonths: svc.months != null ? String(svc.months) : '' });
-    setUserMenuPerms(user.menuPermissions ?? null);
     setShowMenuPerms(false);
-    setConfirmDepartments(Array.isArray(user.confirmDepartments) ? user.confirmDepartments : []);
     setAdminForcePassword('');
     setIsEditing(true);
     setErrorMsg('');
     setSuccessMsg('');
     setIsOpen(true);
+    // 민감 권한은 userAccess 문서에서 로드 (없으면 users 문서 fallback — 전환기 호환)
+    try {
+      const accSnap = await getDoc(doc(db, 'userAccess', user.email || user.id));
+      const acc = accSnap.exists() ? accSnap.data() : {};
+      setUserMenuPerms(acc.menuPermissions ?? user.menuPermissions ?? null);
+      setConfirmDepartments(Array.isArray(acc.confirmDepartments) ? acc.confirmDepartments
+        : (Array.isArray(user.confirmDepartments) ? user.confirmDepartments : []));
+    } catch {
+      setUserMenuPerms(user.menuPermissions ?? null);
+      setConfirmDepartments(Array.isArray(user.confirmDepartments) ? user.confirmDepartments : []);
+    }
   };
 
   const openNew = () => {

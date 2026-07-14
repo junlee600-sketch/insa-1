@@ -98,6 +98,36 @@ async function startServer() {
       }
     }
 
+    // 호출자의 Firebase ID 토큰만 검증(역할 불문). 로그인 사용자 본인 확인용.
+    async function verifyUserToken(req: express.Request, res: express.Response): Promise<string | null> {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        res.status(401).json({ error: "인증 토큰이 없습니다." });
+        return null;
+      }
+      const idToken = authHeader.split("Bearer ")[1];
+      try {
+        const decoded = await getFirebaseAdmin().auth().verifyIdToken(idToken);
+        if (!decoded.email) { res.status(403).json({ error: "인증된 이메일이 없습니다." }); return null; }
+        return decoded.email.toLowerCase();
+      } catch (err: any) {
+        console.error("[verifyUserToken] 실패:", err?.code);
+        res.status(401).json({ error: "유효하지 않은 토큰입니다." });
+        return null;
+      }
+    }
+
+    // 관리자 파괴적 작업 감사 로그 기록
+    async function writeAudit(action: string, actor: string, target: string, extra: Record<string, any> = {}) {
+      try {
+        await getAdminDb().collection("adminAuditLog").add({
+          action, actor, target, at: new Date().toISOString(), ...extra,
+        });
+      } catch (e) {
+        console.error("[audit] 기록 실패:", (e as any)?.message);
+      }
+    }
+
     const isProd = process.env.NODE_ENV === "production";
 
     // Cloud Run / 리버스 프록시 환경에서 실제 클라이언트 IP를 rate limiter에 전달
@@ -157,6 +187,36 @@ async function startServer() {
       message: { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }
     });
 
+    // 사용자 셀프서비스 API: IP당 15분에 20회
+    const userLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 20,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }
+    });
+
+    // API Route: 최초 로그인 강제 비밀번호 변경 (서버가 비밀번호를 설정하고 플래그 해제 → SDK 우회 차단)
+    app.post("/api/user/complete-initial-password", userLimiter, async (req, res) => {
+      const email = await verifyUserToken(req, res);
+      if (!email) return;
+      try {
+        const { newPassword } = req.body;
+        if (typeof newPassword !== "string" || newPassword.length < 6) {
+          return res.status(400).json({ error: "비밀번호는 최소 6자 이상이어야 합니다." });
+        }
+        const pbAdmin = getFirebaseAdmin();
+        const userRecord = await pbAdmin.auth().getUserByEmail(email);
+        await pbAdmin.auth().updateUser(userRecord.uid, { password: newPassword });
+        // 서버에서 비밀번호 변경을 확정한 뒤에만 플래그 해제 (본인이 SDK로 임의 해제 불가)
+        await getAdminDb().collection("users").doc(email).set({ mustChangePassword: false }, { merge: true });
+        res.json({ success: true });
+      } catch (error: any) {
+        console.error("Error completing initial password:", error);
+        res.status(500).json({ error: isProd ? "비밀번호 변경 중 오류가 발생했습니다." : (error?.message || error?.code || "오류") });
+      }
+    });
+
     // API Route: Update user password
     app.post("/api/admin/update-password", adminLimiter, async (req, res) => {
       const caller = await verifyAdminToken(req, res);
@@ -181,6 +241,7 @@ async function startServer() {
           password: newPassword
         });
 
+        await writeAudit("update-password", caller, email.toLowerCase());
         res.json({ success: true, message: "비밀번호가 성공적으로 변경되었습니다." });
       } catch (error: any) {
         console.error("Error updating password:", error);
@@ -214,6 +275,7 @@ async function startServer() {
           // Auth 계정이 없어도 Firestore 상태만 변경한 것으로 성공 처리
         }
 
+        await writeAudit("set-user-status", caller, email.toLowerCase(), { disabled });
         res.json({ success: true });
       } catch (error: any) {
         console.error("Error setting user status:", error);
@@ -238,8 +300,24 @@ async function startServer() {
           return res.status(400).json({ error: "유효하지 않은 이메일 형식입니다." });
         }
 
+        const targetEmail = email.toLowerCase();
+
+        // 본인 계정은 삭제 불가 (실수/오작동 방지)
+        if (targetEmail === caller) {
+          return res.status(400).json({ error: "본인 계정은 삭제할 수 없습니다." });
+        }
+
         const pbAdmin = getFirebaseAdmin();
         const db = getAdminDb();
+
+        // 마지막 관리자 삭제 방지 (관리자 0명이 되면 복구 불가)
+        const targetDoc = await db.collection("users").doc(targetEmail).get();
+        if (targetDoc.exists && targetDoc.data()?.role === "admin") {
+          const adminsSnap = await db.collection("users").where("role", "==", "admin").get();
+          if (adminsSnap.size <= 1) {
+            return res.status(400).json({ error: "마지막 관리자 계정은 삭제할 수 없습니다." });
+          }
+        }
 
         // 1. Firebase Auth 계정 삭제
         try {
@@ -278,6 +356,7 @@ async function startServer() {
         };
 
         add(db.collection("users").doc(email));
+        add(db.collection("userAccess").doc(email));
         for (const d of asEvaluator)     { add(db.collection("results").doc(d.id)); add(d.ref); }
         for (const d of execAsEvaluator) { add(db.collection("exec_results").doc(d.id)); add(d.ref); }
         for (const d of asEvaluatee)     { add(db.collection("results").doc(d.id)); add(d.ref); }
@@ -293,6 +372,7 @@ async function startServer() {
           await batch.commit();
         }
 
+        await writeAudit("delete-user", caller, targetEmail, { deletedRefs: refs.length });
         res.json({ success: true, message: "사용자 및 모든 관련 데이터가 삭제되었습니다." });
       } catch (error: any) {
         console.error("Error deleting user:", error);

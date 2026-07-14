@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../lib/logger';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -100,39 +99,28 @@ export default function ForcePasswordChange() {
       // wrong-password / invalid-credential = 기존과 다른 비밀번호 → 계속 진행
     }
 
-    let passwordChanged = false;
-    const clearFlag = () => setDoc(doc(db, 'users', user.email), { mustChangePassword: false }, { merge: true });
-
+    // 비밀번호 변경과 mustChangePassword 플래그 해제는 서버(Admin SDK)에서 원자적으로 처리한다.
+    // (클라이언트가 setDoc 으로 플래그를 직접 해제할 수 없도록 보안 규칙에서 차단됨)
     try {
-      await updatePassword(auth.currentUser, newPassword);
-      passwordChanged = true;
-      // 플래그 해제 시 AuthContext 리스너가 반영 → 대시보드로 이동
-      await clearFlag();
+      const idToken = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/user/complete-initial-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || '비밀번호 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        setSaving(false);
+        return;
+      }
+      // 서버가 users 문서의 플래그를 해제 → AuthContext 리스너가 반영 → 대시보드로 이동.
+      // 세션 비밀번호가 바뀌었으므로 재로그인을 위해 로그아웃 후 로그인 화면으로 유도.
+      alert('비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요.');
+      await logout();
     } catch (err: any) {
       logger.error(err);
-
-      if (passwordChanged) {
-        // 비밀번호는 이미 바뀌었고 플래그 해제만 실패한 경우 → 1회 재시도
-        try {
-          await clearFlag();
-          return;
-        } catch (retryErr) {
-          logger.error(retryErr);
-          setError('비밀번호는 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요.');
-          setSaving(false);
-          return;
-        }
-      }
-
-      if (err.code === 'auth/requires-recent-login') {
-        setError('보안을 위해 다시 로그인한 뒤 변경해 주세요.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('비밀번호가 너무 약합니다. 6자 이상으로 설정해 주세요.');
-      } else if (err.code === 'permission-denied') {
-        setError('변경 권한이 없습니다. 관리자에게 문의해 주세요.');
-      } else {
-        setError('비밀번호 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-      }
+      setError('비밀번호 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       setSaving(false);
     }
   };

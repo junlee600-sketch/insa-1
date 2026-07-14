@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
   const userDocUnsub = useRef<(() => void) | null>(null);
+  const userAccessUnsub = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let authUnsub: () => void;
@@ -47,6 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (userDocUnsub.current) {
           userDocUnsub.current();
           userDocUnsub.current = null;
+        }
+        if (userAccessUnsub.current) {
+          userAccessUnsub.current();
+          userAccessUnsub.current = null;
         }
 
         setAuthError('');
@@ -87,13 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               return;
             }
 
-            const appUser: AppUser = { uid: firebaseUser.uid, ...data } as AppUser;
-
             if (data.uid !== firebaseUser.uid) {
               await setDoc(userDocRef, { uid: firebaseUser.uid }, { merge: true });
             }
 
-            setUser(appUser);
+            // menuPermissions·confirmDepartments 는 userAccess 구독이 덮어쓰므로 병합(기존 값 보존)
+            setUser(prev => ({ ...(prev || {}), uid: firebaseUser.uid, ...data } as AppUser));
           } catch (err: any) {
             logger.error("User doc sync error:", err);
             const code: string = err?.code || '';
@@ -113,6 +117,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setLoading(false);
         });
+
+        // 민감 권한(menuPermissions·confirmDepartments)은 userAccess/{email} 에서 구독해 병합
+        userAccessUnsub.current = onSnapshot(doc(db, 'userAccess', email), (snap) => {
+          if (!snap.exists()) return; // 문서 없으면 users 문서의 기존 값(전환기 fallback)을 그대로 둠
+          const acc = snap.data();
+          setUser(prev => {
+            if (!prev || prev.email !== email) return prev;
+            return {
+              ...prev,
+              menuPermissions: acc?.menuPermissions ?? undefined,
+              confirmDepartments: acc?.confirmDepartments ?? undefined,
+            };
+          });
+        }, (err) => {
+          logger.error("userAccess snapshot error:", err);
+        });
       });
     };
 
@@ -121,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       if (authUnsub) authUnsub();
       if (userDocUnsub.current) userDocUnsub.current();
+      if (userAccessUnsub.current) userAccessUnsub.current();
     };
   }, []);
 

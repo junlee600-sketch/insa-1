@@ -22,24 +22,28 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && (getUser(request.auth.token.email).role == 'admin' || getUser(request.auth.token.email).role == 'hr');
     }
 
+    // 민감 권한(menuPermissions·confirmDepartments)은 users 문서가 아닌 userAccess/{email} 문서에 보관
+    // (users get 은 전체 허용이므로 권한 구조 노출을 막기 위해 분리)
+    function accessExists() { return exists(/databases/$(database)/documents/userAccess/$(request.auth.token.email)); }
+    function accessDoc() { return get(/databases/$(database)/documents/userAccess/$(request.auth.token.email)).data; }
+
     // 최종점수 확정 권한: 대상자(evaluatee)의 소속부서가 호출자의 confirmDepartments 목록에 포함될 때만 허용
     function canConfirmDeptOf(evaluateeId) {
       return isSignedIn()
         && evaluateeId is string
-        && exists(/databases/$(database)/documents/users/$(request.auth.token.email))
-        && 'confirmDepartments' in getUser(request.auth.token.email)
+        && accessExists()
+        && 'confirmDepartments' in accessDoc()
         && exists(/databases/$(database)/documents/users/$(evaluateeId))
-        && getUser(evaluateeId).department in getUser(request.auth.token.email).confirmDepartments;
+        && getUser(evaluateeId).department in accessDoc().confirmDepartments;
     }
 
-    // 사용자별 개별 메뉴 권한 체크
+    // 사용자별 개별 메뉴 권한 체크 (userAccess 문서 기반)
     function hasMenuAccess(menuPath) {
-      let u = getUser(request.auth.token.email);
       return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.token.email))
-        && 'menuPermissions' in u
-        && menuPath in u.menuPermissions
-        && u.menuPermissions[menuPath] == true;
+        && accessExists()
+        && 'menuPermissions' in accessDoc()
+        && menuPath in accessDoc().menuPermissions
+        && accessDoc().menuPermissions[menuPath] == true;
     }
 
     // 역할별 메뉴 권한 체크 (settings/menuPermissions 기반)
@@ -66,11 +70,11 @@ service cloud.firestore {
       allow update: if (
         isSignedIn() && (
           isAdmin() ||
-          // 본인은 name, department, updatedAt, uid, mustChangePassword 만 수정 가능
-          // (role, position, menuPermissions 자가수정 불가 / mustChangePassword 는 false 로만 변경 가능)
+          // 본인은 name, department, updatedAt, uid 만 수정 가능
+          // (role, position, menuPermissions, mustChangePassword 자가수정 불가 —
+          //  강제 비밀번호 변경 플래그 해제는 서버(Admin SDK)에서만 처리)
           (request.auth.token.email == userId
-            && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'updatedAt', 'uid', 'mustChangePassword'])
-            && (!incoming().diff(existing()).affectedKeys().hasAny(['mustChangePassword']) || incoming().mustChangePassword == false))
+            && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'updatedAt', 'uid']))
         )
       );
 
@@ -79,10 +83,20 @@ service cloud.firestore {
       allow list: if isHr() || isAdmin() || canAccessMenu('/admin/users') || canAccessMenu('/admin/scores');
     }
 
-    // 근태·업무일지 점수 (문서ID: {year}_{userId})
-    // 읽기: 로그인 사용자 / 쓰기: admin 또는 /admin/scores 개별 권한 보유 계정만
+    // 민감 권한 문서: 본인 또는 관리자만 읽기, 쓰기는 관리자만
+    match /userAccess/{email} {
+      allow read: if isAdmin() || (isSignedIn() && email == request.auth.token.email);
+      allow write: if isAdmin();
+    }
+
+    // 근태·업무일지 점수 (문서ID: {year}_{userId}, 문서 내 userId 필드 보유)
+    // 읽기: 본인 점수 또는 HR·관리자·점수/결과 열람 권한자만 (타인 근태점수 무단열람 차단)
     match /periodicScores/{scoreId} {
-      allow read: if isSignedIn();
+      allow read: if isHr()
+        || canAccessMenu('/admin/scores')
+        || canAccessMenu('/admin/results')
+        || canAccessMenu('/admin/results-executive')
+        || (isSignedIn() && resource.data.userId == request.auth.token.email);
       allow write: if isAdmin() || canAccessMenu('/admin/scores');
     }
 
@@ -131,7 +145,7 @@ service cloud.firestore {
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
         // 평가자는 status를 pending 또는 completed 값으로만 변경 가능 (임의 문자열 방지)
         && incoming().status in ['pending', 'completed']
-        && incoming().totalScore is number && incoming().totalScore >= 0
+        && incoming().totalScore is number && incoming().totalScore >= 0 && incoming().totalScore <= 1000
       );
     }
 
@@ -184,7 +198,7 @@ service cloud.firestore {
         && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'totalScore'])
         // 임의 status 문자열 방지
         && incoming().status in ['pending', 'completed']
-        && incoming().totalScore is number && incoming().totalScore >= 0
+        && incoming().totalScore is number && incoming().totalScore >= 0 && incoming().totalScore <= 1000
       );
     }
 
