@@ -64,7 +64,9 @@ export function Layout() {
                 <p className="px-2.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[var(--hrs-slate)]">{category}</p>
                 <ul className="space-y-0.5 text-sm">
                   {items.map((item) => {
-                    const isActive = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to));
+                    // 세그먼트 경계까지 일치해야 활성 (자식 라우트는 유지, 접두어가 겹치는 형제 라우트 오탐 방지:
+                    //  예) /evaluate 가 /evaluate-executive 를 활성화하던 문제)
+                    const isActive = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to + '/'));
                     return (
                       <li key={item.to}>
                         <Link
