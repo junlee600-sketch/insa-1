@@ -44,13 +44,16 @@ export default function ExecutiveFinalResults() {
   const [modalOpen, setModalOpen] = useState(false);
   const [finalScoreInput, setFinalScoreInput] = useState('');
 
-  // 가중평균 최종점수 계산: 원점수평균×평가% + 근태×근태% + 업무일지×업무일지% (미입력=0)
+  // 가중평균 최종점수: 미입력(근태/업무일지) 항목은 제외하고, 남은 항목의 가중치로 정규화.
+  // 근태·업무일지 모두 미입력이면 평가 원점수 100% 반영.
   const rawAvgOf = (ev: any) => ev.totalCompleted > 0 ? ev.rawScoreSum / ev.totalCompleted : 0;
   const weightedScoreOf = (ev: any) => {
     const p = userPeriodic[ev.evaluateeId] || {};
-    const att = p.attendanceScore ?? 0;
-    const log = p.workLogScore ?? 0;
-    const total = (rawAvgOf(ev) * weights.eval + att * weights.attendance + log * weights.workLog) / 100;
+    let num = rawAvgOf(ev) * weights.eval;
+    let den = weights.eval;
+    if (p.attendanceScore != null) { num += p.attendanceScore * weights.attendance; den += weights.attendance; }
+    if (p.workLogScore != null) { num += p.workLogScore * weights.workLog; den += weights.workLog; }
+    const total = den > 0 ? num / den : rawAvgOf(ev);
     return Math.round(total * 10) / 10;
   };
 
@@ -563,12 +566,12 @@ export default function ExecutiveFinalResults() {
                   </div>
                   <div>
                     <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">근태</p>
-                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
+                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.attendanceScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력 · 제외</span>}</p>
                     <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.attendance}%</p>
                   </div>
                   <div>
                     <p className="text-[12px] tracking-normal text-[var(--hrs-slate)] mb-1">업무일지</p>
-                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력(0)</span>}</p>
+                    <p className="text-lg font-bold">{userPeriodic[selectedEvaluatee.evaluateeId]?.workLogScore ?? <span className="text-[var(--hrs-slate)] text-sm">미입력 · 제외</span>}</p>
                     <p className="text-[12px] text-[var(--hrs-slate)]">×{weights.workLog}%</p>
                   </div>
                   <div className="border-l border-[var(--hrs-line)]">
