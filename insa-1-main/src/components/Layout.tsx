@@ -27,24 +27,16 @@ export function Layout() {
   // 2차 방어: 어떤 경로로 진입했든 비밀번호 강제 변경이 남아 있으면 본 화면을 렌더링하지 않는다.
   if (user?.mustChangePassword) return <Navigate to="/change-password" replace />;
 
-  const isGroupLeader = user?.position?.endsWith('그룹장');
-  const isExecutive = ['본부장', '그룹장', '사장'].includes(user?.position || '');
-  const isPresident = user?.position === '사장';
   const role = user?.role || '';
 
+  // 권한은 개별 메뉴 권한 → 역할별 메뉴 권한(메뉴 권한 관리)만으로 판단. 직급 기반 자동 부여 없음.
   const canAccess = (item: typeof ALL_NAV[0]) => {
-    // 사용자별 개별 권한이 설정된 경우 우선 적용
     if (user?.menuPermissions && item.to in user.menuPermissions) {
       return user.menuPermissions[item.to];
     }
-    // 역할 기반 권한 체크
     const p = perms[item.to];
     if (!p) return false;
-    if (p[role as 'admin' | 'hr' | 'user']) return true;
-    if (item.specialRoles.includes('executive') && isExecutive) return true;
-    if (item.specialRoles.includes('groupLeader') && isGroupLeader) return true;
-    if (item.specialRoles.includes('president') && isPresident) return true;
-    return false;
+    return !!p[role as 'admin' | 'hr' | 'user'];
   };
 
   const groupedNav = ALL_NAV.reduce((acc, item) => {

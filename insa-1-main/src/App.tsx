@@ -28,12 +28,9 @@ import ExecutiveEvaluationItems from './pages/admin/ExecutiveEvaluationItems';
 import ExecutiveAssignments from './pages/admin/ExecutiveAssignments';
 import ExecutiveFinalResults from './pages/admin/ExecutiveFinalResults';
 
-function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPresident, allowExecutives, menuPath }: {
+function ProtectedRoute({ children, requiredRole, menuPath }: {
   children: React.ReactNode;
   requiredRole?: string[];
-  allowGroupLeader?: boolean;
-  allowPresident?: boolean;
-  allowExecutives?: boolean;
   menuPath?: string;
 }) {
   const { user, loading } = useAuth();
@@ -44,7 +41,10 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
   // 최초 로그인 사용자는 비밀번호를 변경할 때까지 다른 페이지 접근 차단
   if (user.mustChangePassword) return <Navigate to="/change-password" replace />;
 
-  // 1순위: 사용자별 개별 권한 (UserManagement에서 설정) - 즉시 판단 가능
+  // 권한은 오직 ① 개별 메뉴 권한 → ② 메뉴 권한 관리(역할 규칙) → ③ 하드코딩 역할 fallback 순으로만 판단
+  // (직급 기반 자동 권한 부여는 사용하지 않음)
+
+  // 1순위: 사용자별 개별 권한 (UserManagement에서 설정)
   if (menuPath && user.menuPermissions && menuPath in user.menuPermissions) {
     return user.menuPermissions[menuPath] ? <>{children}</> : <Navigate to="/" replace />;
   }
@@ -58,20 +58,12 @@ function ProtectedRoute({ children, requiredRole, allowGroupLeader, allowPreside
   if (menuPath && menuPerms[menuPath]) {
     const p = menuPerms[menuPath];
     const role = user.role as 'admin' | 'hr' | 'user';
-    let hasAccess = p[role];
-    if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) hasAccess = true;
-    if (!hasAccess && allowPresident && user.position === '사장') hasAccess = true;
-    if (!hasAccess && allowExecutives && ['본부장', '그룹장', '사장'].includes(user.position || '')) hasAccess = true;
-    return hasAccess ? <>{children}</> : <Navigate to="/" replace />;
+    return p[role] ? <>{children}</> : <Navigate to="/" replace />;
   }
 
   // 3순위: 하드코딩 역할 체크 (fallback)
-  if (requiredRole) {
-    let hasAccess = requiredRole.includes(user.role);
-    if (!hasAccess && allowGroupLeader && user.position?.endsWith('그룹장')) hasAccess = true;
-    if (!hasAccess && allowPresident && user.position === '사장') hasAccess = true;
-    if (!hasAccess && allowExecutives && ['본부장', '그룹장', '사장'].includes(user.position || '')) hasAccess = true;
-    if (!hasAccess) return <Navigate to="/" replace />;
+  if (requiredRole && !requiredRole.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -95,11 +87,11 @@ export default function App() {
             <Route path="evaluate/:assignmentId" element={<EvaluationForm />} />
             <Route
               path="evaluate-executive"
-              element={<ProtectedRoute menuPath="/evaluate-executive" requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluations /></ProtectedRoute>}
+              element={<ProtectedRoute menuPath="/evaluate-executive" requiredRole={['admin', 'hr']}><ExecutiveEvaluations /></ProtectedRoute>}
             />
             <Route
               path="evaluate-executive/:assignmentId"
-              element={<ProtectedRoute menuPath="/evaluate-executive" requiredRole={['admin', 'hr']} allowExecutives={true}><ExecutiveEvaluationForm /></ProtectedRoute>}
+              element={<ProtectedRoute menuPath="/evaluate-executive" requiredRole={['admin', 'hr']}><ExecutiveEvaluationForm /></ProtectedRoute>}
             />
 
             {/* Admin / HR Views */}
@@ -133,11 +125,11 @@ export default function App() {
             />
             <Route
               path="admin/results"
-              element={<ProtectedRoute menuPath="/admin/results" requiredRole={['admin', 'hr']} allowGroupLeader={true} allowPresident={true}><FinalResults /></ProtectedRoute>}
+              element={<ProtectedRoute menuPath="/admin/results" requiredRole={['admin', 'hr']}><FinalResults /></ProtectedRoute>}
             />
             <Route
               path="admin/results-executive"
-              element={<ProtectedRoute menuPath="/admin/results-executive" requiredRole={['admin', 'hr']} allowPresident={true}><ExecutiveFinalResults /></ProtectedRoute>}
+              element={<ProtectedRoute menuPath="/admin/results-executive" requiredRole={['admin', 'hr']}><ExecutiveFinalResults /></ProtectedRoute>}
             />
             <Route
               path="admin/scores"

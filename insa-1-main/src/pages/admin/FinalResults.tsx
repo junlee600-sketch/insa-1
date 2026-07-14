@@ -53,7 +53,7 @@ export default function FinalResults() {
     return Math.round(total * 10) / 10;
   };
 
-  const isGroupLeader = user && user.role === 'user' && user.position?.endsWith('그룹장');
+  // 확정 권한은 오직 confirmDepartments(최종평가 점수확정권한) + role(admin/hr) 로만 판단. 직급 기반 없음.
   const hasConfirmPerms = !!(user?.confirmDepartments?.length);
   const canConfirmForDept = (dept: string) =>
     user?.role === 'admin' || user?.role === 'hr' || !!(user?.confirmDepartments?.includes(dept));
@@ -65,14 +65,6 @@ export default function FinalResults() {
   useEffect(() => {
     if (selectedYear) fetchResults();
   }, [selectedYear]);
-
-  // Force department if group leader
-  useEffect(() => {
-    if (isGroupLeader) {
-      const dep = user.department || user.position!.replace('장', '');
-      setSelectedDepartment(dep);
-    }
-  }, [isGroupLeader, user]);
 
   const fetchBaseData = async () => {
     try {
@@ -319,10 +311,7 @@ export default function FinalResults() {
 
   const filteredEvaluatees = evaluatees.filter(ev => {
     const evDept = userDepartments[ev.evaluateeId];
-    if (isGroupLeader) {
-      const dep = user.department || user.position!.replace('장', '');
-      return evDept === dep;
-    }
+    // 확정권한(confirmDepartments)만 있는 사용자는 담당 부서만 조회
     if (hasConfirmPerms && !canConfirmForDept(evDept)) return false;
     if (selectedDepartment === 'all') return true;
     return evDept === selectedDepartment;
@@ -377,12 +366,12 @@ export default function FinalResults() {
             </button>
           )}
           <div className="w-44">
-            <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')} disabled={!!isGroupLeader}>
+            <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')}>
               <SelectTrigger className="bg-[var(--hrs-surface)]">
                 <SelectValue placeholder="소속 부서 선택" />
               </SelectTrigger>
               <SelectContent>
-                {!isGroupLeader && <SelectItem value="all">전체 부서</SelectItem>}
+                <SelectItem value="all">전체 부서</SelectItem>
                 {departments
                   .filter(d => !hasConfirmPerms || canConfirmForDept(d))
                   .map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}

@@ -14,11 +14,9 @@ import { userService } from '../../lib/service';
 
 export default function ExecutiveFinalResults() {
   const { user } = useAuth();
-  
-  if (user?.position !== '사장' && user?.role !== 'admin') {
-    return <div className="p-8 text-center text-red-500 font-bold">임원평가 확정 및 조회는 사장 직급 또는 관리자(Admin)만 가능합니다.</div>;
-  }
-  
+  // 접근 통제는 라우트(ProtectedRoute menuPath="/admin/results-executive")에서 메뉴 권한으로 판단.
+  // 직급(사장) 기반 게이트는 사용하지 않음.
+
   const [years, setYears] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState('');
   
@@ -58,8 +56,7 @@ export default function ExecutiveFinalResults() {
     return Math.round(total * 10) / 10;
   };
 
-  const isGroupLeader = user && user.role === 'user' && user.position?.endsWith('그룹장');
-  // 사장은 임원평가 최종 결과를 수정할 수 있으므로 읽기 전용이 아님
+  // 확정폼 표시는 항상 허용(접근은 라우트 메뉴권한으로 통제). 직급 기반 읽기전용 없음.
   const isPresidentReadOnly = false;
 
   useEffect(() => {
@@ -69,14 +66,6 @@ export default function ExecutiveFinalResults() {
   useEffect(() => {
     if (selectedYear) fetchResults();
   }, [selectedYear]);
-
-  // Force department if group leader
-  useEffect(() => {
-    if (isGroupLeader) {
-      const dep = user.department || user.position!.replace('장', '');
-      setSelectedDepartment(dep);
-    }
-  }, [isGroupLeader, user]);
 
   const fetchBaseData = async () => {
     try {
@@ -288,12 +277,8 @@ export default function ExecutiveFinalResults() {
   };
 
   const filteredEvaluatees = evaluatees.filter(ev => {
+    // 임원평가 대상 = 그룹장 (평가 대상 정의: 직급 기반이지만 접근 권한이 아니라 대상 범위)
     if (userPositions[ev.evaluateeId] !== '그룹장') return false;
-
-    if (isGroupLeader) {
-      const dep = user.department || user.position!.replace('장', '');
-      return userDepartments[ev.evaluateeId] === dep;
-    }
     if (selectedDepartment === 'all') return true;
     return userDepartments[ev.evaluateeId] === selectedDepartment;
   });
@@ -342,12 +327,12 @@ export default function ExecutiveFinalResults() {
             </button>
           )}
           <div className="w-48">
-            <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')} disabled={!!isGroupLeader}>
+            <Select value={selectedDepartment} onValueChange={(v) => setSelectedDepartment(v ?? '')}>
               <SelectTrigger className="border-[var(--hrs-line)] rounded-md bg-white">
                 <SelectValue placeholder="소속 부서 선택" />
               </SelectTrigger>
               <SelectContent>
-                {!isGroupLeader && <SelectItem value="all">전체 부서</SelectItem>}
+                <SelectItem value="all">전체 부서</SelectItem>
                 {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
             </Select>
