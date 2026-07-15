@@ -2,21 +2,23 @@ import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMenuPermissions } from '../contexts/MenuPermissionsContext';
 
+// 권한은 개별 메뉴 권한(userAccess) → 역할별 메뉴 권한(settings/menuPermissions)으로만 판단.
+// 직급(position) 기반 자동 부여는 사용하지 않으므로 specialRoles 필드도 두지 않는다.
 const ALL_NAV = [
-  { to: "/", label: "대시보드", category: "기본", specialRoles: [] as string[] },
-  { to: "/evaluate", label: "내 평가 진행", category: "기본", specialRoles: [] },
-  { to: "/evaluate-executive", label: "임원평가 진행", category: "기본", specialRoles: ['executive'] },
-  { to: "/history", label: "내 평가 이력", category: "기본", specialRoles: [] },
-  { to: "/admin/items", label: "평가 항목 관리", category: "관리 기능", specialRoles: [] },
-  { to: "/admin/items-executive", label: "임원평가 항목 관리", category: "관리 기능", specialRoles: [] },
-  { to: "/admin/assignments", label: "평가자 배정", category: "관리 기능", specialRoles: [] },
-  { to: "/admin/assignments-executive", label: "임원평가 배정", category: "관리 기능", specialRoles: [] },
-  { to: "/admin/results", label: "최종 평가 결과", category: "관리 기능", specialRoles: ['groupLeader', 'president'] },
-  { to: "/admin/results-executive", label: "임원평가 최종 결과", category: "관리 기능", specialRoles: ['president'] },
-  { to: "/admin/scores", label: "근태·업무일지 점수 관리", category: "관리 기능", specialRoles: [] },
-  { to: "/admin/users", label: "사용자 관리", category: "시스템 설정", specialRoles: [] },
-  { to: "/admin/settings", label: "평가 연도/그룹", category: "시스템 설정", specialRoles: [] },
-  { to: "/admin/menu-permissions", label: "메뉴 권한 관리", category: "시스템 설정", specialRoles: [] },
+  { to: "/", label: "대시보드", category: "기본" },
+  { to: "/evaluate", label: "내 평가 진행", category: "기본" },
+  { to: "/evaluate-executive", label: "임원평가 진행", category: "기본" },
+  { to: "/history", label: "내 평가 이력", category: "기본" },
+  { to: "/admin/items", label: "평가 항목 관리", category: "관리 기능" },
+  { to: "/admin/items-executive", label: "임원평가 항목 관리", category: "관리 기능" },
+  { to: "/admin/assignments", label: "평가자 배정", category: "관리 기능" },
+  { to: "/admin/assignments-executive", label: "임원평가 배정", category: "관리 기능" },
+  { to: "/admin/results", label: "최종 평가 결과", category: "관리 기능" },
+  { to: "/admin/results-executive", label: "임원평가 최종 결과", category: "관리 기능" },
+  { to: "/admin/scores", label: "근태·업무일지 점수 관리", category: "관리 기능" },
+  { to: "/admin/users", label: "사용자 관리", category: "시스템 설정" },
+  { to: "/admin/settings", label: "평가 연도/그룹", category: "시스템 설정" },
+  { to: "/admin/menu-permissions", label: "메뉴 권한 관리", category: "시스템 설정" },
 ];
 
 export function Layout() {
