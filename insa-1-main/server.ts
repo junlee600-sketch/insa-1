@@ -196,6 +196,15 @@ async function startServer() {
       message: { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }
     });
 
+    // 관리자 읽기전용 API(조회): 페이지 로드마다 호출되므로 더 넉넉히 — IP당 15분에 60회
+    const adminReadLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 60,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }
+    });
+
     // API Route: 최초 로그인 강제 비밀번호 변경 (서버가 비밀번호를 설정하고 플래그 해제 → SDK 우회 차단)
     app.post("/api/user/complete-initial-password", userLimiter, async (req, res) => {
       const email = await verifyUserToken(req, res);
@@ -214,6 +223,36 @@ async function startServer() {
       } catch (error: any) {
         console.error("Error completing initial password:", error);
         res.status(500).json({ error: isProd ? "비밀번호 변경 중 오류가 발생했습니다." : (error?.message || error?.code || "오류") });
+      }
+    });
+
+    // API Route: 사용자별 최근 로그인 일시 조회 (Firebase Auth 가 자동 기록하는 metadata 사용)
+    // 반환: { times: { [email]: { lastSignInTime, lastRefreshTime } } }  (email 소문자 키)
+    app.post("/api/admin/user-login-times", adminReadLimiter, async (req, res) => {
+      const caller = await verifyAdminToken(req, res);
+      if (!caller) return;
+      try {
+        const pbAdmin = getFirebaseAdmin();
+        const times: Record<string, { lastSignInTime: string | null; lastRefreshTime: string | null }> = {};
+        let pageToken: string | undefined = undefined;
+        do {
+          const result = await pbAdmin.auth().listUsers(1000, pageToken);
+          for (const u of result.users) {
+            if (!u.email) continue;
+            times[u.email.toLowerCase()] = {
+              lastSignInTime: u.metadata.lastSignInTime || null,
+              lastRefreshTime: u.metadata.lastRefreshTime || null,
+            };
+          }
+          pageToken = result.pageToken;
+        } while (pageToken);
+        res.json({ times });
+      } catch (error: any) {
+        console.error("Error fetching login times:", error);
+        if (error.message?.includes("FIREBASE_SERVICE_ACCOUNT_KEY")) {
+          return res.status(500).json({ error: "앱 설정 메뉴에 접속해 [FIREBASE_SERVICE_ACCOUNT_KEY] 환경 변수(비공개 키)를 수동 등록해야 이 기능을 사용할 수 있습니다." });
+        }
+        res.status(500).json({ error: isProd ? "로그인 기록 조회 중 오류가 발생했습니다." : (error?.message || error?.code || "오류") });
       }
     });
 

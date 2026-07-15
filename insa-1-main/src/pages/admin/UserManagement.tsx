@@ -50,6 +50,7 @@ import { anchorFromService, userService, formatService } from '../../lib/service
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
+  const [loginTimes, setLoginTimes] = useState<Record<string, { lastSignInTime: string | null; lastRefreshTime: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', name: '', department: '', position: '', role: 'user', yearsOfService: '', serviceMonths: '' });
@@ -73,6 +74,7 @@ export default function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
+    fetchLoginTimes();
   }, []);
 
   const fetchUsers = async () => {
@@ -82,6 +84,31 @@ export default function UserManagement() {
     userData.sort((a: any, b: any) => (a.department || '').localeCompare(b.department || '', 'ko'));
     setUsers(userData);
     setLoading(false);
+  };
+
+  // 최근 로그인 일시(Firebase Auth metadata)를 서버에서 조회 — 실패해도 목록 표시엔 영향 없음
+  const fetchLoginTimes = async () => {
+    try {
+      const res = await adminFetch('/api/admin/user-login-times', {});
+      if (!res.ok) return;
+      const data = await res.json();
+      setLoginTimes(data.times || {});
+    } catch (err) {
+      logger.error('로그인 기록 조회 실패:', err);
+    }
+  };
+
+  // UTC 문자열 → "YYYY-MM-DD HH:mm" (KST). 기록 없으면 '-'
+  // sv-SE 로케일은 ISO 형태("2026-07-14 15:04")를 그대로 내주므로 문자열 가공이 필요 없음
+  const formatLoginTime = (iso: string | null | undefined) => {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString('sv-SE', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
   };
 
   const handleForcePasswordChange = async (e: React.MouseEvent) => {
@@ -778,26 +805,28 @@ export default function UserManagement() {
       </div>
 
       <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
-        <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
+        <div className="grid grid-cols-16 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
           <div className="col-span-2">로그인 ID</div>
           <div className="col-span-2">사용자 이름</div>
           <div className="col-span-1">직급</div>
           <div className="col-span-2">소속 부서</div>
           <div className="col-span-1 text-center">연차</div>
+          <div className="col-span-3">최근 로그인</div>
           <div className="col-span-1">권한</div>
           <div className="col-span-1">재직상태</div>
-          <div className="col-span-2 text-right">작업</div>
+          <div className="col-span-3 text-right">작업</div>
         </div>
         <div className="flex-1 overflow-y-auto text-sm">
           {filteredUsers.map((user) => {
             const isRetired = user.status === 'retired';
             return (
-              <div key={user.id} className={`grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center transition-colors ${isRetired ? 'bg-[#FAFAFA] opacity-70' : 'hover:bg-[var(--hrs-bg)]'}`}>
+              <div key={user.id} className={`grid grid-cols-16 p-4 border-b border-[var(--hrs-line-soft)] items-center transition-colors ${isRetired ? 'bg-[#FAFAFA] opacity-70' : 'hover:bg-[var(--hrs-bg)]'}`}>
                 <div className="col-span-2 text-[var(--hrs-slate)] truncate pr-2">{user.email?.includes('@') ? user.email.split('@')[0] : user.email}</div>
                 <div className={`col-span-2 font-bold text-lg truncate pr-2 ${isRetired ? 'line-through text-[var(--hrs-slate)]' : ''}`}>{user.name}</div>
                 <div className="col-span-1 font-sans text-xs text-[var(--hrs-slate)] truncate pr-2">{user.position || '-'}</div>
                 <div className="col-span-2 font-sans text-xs uppercase text-[var(--hrs-slate)] truncate pr-2">{user.department}</div>
                 <div className="col-span-1 font-sans text-xs text-center text-[var(--hrs-slate)]">{formatService(userService(user).years, userService(user).months)}</div>
+                <div className="col-span-3 font-sans text-xs text-[var(--hrs-slate)] tabular-nums truncate pr-2">{formatLoginTime(loginTimes[(user.email || user.id || '').toLowerCase()]?.lastSignInTime)}</div>
                 <div className="col-span-1">
                   <span className={`text-[12px] tracking-normal px-2 py-1 ${user.role === 'admin' ? 'bg-[var(--hrs-accent)] text-white' : 'bg-[var(--hrs-line)] text-[var(--hrs-ink)]'}`}>
                     {user.role}
@@ -808,7 +837,7 @@ export default function UserManagement() {
                     {isRetired ? '퇴직' : '재직'}
                   </span>
                 </div>
-                <div className="col-span-2 text-right flex justify-end gap-2 flex-wrap">
+                <div className="col-span-3 text-right flex justify-end gap-2 flex-wrap">
                   <button onClick={() => openEdit(user)} className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-[var(--hrs-ink)] underline underline-offset-4">수정</button>
                   <button
                     onClick={() => handleToggleStatus(user)}
