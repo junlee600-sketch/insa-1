@@ -301,13 +301,17 @@ export default function ExecutiveAssignments() {
             </div>
             <div className="space-y-2">
               <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">대상 그룹</Label>
-              <Select value={filterGroup} onValueChange={(v) => setFilterGroup(v ?? 'all')}>
-                <SelectTrigger className="w-44 border border-[var(--hrs-line)] rounded-md bg-white px-3"><SelectValue placeholder="전체" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">전체</SelectItem>
-                  {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {/* Select 는 트리거 외에 숨은 input 을 하나 더 렌더링해서, space-y-2 의 직속 자식으로 두면
+                  간격이 한 번 더 붙어 컨트롤이 8px 위로 뜬다. 고정 높이 래퍼로 감싸 입력창과 높이를 맞춘다. */}
+              <div className="h-8">
+                <Select value={filterGroup} onValueChange={(v) => setFilterGroup(v ?? 'all')}>
+                  <SelectTrigger className="w-44 border border-[var(--hrs-line)] rounded-md bg-white px-3"><SelectValue placeholder="전체" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체</SelectItem>
+                    {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex items-center gap-3 h-8 text-[12px] text-[var(--hrs-slate)]">
               <span>{sortedRows.length}건{hasFilter ? ` / 전체 ${rows.length}건` : ''}</span>
