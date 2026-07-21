@@ -11,6 +11,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { downloadExcelFile } from '../../lib/excel';
 import { logger } from '../../lib/logger';
 import { userService } from '../../lib/service';
+import { SortHeader } from '../../components/SortHeader';
+import { compareValues, type SortDir } from '../../lib/sort';
 
 export default function ExecutiveFinalResults() {
   const { user } = useAuth();
@@ -31,6 +33,14 @@ export default function ExecutiveFinalResults() {
   const [userDepartments, setUserDepartments] = useState<Record<string, string>>({});
   const [userYears, setUserYears] = useState<Record<string, number | null>>({});
   const [userMonths, setUserMonths] = useState<Record<string, number | null>>({});
+
+  // 정렬 상태 (컬럼 헤더 클릭)
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const handleSort = (key: string) => {
+    if (sortKey === key) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir('asc'); }
+  };
   const fmtService = (id: string) => {
     const y = userYears[id]; const m = userMonths[id];
     if (y == null && m == null) return '-';
@@ -285,6 +295,30 @@ export default function ExecutiveFinalResults() {
 
   // 분석 지표 (최종결과와 동일)
   const displayFinal = (ev: any) => ev.finalState ? ev.finalState.totalScore : weightedScoreOf(ev);
+
+  // 컬럼별 정렬 값 (숫자 컬럼은 숫자로 반환해야 10 < 9 오정렬을 피함)
+  const sortValue = (ev: any, key: string): string | number | null => {
+    switch (key) {
+      case 'name': return usersMap[ev.evaluateeId] || ev.evaluateeId;
+      case 'position': return userPositions[ev.evaluateeId] || '';
+      case 'department': return userDepartments[ev.evaluateeId] || '';
+      case 'service': {
+        const y = userYears[ev.evaluateeId]; const m = userMonths[ev.evaluateeId];
+        return (y == null && m == null) ? null : (y || 0) * 12 + (m || 0);
+      }
+      case 'progress': return ev.totalAssigned > 0 ? ev.totalCompleted / ev.totalAssigned : null;
+      case 'raw': return ev.totalCompleted > 0 ? ev.rawScoreSum / ev.totalCompleted : null;
+      case 'attendance': return userPeriodic[ev.evaluateeId]?.attendanceScore ?? null;
+      case 'workLog': return userPeriodic[ev.evaluateeId]?.workLogScore ?? null;
+      case 'final': return displayFinal(ev);
+      case 'status': return ev.finalState ? '확정' : '대기';
+      default: return null;
+    }
+  };
+
+  const sortedEvaluatees = sortKey
+    ? [...filteredEvaluatees].sort((a, b) => compareValues(sortValue(a, sortKey), sortValue(b, sortKey), sortDir))
+    : filteredEvaluatees;
   const bandColor = (s: number) => s >= 90 ? 'var(--hrs-accent)' : s >= 80 ? 'var(--hrs-high)' : s >= 70 ? 'var(--hrs-mid)' : 'var(--hrs-low)';
   const totAssigned = filteredEvaluatees.reduce((s, e) => s + e.totalAssigned, 0);
   const totCompleted = filteredEvaluatees.reduce((s, e) => s + e.totalCompleted, 0);
@@ -402,16 +436,16 @@ export default function ExecutiveFinalResults() {
       {selectedYear && (
         <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
           <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
-            <div className="col-span-2">이름</div>
-            <div className="col-span-1">직급</div>
-            <div className="col-span-1">소속부서</div>
-            <div className="col-span-1 text-center">연차</div>
-            <div className="col-span-1 text-center">진행률</div>
-            <div className="col-span-1 text-center">원점수</div>
-            <div className="col-span-1 text-center">근태</div>
-            <div className="col-span-1 text-center">업무일지</div>
-            <div className="col-span-1 text-center">최종</div>
-            <div className="col-span-1 text-center">상태</div>
+            <div className="col-span-2"><SortHeader label="이름" colKey="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="직급" colKey="position" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="소속부서" colKey="department" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="연차" colKey="service" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="진행률" colKey="progress" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="원점수" colKey="raw" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="근태" colKey="attendance" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="업무일지" colKey="workLog" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="최종" colKey="final" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="상태" colKey="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
             <div className="col-span-1 text-right">상세</div>
           </div>
 
@@ -419,7 +453,7 @@ export default function ExecutiveFinalResults() {
             {filteredEvaluatees.length === 0 ? (
                <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">진행된 평가 내역이 없습니다.</div>
             ) : (
-              filteredEvaluatees.map(ev => {
+              sortedEvaluatees.map(ev => {
                 const isComplete = ev.totalCompleted === ev.totalAssigned;
                 const rawAvg = ev.totalCompleted > 0 ? (ev.rawScoreSum / ev.totalCompleted).toFixed(2) : '-';
                 const periodic = userPeriodic[ev.evaluateeId] || {};

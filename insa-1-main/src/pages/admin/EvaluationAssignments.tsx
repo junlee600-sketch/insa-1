@@ -10,7 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { readExcelRows, downloadExcelFile, validateExcelFile } from '../../lib/excel';
 import { logger } from '../../lib/logger';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { SortHeader, type SortDir } from '../../components/SortHeader';
+import { SortHeader } from '../../components/SortHeader';
+import { sortRows, type SortDir } from '../../lib/sort';
 
 export default function EvaluationAssignments() {
   const [years, setYears] = useState<any[]>([]);
@@ -167,13 +168,7 @@ export default function EvaluationAssignments() {
     };
   }), [assignments, users, groups]);
 
-  const sortedRows = useMemo(() => {
-    if (!sortKey) return rows;
-    const dir = sortDir === 'asc' ? 1 : -1;
-    return [...rows].sort((a, b) =>
-      dir * String((a as any)[sortKey] ?? '').localeCompare(String((b as any)[sortKey] ?? ''), 'ko', { numeric: true })
-    );
-  }, [rows, sortKey, sortDir]);
+  const sortedRows = useMemo(() => sortRows(rows, sortKey, sortDir), [rows, sortKey, sortDir]);
 
   return (
     <div className="space-y-6">

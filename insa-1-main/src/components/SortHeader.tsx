@@ -1,4 +1,6 @@
-export type SortDir = 'asc' | 'desc';
+import type { SortDir } from '../lib/sort';
+
+export type { SortDir };
 
 /**
  * 표 헤더용 정렬 버튼.
