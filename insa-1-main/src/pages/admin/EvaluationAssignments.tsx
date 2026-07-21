@@ -29,6 +29,11 @@ export default function EvaluationAssignments() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmData, setConfirmData] = useState<{id: string, evor: string, evee: string} | null>(null);
 
+  // 검색 필터 (평가자/대상자 이름, 대상 그룹)
+  const [searchEvor, setSearchEvor] = useState('');
+  const [searchEvee, setSearchEvee] = useState('');
+  const [filterGroup, setFilterGroup] = useState('all');
+
   // 정렬 상태 (컬럼 헤더 클릭)
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -168,7 +173,22 @@ export default function EvaluationAssignments() {
     };
   }), [assignments, users, groups]);
 
-  const sortedRows = useMemo(() => sortRows(rows, sortKey, sortDir), [rows, sortKey, sortDir]);
+  // 검색 조건 적용 후 정렬 (조건은 AND 로 조합)
+  const filteredRows = useMemo(() => {
+    const evor = searchEvor.trim().toLowerCase();
+    const evee = searchEvee.trim().toLowerCase();
+    return rows.filter(r => {
+      if (evor && !r.evorName.toLowerCase().includes(evor)) return false;
+      if (evee && !r.eveeName.toLowerCase().includes(evee)) return false;
+      if (filterGroup !== 'all' && r.assignment.groupId !== filterGroup) return false;
+      return true;
+    });
+  }, [rows, searchEvor, searchEvee, filterGroup]);
+
+  const sortedRows = useMemo(() => sortRows(filteredRows, sortKey, sortDir), [filteredRows, sortKey, sortDir]);
+
+  const hasFilter = !!(searchEvor.trim() || searchEvee.trim() || filterGroup !== 'all');
+  const resetFilters = () => { setSearchEvor(''); setSearchEvee(''); setFilterGroup('all'); };
 
   return (
     <div className="space-y-6">
@@ -260,7 +280,46 @@ export default function EvaluationAssignments() {
             </div>
           </div>
 
-          <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col mt-8">
+          <div className="flex flex-wrap gap-4 items-end mt-8">
+            <div className="space-y-2">
+              <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">평가자 검색</Label>
+              <Input
+                value={searchEvor}
+                onChange={e => setSearchEvor(e.target.value)}
+                placeholder="이름 입력"
+                className="w-44 border border-[var(--hrs-line)] rounded-md bg-white px-3"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">대상자 검색</Label>
+              <Input
+                value={searchEvee}
+                onChange={e => setSearchEvee(e.target.value)}
+                placeholder="이름 입력"
+                className="w-44 border border-[var(--hrs-line)] rounded-md bg-white px-3"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[12px] tracking-normal text-[var(--hrs-slate)]">대상 그룹</Label>
+              <Select value={filterGroup} onValueChange={(v) => setFilterGroup(v ?? 'all')}>
+                <SelectTrigger className="w-44 border border-[var(--hrs-line)] rounded-md bg-white px-3"><SelectValue placeholder="전체" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-3 pb-1 text-[12px] text-[var(--hrs-slate)]">
+              <span>{sortedRows.length}건{hasFilter ? ` / 전체 ${rows.length}건` : ''}</span>
+              {hasFilter && (
+                <button onClick={resetFilters} className="underline underline-offset-4 hover:text-[var(--hrs-ink)]">
+                  검색 초기화
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col mt-4">
             <div className="grid grid-cols-12 gap-2 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
               <div className="col-span-1"><SortHeader label="평가자" colKey="evorName" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
               <div className="col-span-1"><SortHeader label="직급" colKey="evorPosition" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
@@ -273,8 +332,10 @@ export default function EvaluationAssignments() {
               <div className="col-span-1 text-right">작업</div>
             </div>
             <div className="flex-1 overflow-y-auto  text-sm">
-              {assignments.length === 0 ? (
-                <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">배정된 내역이 없습니다.</div>
+              {sortedRows.length === 0 ? (
+                <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">
+                  {hasFilter ? '검색 조건에 맞는 배정 내역이 없습니다.' : '배정된 내역이 없습니다.'}
+                </div>
               ) : (
                 sortedRows.map((row) => {
                   const { assignment, evorName, evorPosition, evorDepartment, eveeName, eveePosition, eveeDepartment, groupName } = row;
