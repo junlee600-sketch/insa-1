@@ -309,7 +309,7 @@ export default function ExecutiveAssignments() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-3 pb-1 text-[12px] text-[var(--hrs-slate)]">
+            <div className="flex items-center gap-3 h-8 text-[12px] text-[var(--hrs-slate)]">
               <span>{sortedRows.length}건{hasFilter ? ` / 전체 ${rows.length}건` : ''}</span>
               {hasFilter && (
                 <button onClick={resetFilters} className="underline underline-offset-4 hover:text-[var(--hrs-ink)]">
