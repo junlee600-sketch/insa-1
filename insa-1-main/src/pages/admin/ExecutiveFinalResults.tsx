@@ -439,13 +439,13 @@ export default function ExecutiveFinalResults() {
             <div className="col-span-2"><SortHeader label="이름" colKey="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
             <div className="col-span-1"><SortHeader label="직급" colKey="position" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
             <div className="col-span-1"><SortHeader label="소속부서" colKey="department" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="연차" colKey="service" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="진행률" colKey="progress" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="원점수" colKey="raw" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="근태" colKey="attendance" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="업무일지" colKey="workLog" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="최종" colKey="final" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
-            <div className="col-span-1"><SortHeader label="상태" colKey="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
+            <div className="col-span-1"><SortHeader label="연차" colKey="service" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
+            <div className="col-span-1"><SortHeader label="진행률" colKey="progress" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
+            <div className="col-span-1"><SortHeader label="원점수" colKey="raw" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
+            <div className="col-span-1"><SortHeader label="근태" colKey="attendance" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
+            <div className="col-span-1"><SortHeader label="업무일지" colKey="workLog" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
+            <div className="col-span-1"><SortHeader label="최종" colKey="final" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
+            <div className="col-span-1"><SortHeader label="상태" colKey="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="center" /></div>
             <div className="col-span-1 text-right">상세</div>
           </div>
 

@@ -261,7 +261,7 @@ export default function ExecutiveAssignments() {
           </div>
 
           <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col mt-8">
-            <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
+            <div className="grid grid-cols-12 gap-2 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
               <div className="col-span-1"><SortHeader label="평가자" colKey="evorName" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
               <div className="col-span-1"><SortHeader label="직급" colKey="evorPosition" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>
               <div className="col-span-2"><SortHeader label="부서" colKey="evorDepartment" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} /></div>

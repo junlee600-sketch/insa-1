@@ -19,18 +19,20 @@ export function SortHeader({
   sortKey: string | null;
   sortDir: SortDir;
   onSort: (key: string) => void;
-  align?: 'left' | 'right';
+  align?: 'left' | 'center' | 'right';
 }) {
   const active = sortKey === colKey;
+  // 데이터 셀의 정렬(text-center/right)과 헤더가 어긋나지 않도록 맞춘다
+  const justify = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
   return (
     <button
       type="button"
       onClick={() => onSort(colKey)}
       title={`${label} 기준 정렬`}
       aria-label={`${label} 기준 정렬`}
-      className={`flex items-center gap-1 w-full font-semibold uppercase tracking-[0.04em] transition-colors hover:text-[var(--hrs-ink)] ${
-        align === 'right' ? 'justify-end' : 'text-left'
-      } ${active ? 'text-[var(--hrs-ink)]' : ''}`}
+      className={`flex items-center gap-1 w-full font-semibold uppercase tracking-[0.04em] transition-colors hover:text-[var(--hrs-ink)] ${justify} ${
+        active ? 'text-[var(--hrs-ink)]' : ''
+      }`}
     >
       <span className="truncate">{label}</span>
       <span className={`text-[9px] leading-none shrink-0 ${active ? 'opacity-100' : 'opacity-30'}`}>
