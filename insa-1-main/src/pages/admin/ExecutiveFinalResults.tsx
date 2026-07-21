@@ -276,9 +276,9 @@ export default function ExecutiveFinalResults() {
     await downloadExcelFile(exportData, "Final Results", `Final_Evaluation_Results_${yearData?.year || selectedYear}.xlsx`);
   };
 
+  // 임원평가 대상 = 임원평가 배정에 피평가자로 등록된 사람 전원 (직급 조건 없음).
+  // evaluatees 는 exec_assignments 를 피평가자별로 묶은 것이므로 부서 필터만 적용한다.
   const filteredEvaluatees = evaluatees.filter(ev => {
-    // 임원평가 대상 = 그룹장 (평가 대상 정의: 직급 기반이지만 접근 권한이 아니라 대상 범위)
-    if (userPositions[ev.evaluateeId] !== '그룹장') return false;
     if (selectedDepartment === 'all') return true;
     return userDepartments[ev.evaluateeId] === selectedDepartment;
   });
