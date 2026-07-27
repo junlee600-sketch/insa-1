@@ -35,7 +35,7 @@ function passwordStrength(pw: string): number {
 }
 
 export default function ForcePasswordChange() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, login } = useAuth();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -114,10 +114,19 @@ export default function ForcePasswordChange() {
         setSaving(false);
         return;
       }
-      // 서버가 users 문서의 플래그를 해제 → AuthContext 리스너가 반영 → 대시보드로 이동.
-      // 세션 비밀번호가 바뀌었으므로 재로그인을 위해 로그아웃 후 로그인 화면으로 유도.
-      alert('비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요.');
-      await logout();
+      // 서버가 새 비밀번호를 설정하고 mustChangePassword 를 해제했다.
+      // 로그인 상태를 유지하기 위해, 사용자가 방금 입력한 새 비밀번호로 조용히 재인증한다.
+      // (서버측 비밀번호 변경이 기존 세션 토큰을 무효화할 수 있으므로 새 세션을 확보 → 로그인 화면을 거치지 않음)
+      // 재인증 후 AuthContext 의 users 문서 구독이 mustChangePassword:false 를 반영하면
+      // 이 컴포넌트 상단의 가드가 자동으로 대시보드(/)로 이동시킨다.
+      try {
+        await login(user.email, newPassword);
+      } catch (reauthErr) {
+        // 자동 재인증 실패 시에만 로그인 화면으로 유도 (최후 수단)
+        logger.error('자동 재로그인 실패:', reauthErr);
+        alert('비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요.');
+        await logout();
+      }
     } catch (err: any) {
       logger.error(err);
       setError('비밀번호 변경에 실패했습니다. 잠시 후 다시 시도해 주세요.');
