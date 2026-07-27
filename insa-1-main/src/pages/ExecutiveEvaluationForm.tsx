@@ -96,6 +96,11 @@ export default function ExecutiveEvaluationForm() {
 
   const handleSubmitClick = () => {
     if (!assignmentId) return;
+    // 이 그룹에 등록된 평가 항목이 하나도 없으면 빈 평가가 저장되지 않도록 차단
+    // (항목 0개일 때 아래 개수 비교가 통과되어 조용히 빈 제출되던 문제 방지)
+    if (exec_items.length === 0) {
+      return showAlert('이 그룹에 등록된 평가 항목이 없습니다. 관리자에게 문의해 주세요.');
+    }
     if (Object.keys(scores).length < exec_items.length) {
       return showAlert('모든 문항에 대해 점수를 부여해 주세요.');
     }
@@ -153,6 +158,12 @@ export default function ExecutiveEvaluationForm() {
 
       <div className="space-y-12">
         <div className="border border-[var(--hrs-line)] p-10 space-y-10 bg-[var(--hrs-surface)]">
+          {exec_items.length === 0 && (
+            <div className="py-8 text-center text-[var(--hrs-slate)]">
+              <p className="font-semibold text-[var(--hrs-ink)]">등록된 평가 항목이 없습니다.</p>
+              <p className="mt-1 text-sm">이 평가 그룹에 배정된 문항이 없어 평가를 진행할 수 없습니다. 관리자에게 문의해 주세요.</p>
+            </div>
+          )}
           {exec_items.map((item, index) => (
             <div key={item.id} className="space-y-4 pb-10 border-b border-[var(--hrs-line-soft)] last:border-b-0 last:pb-0">
               <p className=" text-lg leading-relaxed text-[var(--hrs-ink)]">
@@ -191,10 +202,10 @@ export default function ExecutiveEvaluationForm() {
             />
           </div>
 
-          {!isCompleted && (
+          {!isCompleted && exec_items.length > 0 && (
             <div className="flex justify-end pt-10">
-              <button 
-                onClick={handleSubmitClick} 
+              <button
+                onClick={handleSubmitClick}
                 className="px-8 py-3 bg-[var(--hrs-accent)] text-white text-[12px] tracking-normal hover:bg-[var(--hrs-ink)] transition-colors"
                 type="button"
               >
