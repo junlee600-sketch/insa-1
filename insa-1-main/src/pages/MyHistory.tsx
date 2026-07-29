@@ -26,7 +26,7 @@ export default function MyHistory() {
       if (!user?.email) { setHistory([]); return; }
 
       // 근태·업무일지 점수(periodicScores)는 최종 확정과 무관하게 '입력되는 즉시' 바로 표시한다.
-      // finalScores(최종 확정)는 '확정 상태' 표시 + 삭제 대상 파악용으로만 병합한다.
+      // finalScores(최종 확정)는 관리자 삭제 대상(연도)을 파악하기 위해서만 병합한다.
       const [psSnap, fsSnap] = await Promise.all([
         getDocs(query(collection(db, 'periodicScores'), where('userId', '==', user.email))),
         getDocs(query(collection(db, 'finalScores'), where('evaluateeId', '==', user.email))),
@@ -43,17 +43,15 @@ export default function MyHistory() {
           year,
           attendanceScore: data.attendanceScore ?? null,
           workLogScore: data.workLogScore ?? null,
-          status: null,
           finalScoreId: null,
         });
       });
 
-      // 2) 최종 확정 상태 병합 (점수 입력이 아직 없던 연도도 목록에 포함)
+      // 2) 최종 확정 문서 병합 (삭제 대상 파악용, 점수 입력이 아직 없던 연도도 목록에 포함)
       fsSnap.docs.forEach(d => {
         const data = d.data() as any;
         const year = String(data.year);
         const row = byYear.get(year) || { year, attendanceScore: null, workLogScore: null };
-        row.status = data.status || 'confirmed';
         row.finalScoreId = d.id;
         byYear.set(year, row);
       });
@@ -119,9 +117,8 @@ export default function MyHistory() {
       <div className="flex-1 border border-[var(--hrs-line)] rounded-lg bg-[var(--hrs-surface)] shadow-[0_1px_2px_rgba(16,24,40,0.05)] overflow-hidden flex flex-col">
         <div className="grid grid-cols-12 bg-[var(--hrs-bg)] text-[var(--hrs-slate)] border-b border-[var(--hrs-line)] font-semibold text-[12px] uppercase tracking-[0.04em] p-4 sticky top-0">
           <div className="col-span-3">평가 연도</div>
-          <div className="col-span-2 text-center">최종 상태</div>
-          <div className="col-span-3 text-center">근태점수</div>
-          <div className="col-span-3 text-center">업무일지 점수</div>
+          <div className="col-span-4 text-center">근태점수</div>
+          <div className="col-span-4 text-center">업무일지 점수</div>
           <div className="col-span-1 text-right">관리</div>
         </div>
 
@@ -132,17 +129,10 @@ export default function MyHistory() {
             history.map(record => (
               <div key={record.year} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
                 <div className="col-span-3 font-bold">{record.year}</div>
-                <div className="col-span-2 text-center">
-                  {record.status ? (
-                    <span className="hrs-chip hrs-chip-good">확정</span>
-                  ) : (
-                    <span className="hrs-chip hrs-chip-wait">미확정</span>
-                  )}
-                </div>
-                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                <div className="col-span-4 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
                   {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
-                <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
+                <div className="col-span-4 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
                   {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
                 <div className="col-span-1 text-right">
