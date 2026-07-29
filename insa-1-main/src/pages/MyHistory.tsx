@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, getDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logger } from '../lib/logger';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,42 +23,43 @@ export default function MyHistory() {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      // Fetch final scores where evaluateeId == current user
-      const q = query(
-        collection(db, 'finalScores'),
-        where('evaluateeId', '==', user?.email)
-      );
-      const snap = await getDocs(q);
-      const records = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      if (!user?.email) { setHistory([]); return; }
 
-      // Sort descending by year
-      records.sort((a, b) => b.year.localeCompare(a.year));
+      // 근태·업무일지 점수(periodicScores)는 최종 확정과 무관하게 '입력되는 즉시' 바로 표시한다.
+      // finalScores(최종 확정)는 '확정 상태' 표시 + 삭제 대상 파악용으로만 병합한다.
+      const [psSnap, fsSnap] = await Promise.all([
+        getDocs(query(collection(db, 'periodicScores'), where('userId', '==', user.email))),
+        getDocs(query(collection(db, 'finalScores'), where('evaluateeId', '==', user.email))),
+      ]);
 
-      // 연도별 근태·업무일지 점수 + 가중치 조회
-      await Promise.all(records.map(async (r) => {
-        try {
-          const [ps, yd] = await Promise.all([
-            getDoc(doc(db, 'periodicScores', `${r.year}_${user?.email}`)),
-            getDoc(doc(db, 'years', r.year)),
-          ]);
-          if (ps.exists()) {
-            const d = ps.data();
-            r.attendanceScore = d.attendanceScore ?? null;
-            r.workLogScore = d.workLogScore ?? null;
-          } else {
-            r.attendanceScore = null;
-            r.workLogScore = null;
-          }
-          const w = yd.exists() ? yd.data().weights : null;
-          r.attendanceWeight = w?.attendance ?? 15;
-          r.workLogWeight = w?.workLog ?? 15;
-        } catch {
-          r.attendanceScore = null;
-          r.workLogScore = null;
-          r.attendanceWeight = 15;
-          r.workLogWeight = 15;
-        }
-      }));
+      // 연도별로 병합
+      const byYear = new Map<string, any>();
+
+      // 1) 근태·업무일지 점수 (원본)
+      psSnap.docs.forEach(d => {
+        const data = d.data() as any;
+        const year = String(data.year);
+        byYear.set(year, {
+          year,
+          attendanceScore: data.attendanceScore ?? null,
+          workLogScore: data.workLogScore ?? null,
+          status: null,
+          finalScoreId: null,
+        });
+      });
+
+      // 2) 최종 확정 상태 병합 (점수 입력이 아직 없던 연도도 목록에 포함)
+      fsSnap.docs.forEach(d => {
+        const data = d.data() as any;
+        const year = String(data.year);
+        const row = byYear.get(year) || { year, attendanceScore: null, workLogScore: null };
+        row.status = data.status || 'confirmed';
+        row.finalScoreId = d.id;
+        byYear.set(year, row);
+      });
+
+      // 연도 내림차순 정렬
+      const records = Array.from(byYear.values()).sort((a, b) => b.year.localeCompare(a.year));
 
       setHistory(records);
     } catch (err: any) {
@@ -79,10 +80,12 @@ export default function MyHistory() {
   const confirmDelete = async () => {
     if (!recordToDelete) return;
     try {
+      // finalScores(최종 확정)만 삭제한다. 근태·업무일지 점수(periodicScores)는 그대로 남아
+      // 해당 연도 행은 '미확정' 상태로 계속 표시되므로 목록을 다시 불러온다.
       await deleteDoc(doc(db, 'finalScores', recordToDelete));
-      setHistory(history.filter(h => h.id !== recordToDelete));
       setDeleteModalOpen(false);
       setRecordToDelete(null);
+      await fetchHistory();
     } catch (err: any) {
       logger.error(err);
       setErrorMsg("삭제 권한이 없거나 오류가 발생했습니다 (관리자 권한 필요).");
@@ -108,7 +111,7 @@ export default function MyHistory() {
 
       <section className="grid grid-cols-4 gap-8 mb-10">
         <div className="border-b border-[var(--hrs-line-soft)] pb-4">
-          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">총 완료된 평가 연도</p>
+          <p className="text-[15px] tracking-normal text-[var(--hrs-slate)] mb-1">기록된 평가 연도</p>
           <p className="text-2xl font-light tracking-tight">{history.length}</p>
         </div>
       </section>
@@ -124,13 +127,17 @@ export default function MyHistory() {
 
         <div className="flex-1 overflow-y-auto  text-sm">
           {history.length === 0 ? (
-            <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">확정된 본인의 평가 이력이 없습니다.</div>
+            <div className="p-8 text-center text-[var(--hrs-slate)] font-sans">근태·업무일지 점수 기록이 없습니다.</div>
           ) : (
             history.map(record => (
-              <div key={record.id} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
+              <div key={record.year} className="grid grid-cols-12 p-4 border-b border-[var(--hrs-line-soft)] items-center hover:bg-[var(--hrs-bg)] transition-colors">
                 <div className="col-span-3 font-bold">{record.year}</div>
                 <div className="col-span-2 text-center">
-                  <span className="hrs-chip hrs-chip-good">{record.status}</span>
+                  {record.status ? (
+                    <span className="hrs-chip hrs-chip-good">확정</span>
+                  ) : (
+                    <span className="hrs-chip hrs-chip-wait">미확정</span>
+                  )}
                 </div>
                 <div className="col-span-3 text-center hrs-mono text-lg font-bold text-[var(--hrs-ink)]">
                   {record.attendanceScore != null ? record.attendanceScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
@@ -139,9 +146,9 @@ export default function MyHistory() {
                   {record.workLogScore != null ? record.workLogScore : <span className="text-[var(--hrs-slate)] text-sm font-normal">미입력</span>}
                 </div>
                 <div className="col-span-1 text-right">
-                  {canDelete && (
+                  {canDelete && record.finalScoreId && (
                     <button
-                      onClick={(e) => openDeleteModal(record.id, e)}
+                      onClick={(e) => openDeleteModal(record.finalScoreId, e)}
                       className="text-[12px] tracking-normal text-[var(--hrs-slate)] hover:text-red-600 underline underline-offset-4"
                     >
                       삭제
@@ -157,9 +164,9 @@ export default function MyHistory() {
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent className="sm:max-w-[425px] rounded-md border-[var(--hrs-line)]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-normal tracking-tight">이력 삭제</DialogTitle>
+            <DialogTitle className="text-2xl font-normal tracking-tight">최종 확정 삭제</DialogTitle>
             <DialogDescription className="text-[var(--hrs-slate)] mt-4">
-              정말 이 평가 이력을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다. (관리자 권한 필요)
+              이 연도의 최종 확정 기록을 삭제합니다. 근태·업무일지 점수는 그대로 유지되며 '미확정' 상태로 표시됩니다. 삭제 후에는 복구할 수 없습니다. (관리자 권한 필요)
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-8 flex gap-2 sm:justify-end">
