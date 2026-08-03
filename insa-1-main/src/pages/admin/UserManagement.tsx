@@ -35,7 +35,7 @@ const ALL_MENUS = [
 const ROLE_DEFAULT_PERMS: Record<string, Record<string, boolean>> = {
   admin: { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/scores": true, "/admin/users": true, "/admin/settings": true, "/admin/menu-permissions": true },
   hr:    { "/": true, "/evaluate": true, "/evaluate-executive": true, "/history": true, "/admin/items": true, "/admin/items-executive": true, "/admin/assignments": true, "/admin/assignments-executive": true, "/admin/results": true, "/admin/results-executive": true, "/admin/scores": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
-  user:  { "/": true, "/evaluate": true, "/evaluate-executive": false, "/history": false, "/admin/items": false, "/admin/items-executive": false, "/admin/assignments": false, "/admin/assignments-executive": false, "/admin/results": false, "/admin/results-executive": false, "/admin/scores": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
+  user:  { "/": true, "/evaluate": true, "/evaluate-executive": false, "/history": true, "/admin/items": false, "/admin/items-executive": false, "/admin/assignments": false, "/admin/assignments-executive": false, "/admin/results": false, "/admin/results-executive": false, "/admin/scores": false, "/admin/users": false, "/admin/settings": false, "/admin/menu-permissions": false },
 };
 
 import { Button } from '../../components/ui/button';
@@ -47,8 +47,11 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { readExcelRows, downloadExcelFile, validateExcelFile } from '../../lib/excel';
 import { logger } from '../../lib/logger';
 import { anchorFromService, userService, formatService } from '../../lib/service';
+import { useMenuPermissions } from '../../contexts/MenuPermissionsContext';
 
 export default function UserManagement() {
+  // 개별 메뉴 권한의 시드는 '메뉴 권한 관리(settings/menuPermissions)'의 현재 값을 따른다.
+  const { perms: rolePerms } = useMenuPermissions();
   const [users, setUsers] = useState<any[]>([]);
   const [loginTimes, setLoginTimes] = useState<Record<string, { lastSignInTime: string | null; lastRefreshTime: string | null }>>({});
   const [loading, setLoading] = useState(true);
@@ -277,6 +280,20 @@ export default function UserManagement() {
     if (confirmData) {
       handleDelete(confirmData.id);
     }
+  };
+
+  // 개별 메뉴 권한을 처음 켤 때 채워 넣을 시드값.
+  // 하드코딩 기본값이 아니라 '메뉴 권한 관리'의 현재 역할 설정을 우선 사용한다.
+  // (예전에는 하드코딩 기본값을 그대로 박제해, 이후 역할 설정에서 메뉴를 열어줘도
+  //  개별 권한이 있는 사용자에게는 영영 반영되지 않는 문제가 있었다.)
+  const seedFromRole = (role: string): Record<string, boolean> => {
+    const fallback = ROLE_DEFAULT_PERMS[role] || ROLE_DEFAULT_PERMS.user;
+    const seed: Record<string, boolean> = {};
+    ALL_MENUS.forEach(m => {
+      const p = rolePerms[m.to] as Record<string, boolean> | undefined;
+      seed[m.to] = p ? !!p[role] : !!fallback[m.to];
+    });
+    return seed;
   };
 
   const openEdit = async (user: any) => {
@@ -689,7 +706,7 @@ export default function UserManagement() {
                     onClick={() => {
                       setShowMenuPerms(v => !v);
                       if (userMenuPerms === null) {
-                        setUserMenuPerms({ ...ROLE_DEFAULT_PERMS[formData.role] });
+                        setUserMenuPerms(seedFromRole(formData.role));
                       }
                     }}
                     className="w-full text-left text-[12px] tracking-normal text-[var(--hrs-slate)] flex justify-between items-center py-1 border-t border-[var(--hrs-line-soft)] pt-3"

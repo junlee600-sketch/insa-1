@@ -9,7 +9,7 @@ export const DEFAULT_PERMS: Record<string, RolePerms> = {
   "/": { admin: true, hr: true, user: true },
   "/evaluate": { admin: true, hr: true, user: true },
   "/evaluate-executive": { admin: true, hr: true, user: false },
-  "/history": { admin: true, hr: true, user: false },
+  "/history": { admin: true, hr: true, user: true },
   "/admin/items": { admin: true, hr: true, user: false },
   "/admin/items-executive": { admin: true, hr: true, user: false },
   "/admin/assignments": { admin: true, hr: true, user: false },

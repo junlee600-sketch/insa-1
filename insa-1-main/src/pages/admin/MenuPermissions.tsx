@@ -25,7 +25,7 @@ const DEFAULT_PERMISSIONS: Record<string, { admin: boolean; hr: boolean; user: b
   "/": { admin: true, hr: true, user: true },
   "/evaluate": { admin: true, hr: true, user: true },
   "/evaluate-executive": { admin: true, hr: true, user: false },
-  "/history": { admin: true, hr: true, user: false },
+  "/history": { admin: true, hr: true, user: true },
   "/admin/items": { admin: true, hr: true, user: false },
   "/admin/items-executive": { admin: true, hr: true, user: false },
   "/admin/assignments": { admin: true, hr: true, user: false },
